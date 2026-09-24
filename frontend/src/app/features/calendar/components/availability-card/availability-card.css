@@ -1,0 +1,110 @@
+:host {
+  --color-primary: #3b3b98;
+  --color-accent: #a29bfe;
+  --color-bg: #f7f7fb;
+  --color-text: #2d2d44;
+  --color-muted: #8a8aa3;
+  --radius: 12px;
+  --shadow-sm: 0 2px 6px rgba(59, 59, 152, 0.08);
+  --shadow-md: 0 6px 18px rgba(59, 59, 152, 0.15);
+
+  display: block;
+}
+
+.availability-card {
+  position: relative;
+  padding: 18px 20px;
+  background: #fff;
+  border: none;
+  border-radius: 16px;
+  margin-top: 12px;
+  box-shadow: var(--shadow-sm);
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--color-text);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  overflow: hidden;
+}
+
+.availability-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--color-accent), var(--color-primary));
+}
+
+.availability-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* ====== Título: rango horario ====== */
+.availability-card h3 {
+  margin: 0 0 12px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--color-primary);
+}
+
+/* ====== Detalles (duración, descanso, estado) ====== */
+.availability-card p {
+  margin: 4px 0;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.availability-card p strong {
+  color: var(--color-text);
+}
+
+/* ====== Subtítulo: Horarios disponibles ====== */
+.availability-card h4 {
+  margin: 16px 0 10px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* ====== Slots (botones de horario) ====== */
+.slot {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  margin-top: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--color-text);
+  text-align: left;
+  background: var(--color-bg);
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.slot:hover {
+  background: #fff;
+  border-color: var(--color-accent);
+  color: var(--color-primary);
+  transform: translateX(2px);
+}
+
+.slot.selected {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  color: #fff;
+  font-weight: 600;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(59, 59, 152, 0.3);
+}
+
+.slot.selected:hover {
+  transform: translateX(0);
+}

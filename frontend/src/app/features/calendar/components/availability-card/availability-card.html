@@ -1,0 +1,27 @@
+<div class="availability-card">
+
+    <h3>
+        {{ availability.startTime }} - {{ availability.endTime }}
+    </h3>
+
+    <p>
+        Duración: {{ availability.duration }} minutos
+    </p>
+
+    <p>
+        Descanso: {{ availability.breakTime }} minutos
+    </p>
+
+    <p>
+        Estado: {{ availability.status }}
+    </p>
+
+    <h4>Horarios disponibles</h4>
+
+    @for (slot of slots; track slot) {
+    <button type="button" class="slot" [class.selected]="slot === selectedSlot" (click)="slotSelected.emit(slot)">
+        {{ slot }}
+    </button>
+    }
+
+</div>

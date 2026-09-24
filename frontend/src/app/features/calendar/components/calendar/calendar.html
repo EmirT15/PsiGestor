@@ -1,0 +1,65 @@
+<div class="calendar-header">
+
+    <button type="button" (click)="changeMonth(-1)">
+        &lt;
+    </button>
+
+    <h2>{{ getMonthName() }}</h2>
+
+    <button type="button" (click)="changeMonth(1)">
+        &gt;
+    </button>
+
+</div>
+
+<div class="calendar-weekdays">
+    <span>Dom</span>
+    <span>Lun</span>
+    <span>Mar</span>
+    <span>Mié</span>
+    <span>Jue</span>
+    <span>Vie</span>
+    <span>Sáb</span>
+</div>
+
+<div class="calendar-grid">
+
+    @for (empty of [].constructor(getFirstDayOfMonth()); track $index) {
+    <span></span>
+    }
+
+    @for (day of getDaysInMonth(); track day.getTime()) {
+    <button type="button" (click)="selectDate(day)" [class.has-availability]="hasAvailability(day)"
+        [class.selected]="isSelected(day)">
+        {{ day.getDate() }}
+    </button>
+    }
+
+</div>
+
+
+
+@if (selectedDate) {
+<div class="selected-date">
+    <h3>Disponibilidad del {{ selectedDate }}</h3>
+
+    @if (selectedSlot) {
+    <p>
+        Horario seleccionado: <strong>{{ selectedSlot }}</strong>
+    </p>
+    }
+
+    @for (
+    availability of getAvailabilitiesForDate(
+    getSelectedDate()
+    );
+    track availability.id
+    ) {
+    <app-availability-card [availability]="availability" [slots]="generateSlots(availability)"
+        [selectedSlot]="selectedSlot" (slotSelected)="selectSlot($event, availability)" />
+    }
+</div>
+}
+
+
+<app-availability-form (availabilityCreated)="loadAvailabilities()" />
