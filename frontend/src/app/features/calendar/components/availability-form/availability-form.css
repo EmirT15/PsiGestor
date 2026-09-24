@@ -1,0 +1,125 @@
+:host {
+  --color-primary: #3b3b98;
+  --color-accent: #a29bfe;
+  --color-bg: #f7f7fb;
+  --color-text: #2d2d44;
+  --color-muted: #8a8aa3;
+  --color-error: #d63031;
+  --radius: 10px;
+  --shadow-sm: 0 2px 6px rgba(59, 59, 152, 0.08);
+  --shadow-md: 0 6px 18px rgba(59, 59, 152, 0.15);
+
+  display: block;
+  width: 80%;
+  margin: 24px auto 0;
+  padding: 22px;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border-radius: 16px;
+  box-sizing: border-box;
+}
+
+h2 {
+  margin: 0 0 18px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--color-primary);
+  letter-spacing: 0.3px;
+}
+
+form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+}
+
+/* Cada label + input ocupa una columna, salvo cuando quieres ancho completo */
+label {
+  display: block;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin-bottom: 6px;
+}
+
+input {
+  width: 100%;
+  padding: 10px 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  background: #fff;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+input:hover {
+  border-color: var(--color-accent);
+}
+
+input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(162, 155, 254, 0.35);
+}
+
+/* Estilo para los date/time pickers nativos */
+input[type="date"],
+input[type="time"] {
+  cursor: pointer;
+}
+
+/* Mensaje de error */
+p {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: var(--color-error);
+  background: rgba(214, 48, 49, 0.08);
+  border-left: 3px solid var(--color-error);
+  border-radius: 8px;
+}
+
+/* Botón submit ocupa las dos columnas */
+button[type="submit"] {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  margin-top: 6px;
+  padding: 12px 18px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(59, 59, 152, 0.28);
+  transition: all 0.2s ease;
+}
+
+button[type="submit"]:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(59, 59, 152, 0.35);
+}
+
+button[type="submit"]:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+button[type="submit"]:disabled {
+  background: #d5d5e0;
+  color: #9a9ab0;
+  cursor: not-allowed;
+  box-shadow: none;
+}
