@@ -1,27 +1,48 @@
+/* ============================================================
+   VARIABLES Y HOST
+   ============================================================ */
 :host {
-  --color-primary: #3b3b98;
-  --color-accent: #a29bfe;
-  --color-bg: #f7f7fb;
-  --color-text: #2d2d44;
-  --color-muted: #8a8aa3;
-  --radius: 12px;
-  --shadow-sm: 0 2px 6px rgba(59, 59, 152, 0.08);
-  --shadow-md: 0 6px 18px rgba(59, 59, 152, 0.15);
+  --color-primary: #1e3a8a;
+  --color-primary-light: #3b82f6;
+  --color-accent: #8b5cf6;
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #1e293b;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+
+  --color-success: #10b981;
+  --color-success-bg: #ecfdf5;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fffbeb;
+  --color-danger: #ef4444;
+  --color-danger-bg: #fef2f2;
+  --color-info: #3b82f6;
+  --color-info-bg: #eff6ff;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
 
   display: block;
 }
 
+/* ============================================================
+   TARJETA PRINCIPAL
+   ============================================================ */
 .availability-card {
   position: relative;
-  padding: 18px 20px;
-  background: #fff;
-  border: none;
-  border-radius: 16px;
+  padding: 18px 20px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   margin-top: 12px;
   box-shadow: var(--shadow-sm);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   color: var(--color-text);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
   overflow: hidden;
 }
 
@@ -32,79 +53,290 @@
   left: 0;
   width: 4px;
   height: 100%;
-  background: linear-gradient(180deg, var(--color-accent), var(--color-primary));
+  background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
 }
 
 .availability-card:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
+  border-color: #cbd5e1;
 }
 
-/* ====== Título: rango horario ====== */
+/* ============================================================
+   TÍTULO: RANGO HORARIO
+   ============================================================ */
 .availability-card h3 {
-  margin: 0 0 12px;
-  font-family: 'Poppins', sans-serif;
-  font-size: 1.05rem;
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-border);
+  font-family: 'Poppins', 'Inter', sans-serif;
+  font-size: 1rem;
   font-weight: 600;
-  letter-spacing: 0.3px;
-  color: var(--color-primary);
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* ====== Detalles (duración, descanso, estado) ====== */
+.availability-card h3::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   DETALLES (Duración, Descanso, Estado)
+   ============================================================ */
 .availability-card p {
-  margin: 4px 0;
-  font-size: 0.85rem;
+  margin: 6px 0;
+  font-size: 0.8rem;
   color: var(--color-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.4;
 }
 
 .availability-card p strong {
   color: var(--color-text);
+  font-weight: 600;
 }
 
-/* ====== Subtítulo: Horarios disponibles ====== */
-.availability-card h4 {
-  margin: 16px 0 10px;
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.72rem;
+/* ============================================================
+   BADGE DE ESTADO
+   ============================================================ */
+.availability-card p:last-of-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
   font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  background: var(--color-info-bg);
+  color: var(--color-info);
+  margin: 10px 0 4px;
+}
+
+.availability-card p.status-disponible,
+.availability-card p.status-available {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.availability-card p.status-reservado,
+.availability-card p.status-reserved {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.availability-card p.status-pendiente,
+.availability-card p.status-pending {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+/* ============================================================
+   SUBTÍTULO: HORARIOS DISPONIBLES
+   ============================================================ */
+.availability-card h4 {
+  margin: 16px 0 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--color-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-/* ====== Slots (botones de horario) ====== */
+.availability-card h4::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* ============================================================
+   SLOTS (BOTONES DE HORARIO) — CON ANIMACIÓN BONITA
+   ============================================================ */
 .slot {
   display: block;
   width: 100%;
-  padding: 10px 14px;
+  padding: 9px 14px;
   margin-top: 6px;
   font-family: 'Inter', sans-serif;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 500;
   color: var(--color-text);
   text-align: left;
   background: var(--color-bg);
-  border: 1.5px solid transparent;
-  border-radius: 10px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease,
+              transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.25s ease;
+  position: relative;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
 }
 
-.slot:hover {
-  background: #fff;
-  border-color: var(--color-accent);
+/* Punto indicador verde */
+.slot::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-success);
+  margin-right: 8px;
+  vertical-align: middle;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Destello (shine) que recorre el botón al seleccionar */
+.slot::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  transition: left 0.6s ease;
+}
+
+/* Hover (solo si NO está seleccionado) */
+.slot:hover:not(.selected) {
+  background: var(--color-surface);
+  border-color: var(--color-primary-light);
   color: var(--color-primary);
-  transform: translateX(2px);
+  transform: translateX(3px);
+  box-shadow: var(--shadow-sm);
 }
 
+/* Focus accesible (sin outline feo) */
+.slot:focus-visible {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  border-color: var(--color-primary-light);
+}
+
+/* ============================================================
+   SLOT SELECCIONADO — ANIMACIÓN PRINCIPAL
+   ============================================================ */
 .slot.selected {
-  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
   color: #fff;
   font-weight: 600;
   border-color: transparent;
-  box-shadow: 0 4px 12px rgba(59, 59, 152, 0.3);
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+  transform: translateX(0);
+  animation: slotPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Activa el destello al seleccionar */
+.slot.selected::after {
+  left: 100%;
+}
+
+.slot.selected::before {
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35);
+  animation: dotPulse 0.5s ease;
+}
+
+/* Hover sobre seleccionado: mantiene el gradiente, solo intensifica */
 .slot.selected:hover {
   transform: translateX(0);
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-accent));
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(30, 58, 138, 0.4);
+}
+
+/* ============================================================
+   KEYFRAMES (ANIMACIONES)
+   ============================================================ */
+
+/* Pop con rebote al seleccionar */
+@keyframes slotPop {
+  0% {
+    transform: scale(0.94);
+    box-shadow: 0 0 0 0 rgba(30, 58, 138, 0.5);
+  }
+  40% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 6px rgba(30, 58, 138, 0.15);
+  }
+  70% {
+    transform: scale(0.99);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+  }
+}
+
+/* Pulso del punto indicador al seleccionar */
+@keyframes dotPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6);
+  }
+  50% {
+    transform: scale(1.4);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35);
+  }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 480px) {
+  .availability-card {
+    padding: 14px 16px 12px;
+    border-radius: var(--radius-md);
+  }
+
+  .availability-card h3 {
+    font-size: 0.92rem;
+  }
+
+  .slot {
+    padding: 8px 12px;
+    font-size: 0.78rem;
+  }
+}
+
+/* Respeta la preferencia de movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  .slot,
+  .slot::before,
+  .slot::after {
+    transition: none;
+    animation: none;
+  }
 }

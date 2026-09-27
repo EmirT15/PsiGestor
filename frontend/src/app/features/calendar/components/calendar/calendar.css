@@ -1,32 +1,50 @@
-/* Tipografías (una sola vez, en styles.css global) */
-
+/* ============================================================
+   VARIABLES GLOBALES Y TIPOGRAFÍA
+   ============================================================ */
 :host {
-  --color-primary: #3b3b98;
-  --color-accent: #a29bfe;
-  --color-bg: #f7f7fb;
-  --color-text: #2d2d44;
-  --color-muted: #8a8aa3;
-  --radius: 10px;
-  --shadow-sm: 0 2px 6px rgba(59, 59, 152, 0.08);
-  --shadow-md: 0 6px 18px rgba(59, 59, 152, 0.15);
+  --color-primary: #1e3a8a;        /* Azul oscuro principal */
+  --color-primary-light: #3b82f6;  /* Azul brillante */
+  --color-accent: #8b5cf6;         /* Violeta */
+  --color-bg: #f8fafc;             /* Fondo general */
+  --color-surface: #ffffff;        /* Superficie de tarjetas */
+  --color-text: #1e293b;           /* Texto principal */
+  --color-muted: #64748b;          /* Texto secundario */
+  --color-border: #e2e8f0;         /* Bordes suaves */
+  
+  /* Colores de estados */
+  --color-success: #10b981;        /* Verde Disponible */
+  --color-success-bg: #ecfdf5;
+  --color-warning: #f59e0b;        /* Naranja Pendiente */
+  --color-warning-bg: #fffbeb;
+  --color-danger: #ef4444;         /* Rojo Reservado */
+  --color-danger-bg: #fef2f2;
+  --color-info: #3b82f6;           /* Azul Informativo */
+  --color-info-bg: #eff6ff;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
 
   display: block;
-  width: 80%;              /* ← ocupa 80% del ancho */
-  margin: 0 auto;          /* centrado si quieres; quítalo si va pegado al menú */
+  width: 100%;
+  margin: 0 auto;
   padding: 20px;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   color: var(--color-text);
   background: var(--color-bg);
-  border-radius: 16px;
   box-sizing: border-box;
 }
 
-/* ====== Encabezado del mes ====== */
+/* ============================================================
+   ENCABEZADO DEL CALENDARIO (HEADER)
+   ============================================================ */
 .calendar-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
+  gap: 12px;
+  margin-bottom: 16px;
   padding: 0 4px;
 }
 
@@ -34,122 +52,374 @@
   margin: 0;
   font-family: 'Poppins', sans-serif;
   font-weight: 600;
-  font-size: 1.15rem;
-  letter-spacing: 0.3px;
-  text-transform: capitalize;
-  color: var(--color-primary);
+  font-size: 1.1rem;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
 }
 
 .calendar-header button {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  border-radius: 50%;
-  background: var(--color-bg);
-  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   box-shadow: var(--shadow-sm);
 }
 
 .calendar-header button:hover {
-  background: var(--color-primary);
-  color: #fff;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  background: var(--color-bg);
+  border-color: var(--color-muted);
 }
 
-/* ====== Días de la semana ====== */
+/* Botón "Hoy" */
+.calendar-header button:last-child {
+  width: auto;
+  padding: 0 16px;
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.calendar-header button:last-child:hover {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary-light);
+}
+
+/* ============================================================
+   BOTONES DE VISTA (DÍA, SEMANA, MES)
+   ============================================================ */
+.calendar-view-buttons {
+  display: inline-flex;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.calendar-view-buttons button {
+  padding: 6px 18px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-muted);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.calendar-view-buttons button:hover {
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+.calendar-view-buttons button.selected {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+}
+
+/* ============================================================
+   DÍAS DE LA SEMANA (VISTA MENSUAL)
+   ============================================================ */
 .calendar-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 8px;
   text-align: center;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 0.7rem;
   font-weight: 600;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
   color: var(--color-muted);
 }
 
-/* ====== Cuadrícula de días ====== */
+/* ============================================================
+   CUADRÍCULA MENSUAL
+   ============================================================ */
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
+  gap: 8px;
 }
 
 .calendar-grid button {
-  height: 42px;            /* ← altura fija: ya no crece con el ancho */
+  height: 44px;
   padding: 0;
-  border: none;
-  border-radius: var(--radius);
-  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
   color: var(--color-text);
   font-family: 'Inter', sans-serif;
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   box-shadow: var(--shadow-sm);
 }
 
 .calendar-grid button:hover {
-  background: var(--color-accent);
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  background: var(--color-bg);
+  border-color: var(--color-muted);
 }
 
 .calendar-grid button.has-availability {
+  background: var(--color-success-bg);
+  border-color: var(--color-success);
+  color: var(--color-success);
   font-weight: 700;
-  background: linear-gradient(135deg, var(--color-accent), #8b7cf6);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(162, 155, 254, 0.45);
 }
 
 .calendar-grid button.has-availability:hover {
-  background: linear-gradient(135deg, #8b7cf6, var(--color-primary));
+  background: var(--color-success);
+  color: #fff;
 }
 
 .calendar-grid button.selected {
   outline: none;
   background: var(--color-primary);
+  border-color: var(--color-primary);
   color: #fff;
-  box-shadow: 0 0 0 3px var(--color-bg), 0 0 0 5px var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-primary);
 }
 
-/* ====== Detalle del día seleccionado ====== */
+/* ============================================================
+   VISTA DE DÍA
+   ============================================================ */
+.day-view {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.day-view h3 {
+  margin: 0 0 16px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-transform: capitalize;
+}
+
+/* ============================================================
+   VISTA SEMANAL (ESTILO TARJETAS COMO LA IMAGEN)
+   ============================================================ */
+.week-view {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  overflow-x: auto;
+}
+
+.week-day {
+  min-height: 200px;
+  padding: 12px 8px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.week-day h3 {
+  margin: 0 0 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+}
+
+/* Tarjetas de disponibilidad dentro de la vista semanal */
+.week-day .availability-card {
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+}
+
+.week-day .availability-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-muted);
+}
+
+.week-day .availability-card h3 {
+  margin: 0 0 4px;
+  padding: 0;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: left;
+}
+
+.week-day .availability-card p {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--color-muted);
+}
+
+.week-day .slot {
+  padding: 6px 8px;
+  font-size: 0.7rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.week-day .slot:hover {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+/* ============================================================
+   DETALLE DEL DÍA SELECCIONADO
+   ============================================================ */
 .selected-date {
-  margin-top: 22px;
-  padding: 18px;
-  background: #fff;
-  border-radius: 14px;
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
 }
 
 .selected-date h3 {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   font-family: 'Poppins', sans-serif;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-text);
 }
 
 .selected-date p {
   margin: 0 0 14px;
   color: var(--color-muted);
-  font-size: 0.88rem;
+  font-size: 0.85rem;
 }
 
 .selected-date p strong {
   color: var(--color-primary);
   font-weight: 600;
 }
+
+/* ============================================================
+   ETIQUETAS DE ESTADO (BADGES)
+   ============================================================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
+.badge-success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.badge-warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.badge-danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.badge-info {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+/* ============================================================
+   SCROLLBAR PERSONALIZADO
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1024px) {
+  .week-view {
+    grid-template-columns: repeat(7, minmax(140px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  :host {
+    padding: 12px;
+  }
+
+  .calendar-header h2 {
+    font-size: 0.95rem;
+  }
+
+  .calendar-view-buttons button {
+    padding: 5px 12px;
+    font-size: 0.8rem;
+  }
+
+  .calendar-grid button {
+    height: 38px;
+    font-size: 0.75rem;
+  }
+}
+

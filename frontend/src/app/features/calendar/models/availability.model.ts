@@ -5,5 +5,9 @@ export interface Availability {
   endTime: string;
   duration: number;
   breakTime: number;
-  status: 'active' | 'blocked' | 'cancelled';
+  status:
+  | 'Disponible'
+  | 'Reservado'
+  | 'Reprogramacion pendiente'
+  | 'Inhabilitado';
 }
