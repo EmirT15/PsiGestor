@@ -10,7 +10,31 @@
         &gt;
     </button>
 
+    <button type="button" (click)="goToToday()">
+        Hoy
+    </button>
+
 </div>
+
+<div class="calendar-view-buttons">
+
+    <button type="button" [class.selected]="currentView === 'day'" (click)="currentView = 'day'">
+        Día
+    </button>
+
+    <button type="button" [class.selected]="currentView === 'week'" (click)="currentView = 'week'">
+        Semana
+    </button>
+
+    <button type="button" [class.selected]="currentView === 'month'" (click)="currentView = 'month'">
+        Mes
+    </button>
+
+</div>
+
+<app-status-filter [selectedStatus]="statusFilter" (statusChange)="statusFilter = $event" />
+
+@if (currentView === 'month') {
 
 <div class="calendar-weekdays">
     <span>Dom</span>
@@ -37,6 +61,79 @@
 
 </div>
 
+}
+
+@if (currentView === 'day') {
+
+<div class="day-view">
+
+    <h3>
+        {{ getCurrentViewDate().toLocaleDateString('es-MX', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+        }) }}
+    </h3>
+
+    @for (
+    availability of getAvailabilitiesForDate(
+    getCurrentViewDate()
+    );
+    track availability.id
+    ) {
+
+    <app-availability-card [availability]="availability" [slots]="generateSlots(availability)"
+        [selectedSlot]="selectedSlot" [selectedAvailabilityId]="selectedAvailabilityId"
+        (slotSelected)="selectSlot($event, availability)" />
+
+    }
+
+    @if (selectedSlot && selectedSlotDate === formatDate(getCurrentViewDate())) {
+    <p>Horario seleccionado: <strong>{{ selectedSlot }}</strong></p>
+    }
+
+</div>
+
+}
+
+@if (currentView === 'week') {
+
+<div class="week-view">
+
+    @for (day of getWeekDays(); track day.getTime()) {
+
+    <div class="week-day">
+
+        <h3>
+            {{ day.toLocaleDateString('es-MX', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short'
+            }) }}
+        </h3>
+
+        @for (
+        availability of getAvailabilitiesForDate(day);
+        track availability.id
+        ) {
+
+        <app-availability-card [availability]="availability" [slots]="generateSlots(availability)"
+            [selectedSlot]="selectedSlot" [selectedAvailabilityId]="selectedAvailabilityId" (slotSelected)="selectSlot($event, availability)" />
+
+        }
+
+        @if (selectedSlot && selectedSlotDate === formatDate(day)) {
+        <p>Horario seleccionado: <strong>{{ selectedSlot }}</strong></p>
+        }
+
+    </div>
+
+    }
+
+</div>
+
+}
 
 
 @if (selectedDate) {
@@ -56,7 +153,7 @@
     track availability.id
     ) {
     <app-availability-card [availability]="availability" [slots]="generateSlots(availability)"
-        [selectedSlot]="selectedSlot" (slotSelected)="selectSlot($event, availability)" />
+        [selectedSlot]="selectedSlot" [selectedAvailabilityId]="selectedAvailabilityId" (slotSelected)="selectSlot($event, availability)" />
     }
 </div>
 }

@@ -105,7 +105,7 @@ def has_overlapping_availability(date, start_time, end_time):
                 SELECT 1
                 FROM availabilities
                 WHERE date = %s
-                  AND status = 'active'
+                  AND status != 'Inhabilitado'
                   AND start_time < %s
                   AND end_time > %s
             );
