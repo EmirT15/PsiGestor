@@ -1,18 +1,17 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Availability } from '../../models/availability.model';
-import { AvailabilityForm } from '../availability-form/availability-form';
-import { AvailabilityCard } from '../availability-card/availability-card';
-import {
-  StatusFilterComponent,
-  StatusFilter
-} from '../../../../shared/components/status-filter/status-filter';
+//import { AvailabilityForm } from '../availability-form/availability-form';
+import type { StatusFilter } from '../../../../shared/components/status-filter/status-filter';
 import { CalendarService } from '../../services/calendar.service';
+import { AvailabilityCard } from '../availability-card/availability-card';
+import {CalendarToolbar} from '../calendar-toolbar/calendar-toolbar';
 
 @Component({
   imports: [
-    AvailabilityForm,
+   // AvailabilityForm,
     AvailabilityCard,
-    StatusFilterComponent
+    CalendarToolbar
+    //StatusFilterComponent
   ],
   selector: 'app-calendar',
   styleUrl: './calendar.css',
@@ -23,12 +22,23 @@ export class Calendar implements OnInit {
   availabilities: Availability[] = [];
 
   currentDate = new Date();
-  currentView: 'day' | 'week' | 'month' = 'month';
+  currentView: 'day' | 'week' | 'month' = 'week'; //se cambio month por week para que se vea la semana por default
   statusFilter: StatusFilter = 'all';
   selectedDate = '';
   selectedSlot = '';
   selectedSlotDate = '';
   selectedAvailabilityId: number | null = null;
+
+  readonly visualTimeRows = [
+  '08:00',
+  '09:00',
+  '10:00',
+  '11:00',
+  '12:00',
+  '13:00',
+  '14:00',
+  '15:00'
+];
 
   getDaysInMonth(): Date[] {
     const year = this.currentDate.getFullYear();
@@ -121,6 +131,7 @@ export class Calendar implements OnInit {
   }
 
   getWeekDays(): Date[] {
+   
     const date = this.getCurrentViewDate();
     const dayOfWeek = date.getDay();
     const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
@@ -138,6 +149,32 @@ export class Calendar implements OnInit {
 
     return days;
   }
+  getDisplayedWeekDays(): Date[] {
+  return this.getWeekDays().slice(0, 5);
+}
+
+  isToday(date: Date): boolean {
+  const today = new Date();
+
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  );
+}
+getWeekdayLabel(date: Date): string {
+  const weekdays = [
+    'DOM',
+    'LUN',
+    'MAR',
+    'MIÉ',
+    'JUE',
+    'VIE',
+    'SÁB'
+  ];
+
+  return weekdays[date.getDay()];
+}
 
   hasAvailability(date: Date): boolean {
     return this.getAvailabilitiesForDate(date).length > 0;

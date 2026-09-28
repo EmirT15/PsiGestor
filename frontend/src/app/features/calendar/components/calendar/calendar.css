@@ -2,23 +2,35 @@
    VARIABLES GLOBALES Y TIPOGRAFÍA
    ============================================================ */
 :host {
-  --color-primary: #1e3a8a;        /* Azul oscuro principal */
-  --color-primary-light: #3b82f6;  /* Azul brillante */
-  --color-accent: #8b5cf6;         /* Violeta */
-  --color-bg: #f8fafc;             /* Fondo general */
-  --color-surface: #ffffff;        /* Superficie de tarjetas */
-  --color-text: #1e293b;           /* Texto principal */
-  --color-muted: #64748b;          /* Texto secundario */
-  --color-border: #e2e8f0;         /* Bordes suaves */
-  
+  --color-primary: #1e3a8a;
+  /* Azul oscuro principal */
+  --color-primary-light: #3b82f6;
+  /* Azul brillante */
+  --color-accent: #8b5cf6;
+  /* Violeta */
+  --color-bg: #f8fafc;
+  /* Fondo general */
+  --color-surface: #ffffff;
+  /* Superficie de tarjetas */
+  --color-text: #1e293b;
+  /* Texto principal */
+  --color-muted: #64748b;
+  /* Texto secundario */
+  --color-border: #e2e8f0;
+  /* Bordes suaves */
+
   /* Colores de estados */
-  --color-success: #10b981;        /* Verde Disponible */
+  --color-success: #10b981;
+  /* Verde Disponible */
   --color-success-bg: #ecfdf5;
-  --color-warning: #f59e0b;        /* Naranja Pendiente */
+  --color-warning: #f59e0b;
+  /* Naranja Pendiente */
   --color-warning-bg: #fffbeb;
-  --color-danger: #ef4444;         /* Rojo Reservado */
+  --color-danger: #ef4444;
+  /* Rojo Reservado */
   --color-danger-bg: #fef2f2;
-  --color-info: #3b82f6;           /* Azul Informativo */
+  --color-info: #3b82f6;
+  /* Azul Informativo */
   --color-info-bg: #eff6ff;
 
   --radius-sm: 6px;
@@ -423,3 +435,334 @@
   }
 }
 
+/* ============================================================
+   VISTA SEMANAL EXPANDIDA
+   ============================================================ */
+
+.week-calendar {
+  width: 100%;
+  margin-top: 14px;
+
+  background: #ffffff;
+
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+
+  overflow: hidden;
+
+  box-shadow: var(--shadow-sm);
+}
+
+
+.week-calendar-scroll {
+  width: 100%;
+
+  overflow-x: auto;
+}
+
+.week-schedule-grid {
+  display: grid;
+
+  grid-template-columns:
+    64px repeat(5, minmax(0, 1fr));
+
+  width: 100%;
+  min-width: 960px;
+}
+
+.week-grid-corner {
+  min-height: 68px;
+
+  background: #f4f7fc;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+
+  box-sizing: border-box;
+}
+
+.week-day-header {
+  min-height: 68px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 2px;
+
+  background: #f4f7fc;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+
+  box-sizing: border-box;
+}
+
+.week-day-name {
+  font-size: 11px;
+  font-weight: 600;
+
+  color: #5f6b7a;
+
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.week-day-number {
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  color: #182230;
+}
+
+.week-day-header.today {
+  background: #eaf3ff;
+}
+
+.week-day-header.today .week-day-number {
+  background: #075ea5;
+  color: #ffffff;
+}
+
+.week-time-column {
+  min-height: 76px;
+
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+
+  padding: 9px 10px 0 4px;
+
+  background: #ffffff;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+
+  box-sizing: border-box;
+}
+
+.week-time-column span {
+  font-size: 11px;
+  font-weight: 500;
+
+  color: #5f6b7a;
+
+  white-space: nowrap;
+}
+
+.week-calendar-cell {
+  min-height: 76px;
+
+  background: #ffffff;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+
+  box-sizing: border-box;
+
+  transition: background 0.15s ease;
+}
+
+.week-calendar-cell:hover {
+  background: #f8fafc;
+}
+
+.week-calendar-cell.today-column {
+  background: #fbfdff;
+}
+
+/* ============================================================
+   CUADRÍCULA GENERAL
+   ============================================================ */
+
+.week-grid-corner {
+  min-height: 68px;
+
+  background: #f4f7fc;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.week-day-header {
+  min-height: 68px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 2px;
+
+  background: #f4f7fc;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+
+  box-sizing: border-box;
+}
+
+
+/* ============================================================
+   ESQUINA SUPERIOR IZQUIERDA
+   ============================================================ */
+
+.week-grid-corner {
+  min-height: 76px;
+
+  background: #f8fafc;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+
+/* ============================================================
+   ENCABEZADOS DE DÍAS
+   ============================================================ */
+
+.week-day-header {
+  min-height: 76px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 3px;
+
+  background: #f8fafc;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+
+  box-sizing: border-box;
+}
+
+
+.week-day-name {
+  font-size: 11px;
+  font-weight: 600;
+
+  color: #5f6b7a;
+
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+
+.week-day-number {
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  color: #182230;
+}
+
+
+/* Día actual */
+
+.week-day-header.today {
+  /* background: #eff6ff;*/
+  background: #eaf3ff;
+}
+
+
+.week-day-header.today .week-day-name {
+  color: var(--color-primary);
+}
+
+
+.week-day-header.today .week-day-number {
+  /* background: var(--color-primary);
+  color: #ffffff;*/
+
+  background: #075ea5;
+  color: #ffffff;
+}
+
+
+/* ============================================================
+   COLUMNA IZQUIERDA
+   ============================================================ */
+
+.week-time-column {
+  min-height: 76px;
+
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+
+  padding: 9px 10px 0 4px;
+
+  background: #ffffff;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+
+  box-sizing: border-box;
+}
+
+.week-time-column span {
+  font-size: 11px;
+  font-weight: 500;
+
+  color: #5f6b7a;
+
+  white-space: nowrap;
+}
+
+
+/* ============================================================
+   CELDAS DEL CALENDARIO
+   ============================================================ */
+
+.week-calendar-cell {
+  min-height: 76px;
+
+  background: #ffffff;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+
+  box-sizing: border-box;
+
+  transition: background 0.15s ease;
+}
+
+
+.week-calendar-cell:hover {
+  background: #f8fafc;
+}
+
+
+/* Columna correspondiente al día actual */
+
+.week-calendar-cell.today-column {
+  background: #fbfdff;
+}
+
+
+.week-calendar-cell.today-column:hover {
+  background: #f5f9ff;
+}
