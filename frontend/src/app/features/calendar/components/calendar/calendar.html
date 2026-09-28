@@ -9,7 +9,17 @@
 
   (viewChange)="currentView = $event"
   (statusChange)="statusFilter = $event"
+
+  (manageSchedule)="openManageSchedule()"
 />
+
+@if (isManageScheduleOpen) {
+
+  <app-manage-schedule-modal
+    (closed)="closeManageSchedule()"
+  />
+
+}
 
 @if (currentView === 'month') {
 

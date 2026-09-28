@@ -31,6 +31,7 @@ export class CalendarToolbar {
   @Output() statusChange =
     new EventEmitter<StatusFilter>();
 
+  @Output() manageSchedule = new EventEmitter<void>();
 
   changeView(view: 'day' | 'week' | 'month'): void {
     this.viewChange.emit(view);

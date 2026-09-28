@@ -196,6 +196,54 @@
 .toolbar-filters {
   width: 100%;
 }
+/* ============================================================
+   BOTÓN GESTIONAR HORARIO
+   ============================================================ */
+
+.manage-schedule-button {
+  height: 34px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 0 14px;
+
+  border: 1px solid #075ea5;
+  border-radius: 8px;
+
+  background: #075ea5;
+
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+
+.manage-schedule-button:hover {
+  background: #064f8b;
+  border-color: #064f8b;
+
+  box-shadow: 0 2px 6px rgba(7, 94, 165, 0.2);
+}
+
+
+.manage-schedule-button:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.2);
+  outline-offset: 2px;
+}
 
 
 /* ============================================================

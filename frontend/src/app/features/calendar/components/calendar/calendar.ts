@@ -5,13 +5,15 @@ import type { StatusFilter } from '../../../../shared/components/status-filter/s
 import { CalendarService } from '../../services/calendar.service';
 import { AvailabilityCard } from '../availability-card/availability-card';
 import {CalendarToolbar} from '../calendar-toolbar/calendar-toolbar';
+import { ManageScheduleModal } from '../manage-schedule-modal/manage-schedule-modal';
 
 @Component({
   imports: [
    // AvailabilityForm,
     AvailabilityCard,
-    CalendarToolbar
+    CalendarToolbar,
     //StatusFilterComponent
+    ManageScheduleModal
   ],
   selector: 'app-calendar',
   styleUrl: './calendar.css',
@@ -28,6 +30,8 @@ export class Calendar implements OnInit {
   selectedSlot = '';
   selectedSlotDate = '';
   selectedAvailabilityId: number | null = null;
+
+  isManageScheduleOpen = false;
 
   readonly visualTimeRows = [
   '08:00',
@@ -85,6 +89,14 @@ export class Calendar implements OnInit {
     this.selectedDate = this.formatDate(today);
     this.selectedSlot = '';
   }
+
+  openManageSchedule(): void {
+  this.isManageScheduleOpen = true;
+}
+
+closeManageSchedule(): void {
+  this.isManageScheduleOpen = false;
+}
 
   getMonthName(): string {
     return this.currentDate.toLocaleDateString('es-MX', {
