@@ -283,3 +283,36 @@
 
   font-size: 11px;
 }
+
+.schedule-config {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  gap: 5px;
+}
+
+.validation-error {
+  color: #b42318;
+
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.input-error {
+  border-color: #d92d20 !important;
+}
+
+.input-error:focus {
+  border-color: #d92d20 !important;
+
+  box-shadow: 0 0 0 2px rgba(217, 45, 32, 0.1) !important;
+}
+
+.duration-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  gap: 5px;
+}

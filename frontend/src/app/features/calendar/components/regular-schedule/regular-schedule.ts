@@ -24,7 +24,7 @@ interface WorkDay {
   styleUrl: './regular-schedule.css',
 })
 export class RegularSchedule {
-  
+
   appointmentDuration: number | null = null;
 
 breakConfig: BreakScheduleConfig = {
@@ -35,6 +35,135 @@ breakConfig: BreakScheduleConfig = {
 
 updateBreakConfig(config: BreakScheduleConfig): void {
   this.breakConfig = config;
+}
+
+isDayTimeValid(day: WorkDay): boolean {
+  if (!day.enabled) {
+    return true;
+  }
+
+  if (!day.startTime || !day.endTime) {
+    return false;
+  }
+
+  return day.startTime < day.endTime;
+}
+getDayError(day: WorkDay): string | null {
+  if (!day.enabled) {
+    return null;
+  }
+
+  if (!day.startTime || !day.endTime) {
+    return 'Debes definir la hora de inicio y finalización.';
+  }
+
+  if (day.startTime >= day.endTime) {
+    return 'La hora de inicio debe ser anterior a la hora de finalización.';
+  }
+
+  return null;
+}
+isAppointmentDurationValid(): boolean {
+  return (
+    this.appointmentDuration !== null &&
+    this.appointmentDuration > 0
+  );
+}
+
+isBreakTimeValid(): boolean {
+  if (!this.breakConfig.enabled) {
+    return true;
+  }
+
+  if (
+    !this.breakConfig.startTime ||
+    !this.breakConfig.endTime
+  ) {
+    return false;
+  }
+
+  return this.breakConfig.startTime < this.breakConfig.endTime;
+}
+getBreakError(): string | null {
+  if (!this.breakConfig.enabled) {
+    return null;
+  }
+
+  if (
+    !this.breakConfig.startTime ||
+    !this.breakConfig.endTime
+  ) {
+    return 'Debes definir el inicio y la finalización del descanso.';
+  }
+
+  if (
+    this.breakConfig.startTime >=
+    this.breakConfig.endTime
+  ) {
+    return 'La hora inicial del descanso debe ser anterior a la hora final.';
+  }
+
+  if (!this.isBreakInsideWorkingHours()) {
+    return 'El descanso debe encontrarse dentro del horario de atención de los días habilitados.';
+  }
+
+  return null;
+}
+
+isScheduleValid(): boolean {
+  const enabledDays = this.workDays.filter(
+    (day) => day.enabled
+  );
+
+  if (enabledDays.length === 0) {
+    return false;
+  }
+
+  const daysAreValid = enabledDays.every(
+    (day) => this.isDayTimeValid(day)
+  );
+
+  if (!daysAreValid) {
+    return false;
+  }
+
+  if (!this.isAppointmentDurationValid()) {
+    return false;
+  }
+
+  if (!this.isBreakTimeValid()) {
+    return false;
+  }
+
+  if (!this.isBreakInsideWorkingHours()) {
+    return false;
+  }
+
+  return true;
+}
+isBreakInsideWorkingHours(): boolean {
+  if (!this.breakConfig.enabled) {
+    return true;
+  }
+
+  if (!this.isBreakTimeValid()) {
+    return false;
+  }
+
+  const enabledDays = this.workDays.filter(
+    (day) => day.enabled && this.isDayTimeValid(day)
+  );
+
+  if (enabledDays.length === 0) {
+    return false;
+  }
+
+  return enabledDays.every((day) => {
+    return (
+      this.breakConfig.startTime >= day.startTime &&
+      this.breakConfig.endTime <= day.endTime
+    );
+  });
 }
   workDays: WorkDay[] = [
     {

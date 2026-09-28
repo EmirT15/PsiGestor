@@ -43,38 +43,50 @@
         </div>
 
         @if (day.enabled) {
-          <div class="schedule-times">
-            <div class="time-field">
-              <label [for]="'start-' + day.id">
-                Hora de inicio
-              </label>
+  <div class="schedule-config">
+    <div class="schedule-times">
 
-              <input
-                [id]="'start-' + day.id"
-                type="time"
-                [(ngModel)]="day.startTime"
-              />
-            </div>
+      <div class="time-field">
+        <label [for]="'start-' + day.id">
+          Hora de inicio
+        </label>
 
-            <span class="time-separator">a</span>
+        <input
+          [id]="'start-' + day.id"
+          type="time"
+          [(ngModel)]="day.startTime"
+          [class.input-error]="getDayError(day)"
+        />
+      </div>
 
-            <div class="time-field">
-              <label [for]="'end-' + day.id">
-                Hora de finalización
-              </label>
+      <span class="time-separator">a</span>
 
-              <input
-                [id]="'end-' + day.id"
-                type="time"
-                [(ngModel)]="day.endTime"
-              />
-            </div>
-          </div>
-        } @else {
-          <span class="disabled-message">
-            Sin horario configurado
-          </span>
-        }
+      <div class="time-field">
+        <label [for]="'end-' + day.id">
+          Hora de finalización
+        </label>
+
+        <input
+          [id]="'end-' + day.id"
+          type="time"
+          [(ngModel)]="day.endTime"
+          [class.input-error]="getDayError(day)"
+        />
+      </div>
+
+    </div>
+
+    @if (getDayError(day); as error) {
+      <span class="validation-error">
+        {{ error }}
+      </span>
+    }
+  </div>
+} @else {
+  <span class="disabled-message">
+    Sin horario configurado
+  </span>
+}
       </article>
     }
   </div>
@@ -89,23 +101,39 @@
       </p>
     </div>
 
-    <div class="duration-control">
-      <input
-        id="appointment-duration"
-        type="number"
-        min="1"
-        placeholder="Ej. 50"
-        [(ngModel)]="appointmentDuration"
-      />
+    <div class="duration-field">
+  <div class="duration-control">
+    <input
+      id="appointment-duration"
+      type="number"
+      min="1"
+      placeholder="Ej. 50"
+      [(ngModel)]="appointmentDuration"
+      [class.input-error]="
+        appointmentDuration !== null &&
+        !isAppointmentDurationValid()
+      "
+    />
 
-      <span>minutos</span>
-    </div>
+    <span>minutos</span>
+  </div>
+
+  @if (
+    appointmentDuration !== null &&
+    !isAppointmentDurationValid()
+  ) {
+    <span class="validation-error">
+      La duración debe ser mayor que 0 minutos.
+    </span>
+  }
+</div>
   </div>
 
   <app-break-schedule
-    [config]="breakConfig"
-    (configChange)="updateBreakConfig($event)"
-  />
+  [config]="breakConfig"
+  [error]="getBreakError()"
+  (configChange)="updateBreakConfig($event)"
+/>
 
 </div>
 </section>

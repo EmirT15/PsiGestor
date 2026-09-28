@@ -147,3 +147,14 @@
 
   font-size: 11px;
 }
+
+.validation-error {
+  display: block;
+
+  margin-top: 6px;
+
+  color: #b42318;
+
+  font-size: 10px;
+  line-height: 1.3;
+}

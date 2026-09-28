@@ -52,6 +52,11 @@
       </div>
 
     </div>
+    @if (error) {
+  <span class="validation-error">
+    {{ error }}
+  </span>
+}
   } @else {
     <div class="break-disabled">
       Sin descanso configurado

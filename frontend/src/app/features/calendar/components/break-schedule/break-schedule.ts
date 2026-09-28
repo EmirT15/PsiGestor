@@ -17,6 +17,9 @@ export class BreakSchedule {
   @Input({ required: true })
   config!: BreakScheduleConfig;
 
+  @Input()
+error: string | null = null;
+
   @Output()
   configChange = new EventEmitter<BreakScheduleConfig>();
 
