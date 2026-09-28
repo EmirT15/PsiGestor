@@ -1,3 +1,81 @@
-<div class="regular-schedule-root">
-  <!-- HU-02A: Configuración de horario habitual -->
-</div>
+<section class="regular-schedule">
+  <div class="schedule-heading">
+    <div>
+      <h3>Horario habitual</h3>
+
+      <p>
+        Selecciona tus días de atención y define el horario correspondiente.
+      </p>
+    </div>
+  </div>
+
+  <div class="schedule-list">
+    @for (day of workDays; track day.id) {
+      <article
+        class="schedule-row"
+        [class.schedule-row-disabled]="!day.enabled"
+      >
+        <div class="day-section">
+          <button
+            type="button"
+            class="toggle"
+            [class.toggle-active]="day.enabled"
+            [attr.aria-pressed]="day.enabled"
+            [attr.aria-label]="'Activar o desactivar ' + day.name"
+            (click)="toggleDay(day)"
+          >
+            <span class="toggle-circle"></span>
+          </button>
+
+          <div class="day-information">
+            <span class="day-name">{{ day.name }}</span>
+
+            <span class="day-status">
+  {{
+    !day.enabled
+      ? 'No laborable'
+      : day.startTime && day.endTime
+        ? 'Horario configurado'
+        : 'Horario por definir'
+  }}
+</span>
+          </div>
+        </div>
+
+        @if (day.enabled) {
+          <div class="schedule-times">
+            <div class="time-field">
+              <label [for]="'start-' + day.id">
+                Hora de inicio
+              </label>
+
+              <input
+                [id]="'start-' + day.id"
+                type="time"
+                [(ngModel)]="day.startTime"
+              />
+            </div>
+
+            <span class="time-separator">a</span>
+
+            <div class="time-field">
+              <label [for]="'end-' + day.id">
+                Hora de finalización
+              </label>
+
+              <input
+                [id]="'end-' + day.id"
+                type="time"
+                [(ngModel)]="day.endTime"
+              />
+            </div>
+          </div>
+        } @else {
+          <span class="disabled-message">
+            Sin horario configurado
+          </span>
+        }
+      </article>
+    }
+  </div>
+</section>

@@ -1,0 +1,202 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.regular-schedule {
+  width: 100%;
+}
+
+.schedule-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  margin-bottom: 18px;
+}
+
+.schedule-heading h3 {
+  margin: 0;
+
+  color: #1f2937;
+
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.schedule-heading p {
+  margin: 5px 0 0;
+
+  color: #6b7280;
+
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.schedule-row {
+  min-height: 68px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  padding: 11px 14px;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.schedule-row-disabled {
+  background: #f9fafb;
+}
+
+.day-section {
+  min-width: 180px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+}
+
+.day-information {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.day-name {
+  color: #374151;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.day-status {
+  color: #9ca3af;
+
+  font-size: 10px;
+}
+
+.toggle {
+  width: 36px;
+  height: 20px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+
+  padding: 2px;
+
+  border: 0;
+  border-radius: 999px;
+
+  background: #d1d5db;
+
+  cursor: pointer;
+
+  transition: background-color 0.2s ease;
+}
+
+.toggle-active {
+  background: #075ea5;
+}
+
+.toggle-circle {
+  width: 16px;
+  height: 16px;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+
+  transition: transform 0.2s ease;
+}
+
+.toggle-active .toggle-circle {
+  transform: translateX(16px);
+}
+
+.schedule-times {
+  display: flex;
+  align-items: flex-end;
+
+  gap: 10px;
+}
+
+.time-field {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.time-field label {
+  color: #6b7280;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.time-field input {
+  width: 112px;
+  height: 34px;
+
+  box-sizing: border-box;
+
+  padding: 0 8px;
+
+  color: #374151;
+
+  background: #ffffff;
+
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+
+  font-family: inherit;
+  font-size: 12px;
+
+  outline: none;
+}
+
+.time-field input:hover {
+  border-color: #9ca3af;
+}
+
+.time-field input:focus {
+  border-color: #075ea5;
+
+  box-shadow: 0 0 0 2px rgba(7, 94, 165, 0.1);
+}
+
+.time-separator {
+  margin-bottom: 9px;
+
+  color: #9ca3af;
+
+  font-size: 11px;
+}
+
+.disabled-message {
+  color: #9ca3af;
+
+  font-size: 11px;
+}
