@@ -110,11 +110,8 @@
 .period-label {
   color: #1e293b;
 
-  font-size: 14px;
-
+  font-size: 13px;
   font-weight: 600;
-
-  text-transform: capitalize;
 
   white-space: nowrap;
 }
@@ -124,20 +121,19 @@
    SELECTOR DÍA / SEMANA / MES
    ============================================================ */
 
-.view-selector {
-  display: flex;
 
+ .view-selector {
+  display: flex;
   align-items: center;
 
-  margin-left: auto;
+  margin-left: 0;
+  margin-right: auto;
 
   padding: 3px;
 
   background: #f1f5f9;
-
   border-radius: 9px;
 }
-
 
 .view-selector button {
   border: 0;

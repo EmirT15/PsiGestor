@@ -97,9 +97,12 @@
             [class.today]="isToday(day)"
           >
 
-            <span class="week-day-name">
-  {{ getWeekdayLabel(day) }}
-</span>
+          <span
+              class="week-day-name notranslate"
+              translate="no"
+            >
+              {{ getWeekdayLabel(day) }}
+            </span>
 
             <span class="week-day-number">
               {{ day.getDate() }}
@@ -110,14 +113,14 @@
         }
 
 
-        <!-- Filas visuales -->
-        @for (
-          row of visualTimeRows;
-          track $index
-        ) {
+       @for (
+  time of visualTimeRows;
+  track time
+) {
 
-          <!-- Columna izquierda -->
-          <div class="week-time-column"></div>
+  <div class="week-time-column">
+    <span>{{ time }}</span>
+  </div>
 
 
           <!-- Celdas de lunes a viernes -->

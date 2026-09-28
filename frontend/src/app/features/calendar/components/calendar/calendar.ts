@@ -29,7 +29,16 @@ export class Calendar implements OnInit {
   selectedSlotDate = '';
   selectedAvailabilityId: number | null = null;
 
-  readonly visualTimeRows = Array.from({ length: 8 });
+  readonly visualTimeRows = [
+  '08:00',
+  '09:00',
+  '10:00',
+  '11:00',
+  '12:00',
+  '13:00',
+  '14:00',
+  '15:00'
+];
 
   getDaysInMonth(): Date[] {
     const year = this.currentDate.getFullYear();
