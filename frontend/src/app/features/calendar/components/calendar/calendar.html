@@ -1,38 +1,15 @@
-<div class="calendar-header">
+<app-calendar-toolbar
+  [currentDate]="currentDate"
+  [currentView]="currentView"
+  [selectedStatus]="statusFilter"
 
-    <button type="button" (click)="changeMonth(-1)">
-        &lt;
-    </button>
+  (previous)="changeMonth(-1)"
+  (next)="changeMonth(1)"
+  (today)="goToToday()"
 
-    <h2>{{ getMonthName() }}</h2>
-
-    <button type="button" (click)="changeMonth(1)">
-        &gt;
-    </button>
-
-    <button type="button" (click)="goToToday()">
-        Hoy
-    </button>
-
-</div>
-
-<div class="calendar-view-buttons">
-
-    <button type="button" [class.selected]="currentView === 'day'" (click)="currentView = 'day'">
-        Día
-    </button>
-
-    <button type="button" [class.selected]="currentView === 'week'" (click)="currentView = 'week'">
-        Semana
-    </button>
-
-    <button type="button" [class.selected]="currentView === 'month'" (click)="currentView = 'month'">
-        Mes
-    </button>
-
-</div>
-
-<app-status-filter [selectedStatus]="statusFilter" (statusChange)="statusFilter = $event" />
+  (viewChange)="currentView = $event"
+  (statusChange)="statusFilter = $event"
+/>
 
 @if (currentView === 'month') {
 
@@ -99,44 +76,76 @@
 
 @if (currentView === 'week') {
 
-<div class="week-view">
+  <section class="week-calendar">
 
-    @for (day of getWeekDays(); track day.getTime()) {
+    <div class="week-calendar-scroll">
 
-    <div class="week-day">
+      <div class="week-schedule-grid">
 
-        <h3>
-            {{ day.toLocaleDateString('es-MX', {
-            weekday: 'short',
-            day: 'numeric',
-            month: 'short'
-            }) }}
-        </h3>
+        <!-- Esquina superior izquierda -->
+        <div class="week-grid-corner"></div>
 
+
+        <!-- Encabezados de lunes a viernes -->
         @for (
-        availability of getAvailabilitiesForDate(day);
-        track availability.id
+          day of getDisplayedWeekDays();
+          track day.getTime()
         ) {
 
-        <app-availability-card [availability]="availability" [slots]="generateSlots(availability)"
-            [selectedSlot]="selectedSlot" [selectedAvailabilityId]="selectedAvailabilityId" (slotSelected)="selectSlot($event, availability)" />
+          <div
+            class="week-day-header"
+            [class.today]="isToday(day)"
+          >
+
+            <span class="week-day-name">
+  {{ getWeekdayLabel(day) }}
+</span>
+
+            <span class="week-day-number">
+              {{ day.getDate() }}
+            </span>
+
+          </div>
 
         }
 
-        @if (selectedSlot && selectedSlotDate === formatDate(day)) {
-        <p>Horario seleccionado: <strong>{{ selectedSlot }}</strong></p>
+
+        <!-- Filas visuales -->
+        @for (
+          row of visualTimeRows;
+          track $index
+        ) {
+
+          <!-- Columna izquierda -->
+          <div class="week-time-column"></div>
+
+
+          <!-- Celdas de lunes a viernes -->
+          @for (
+            day of getDisplayedWeekDays();
+            track day.getTime()
+          ) {
+
+            <div
+              class="week-calendar-cell"
+              [class.today-column]="isToday(day)"
+            >
+            </div>
+
+          }
+
         }
+
+      </div>
 
     </div>
 
-    }
-
-</div>
+  </section>
 
 }
 
 
-@if (selectedDate) {
+<!-- @if (selectedDate) {
 <div class="selected-date">
     <h3>Disponibilidad del {{ selectedDate }}</h3>
 
@@ -156,7 +165,7 @@
         [selectedSlot]="selectedSlot" [selectedAvailabilityId]="selectedAvailabilityId" (slotSelected)="selectSlot($event, availability)" />
     }
 </div>
-}
+} -->
 
 
 <!-- <app-availability-form (availabilityCreated)="loadAvailabilities()" /> -->

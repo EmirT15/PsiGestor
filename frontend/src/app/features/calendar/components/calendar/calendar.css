@@ -423,3 +423,184 @@
   }
 }
 
+/* ============================================================
+   VISTA SEMANAL EXPANDIDA
+   ============================================================ */
+
+.week-calendar {
+  width: 100%;
+  margin-top: 14px;
+
+  background: #ffffff;
+
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+
+  overflow: hidden;
+
+  box-shadow: var(--shadow-sm);
+}
+
+
+.week-calendar-scroll {
+  width: 100%;
+
+  overflow-x: auto;
+}
+
+
+/* ============================================================
+   CUADRÍCULA GENERAL
+   ============================================================ */
+
+.week-schedule-grid {
+  display: grid;
+
+  grid-template-columns:
+    72px
+    repeat(5, minmax(160px, 1fr));
+
+  width: 100%;
+
+  min-width: 900px;
+}
+
+
+/* ============================================================
+   ESQUINA SUPERIOR IZQUIERDA
+   ============================================================ */
+
+.week-grid-corner {
+  min-height: 76px;
+
+  background: #f8fafc;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+
+/* ============================================================
+   ENCABEZADOS DE DÍAS
+   ============================================================ */
+
+.week-day-header {
+  min-height: 76px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 3px;
+
+  background: #f8fafc;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+
+  box-sizing: border-box;
+}
+
+
+.week-day-name {
+  font-size: 11px;
+
+  font-weight: 600;
+
+  color: var(--color-muted);
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.4px;
+}
+
+
+.week-day-number {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  font-size: 16px;
+
+  font-weight: 600;
+
+  color: var(--color-text);
+}
+
+
+/* Día actual */
+
+.week-day-header.today {
+  background: #eff6ff;
+}
+
+
+.week-day-header.today .week-day-name {
+  color: var(--color-primary);
+}
+
+
+.week-day-header.today .week-day-number {
+  background: var(--color-primary);
+
+  color: #ffffff;
+}
+
+
+/* ============================================================
+   COLUMNA IZQUIERDA
+   ============================================================ */
+
+.week-time-column {
+  min-height: 82px;
+
+  background: #ffffff;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+
+  box-sizing: border-box;
+}
+
+
+/* ============================================================
+   CELDAS DEL CALENDARIO
+   ============================================================ */
+
+.week-calendar-cell {
+  min-height: 82px;
+
+  background: #ffffff;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+
+  box-sizing: border-box;
+
+  transition: background 0.15s ease;
+}
+
+
+.week-calendar-cell:hover {
+  background: #f8fafc;
+}
+
+
+/* Columna correspondiente al día actual */
+
+.week-calendar-cell.today-column {
+  background: #fbfdff;
+}
+
+
+.week-calendar-cell.today-column:hover {
+  background: #f5f9ff;
+}

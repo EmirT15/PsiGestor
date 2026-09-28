@@ -1,1 +1,88 @@
-<p>calendar-toolbar works!</p>
+<div class="calendar-toolbar">
+
+  <div class="toolbar-main">
+
+    <div class="navigation-controls">
+
+      <button
+        type="button"
+        class="navigation-button"
+        aria-label="Periodo anterior"
+        (click)="previous.emit()"
+      >
+        ‹
+      </button>
+
+
+      <button
+        type="button"
+        class="today-button"
+        (click)="today.emit()"
+      >
+        Hoy
+      </button>
+
+
+      <button
+        type="button"
+        class="navigation-button"
+        aria-label="Periodo siguiente"
+        (click)="next.emit()"
+      >
+        ›
+      </button>
+
+    </div>
+
+
+    <div class="period-label">
+      {{ getPeriodLabel() }}
+    </div>
+
+
+    <div class="view-selector">
+
+      <button
+        type="button"
+        [class.active]="currentView === 'day'"
+        (click)="changeView('day')"
+      >
+        Día
+      </button>
+
+
+      <button
+        type="button"
+        [class.active]="currentView === 'week'"
+        (click)="changeView('week')"
+      >
+        Semana
+      </button>
+
+
+      <button
+        type="button"
+        [class.active]="currentView === 'month'"
+        (click)="changeView('month')"
+      >
+        Mes
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <div class="toolbar-divider"></div>
+
+
+  <div class="toolbar-filters">
+
+    <app-status-filter
+      [selectedStatus]="selectedStatus"
+      (statusChange)="statusChange.emit($event)"
+    />
+
+  </div>
+
+</div>

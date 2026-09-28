@@ -1,18 +1,17 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Availability } from '../../models/availability.model';
 //import { AvailabilityForm } from '../availability-form/availability-form';
-import {
-  StatusFilter,
-  StatusFilterComponent
-} from '../../../../shared/components/status-filter/status-filter';
+import type { StatusFilter } from '../../../../shared/components/status-filter/status-filter';
 import { CalendarService } from '../../services/calendar.service';
 import { AvailabilityCard } from '../availability-card/availability-card';
+import {CalendarToolbar} from '../calendar-toolbar/calendar-toolbar';
 
 @Component({
   imports: [
    // AvailabilityForm,
     AvailabilityCard,
-    StatusFilterComponent
+    CalendarToolbar
+    //StatusFilterComponent
   ],
   selector: 'app-calendar',
   styleUrl: './calendar.css',
@@ -29,6 +28,8 @@ export class Calendar implements OnInit {
   selectedSlot = '';
   selectedSlotDate = '';
   selectedAvailabilityId: number | null = null;
+
+  readonly visualTimeRows = Array.from({ length: 8 });
 
   getDaysInMonth(): Date[] {
     const year = this.currentDate.getFullYear();
@@ -121,6 +122,7 @@ export class Calendar implements OnInit {
   }
 
   getWeekDays(): Date[] {
+   
     const date = this.getCurrentViewDate();
     const dayOfWeek = date.getDay();
     const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
@@ -138,6 +140,32 @@ export class Calendar implements OnInit {
 
     return days;
   }
+  getDisplayedWeekDays(): Date[] {
+  return this.getWeekDays().slice(0, 5);
+}
+
+  isToday(date: Date): boolean {
+  const today = new Date();
+
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  );
+}
+getWeekdayLabel(date: Date): string {
+  const weekdays = [
+    'DOM',
+    'LUN',
+    'MAR',
+    'MIÉ',
+    'JUE',
+    'VIE',
+    'SÁB'
+  ];
+
+  return weekdays[date.getDay()];
+}
 
   hasAvailability(date: Date): boolean {
     return this.getAvailabilitiesForDate(date).length > 0;
