@@ -1,16 +1,16 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Availability } from '../../models/availability.model';
-import { AvailabilityForm } from '../availability-form/availability-form';
-import { AvailabilityCard } from '../availability-card/availability-card';
+//import { AvailabilityForm } from '../availability-form/availability-form';
 import {
-  StatusFilterComponent,
-  StatusFilter
+  StatusFilter,
+  StatusFilterComponent
 } from '../../../../shared/components/status-filter/status-filter';
 import { CalendarService } from '../../services/calendar.service';
+import { AvailabilityCard } from '../availability-card/availability-card';
 
 @Component({
   imports: [
-    AvailabilityForm,
+   // AvailabilityForm,
     AvailabilityCard,
     StatusFilterComponent
   ],
@@ -23,7 +23,7 @@ export class Calendar implements OnInit {
   availabilities: Availability[] = [];
 
   currentDate = new Date();
-  currentView: 'day' | 'week' | 'month' = 'month';
+  currentView: 'day' | 'week' | 'month' = 'week'; //se cambio month por week para que se vea la semana por default
   statusFilter: StatusFilter = 'all';
   selectedDate = '';
   selectedSlot = '';
