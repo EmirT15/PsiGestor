@@ -1,5 +1,9 @@
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms'
+import {
+  BreakSchedule,
+  BreakScheduleConfig,
+} from '../break-schedule/break-schedule';
 
 interface WorkDay {
   id: number;
@@ -12,11 +16,26 @@ interface WorkDay {
 
 @Component({
   selector: 'app-regular-schedule',
-  imports: [FormsModule],
+ imports: [
+  FormsModule,
+  BreakSchedule,
+],
   templateUrl: './regular-schedule.html',
   styleUrl: './regular-schedule.css',
 })
 export class RegularSchedule {
+  
+  appointmentDuration: number | null = null;
+
+breakConfig: BreakScheduleConfig = {
+  enabled: false,
+  startTime: '',
+  endTime: '',
+};
+
+updateBreakConfig(config: BreakScheduleConfig): void {
+  this.breakConfig = config;
+}
   workDays: WorkDay[] = [
     {
       id: 1,

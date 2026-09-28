@@ -1,0 +1,60 @@
+<section class="break-schedule">
+  <div class="break-header">
+    <div class="break-information">
+      <h4>Descanso habitual</h4>
+
+      <p>
+        Define un periodo de descanso dentro de tu jornada habitual.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="break-toggle"
+      [class.break-toggle-active]="config.enabled"
+      [attr.aria-pressed]="config.enabled"
+      aria-label="Activar o desactivar descanso habitual"
+      (click)="toggleBreak()"
+    >
+      <span class="toggle-circle"></span>
+    </button>
+  </div>
+
+  @if (config.enabled) {
+    <div class="break-times">
+
+      <div class="time-field">
+        <label for="break-start">
+          Hora de inicio
+        </label>
+
+        <input
+          id="break-start"
+          type="time"
+          [ngModel]="config.startTime"
+          (ngModelChange)="updateStartTime($event)"
+        />
+      </div>
+
+      <span class="time-separator">a</span>
+
+      <div class="time-field">
+        <label for="break-end">
+          Hora de finalización
+        </label>
+
+        <input
+          id="break-end"
+          type="time"
+          [ngModel]="config.endTime"
+          (ngModelChange)="updateEndTime($event)"
+        />
+      </div>
+
+    </div>
+  } @else {
+    <div class="break-disabled">
+      Sin descanso configurado
+    </div>
+  }
+</section>

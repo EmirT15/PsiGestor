@@ -78,4 +78,34 @@
       </article>
     }
   </div>
+  <div class="general-settings">
+
+  <div class="duration-setting">
+    <div class="setting-information">
+      <h4>Duración habitual de las citas</h4>
+
+      <p>
+        Define la duración que tendrán normalmente las sesiones.
+      </p>
+    </div>
+
+    <div class="duration-control">
+      <input
+        id="appointment-duration"
+        type="number"
+        min="1"
+        placeholder="Ej. 50"
+        [(ngModel)]="appointmentDuration"
+      />
+
+      <span>minutos</span>
+    </div>
+  </div>
+
+  <app-break-schedule
+    [config]="breakConfig"
+    (configChange)="updateBreakConfig($event)"
+  />
+
+</div>
 </section>
