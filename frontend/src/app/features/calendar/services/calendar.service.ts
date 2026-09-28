@@ -37,6 +37,20 @@ export class CalendarService {
       data
     );
   }
+
+  cancelAppointment(id: number, reason: string, observation: string): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/availabilities/${id}/cancel`,
+      { reason, observation }
+    );
+  }
+
+  rescheduleAppointment(id: number, date: string, startTime: string, endTime: string): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/availabilities/${id}/reschedule`,
+      { date, startTime, endTime }
+    );
+  }
 }
 
 
