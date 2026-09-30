@@ -1,22 +1,24 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Availability } from '../../models/availability.model';
-//import { AvailabilityForm } from '../availability-form/availability-form';
-import type { StatusFilter } from '../../../../shared/components/status-filter/status-filter';
+import { AvailabilityForm } from '../availability-form/availability-form';
+import { StatusFilterComponent, type StatusFilter } from '../../../../shared/components/status-filter/status-filter';
 import { CalendarService } from '../../services/calendar.service';
 import { AvailabilityCard } from '../availability-card/availability-card';
 import {CalendarToolbar} from '../calendar-toolbar/calendar-toolbar';
 
+
 @Component({
   imports: [
-   // AvailabilityForm,
+    AvailabilityForm,
     AvailabilityCard,
-    CalendarToolbar
-    //StatusFilterComponent
+    CalendarToolbar,
+    StatusFilterComponent
   ],
   selector: 'app-calendar',
   styleUrl: './calendar.css',
   templateUrl: './calendar.html',
 })
+
 export class Calendar implements OnInit {
 
   availabilities: Availability[] = [];

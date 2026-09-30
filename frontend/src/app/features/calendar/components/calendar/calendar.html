@@ -148,7 +148,7 @@
 }
 
 
-<!-- @if (selectedDate) {
+@if (selectedDate) {
 <div class="selected-date">
     <h3>Disponibilidad del {{ selectedDate }}</h3>
 
@@ -168,7 +168,7 @@
         [selectedSlot]="selectedSlot" [selectedAvailabilityId]="selectedAvailabilityId" (slotSelected)="selectSlot($event, availability)" />
     }
 </div>
-} -->
+} 
 
 
-<!-- <app-availability-form (availabilityCreated)="loadAvailabilities()" /> -->
+<app-availability-form (availabilityCreated)="loadAvailabilities()" /> 
