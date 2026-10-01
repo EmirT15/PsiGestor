@@ -1,0 +1,248 @@
+/* ============================================================
+   VARIABLES Y HOST
+   ============================================================ */
+:host {
+  --color-primary: #1e3a8a;
+  --color-primary-light: #3b82f6;
+  --color-accent: #8b5cf6;
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #1e293b;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+
+  /* Colores de estados */
+  --color-success: #10b981;
+  --color-success-bg: #ecfdf5;
+  --color-danger: #ef4444;
+  --color-danger-bg: #fef2f2;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fffbeb;
+  --color-muted-bg: #f1f5f9;
+
+  --radius-sm: 8px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  display: block;
+  width: 100%;
+}
+
+/* ============================================================
+   CONTENEDOR DE FILTROS
+   ============================================================ */
+.status-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Etiqueta opcional "Filtrar:" antes de los chips */
+.status-filter::before {
+ /*content: 'Filtrar:';*/
+ display: none; /* Oculta la etiqueta por defecto */
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  margin-right: 4px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   BOTONES (CHIPS)
+   ============================================================ */
+.status-filter button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 5px 12px;
+
+  font-family: 'Inter', sans-serif;
+  font-size: 0.76rem;
+  font-weight: 500;
+
+  color: var(--color-text);
+  background: var(--color-surface);
+
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.3;
+
+  box-shadow: none;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+/* Punto de color indicador (antes del texto) */
+.status-filter button::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-muted);
+  flex-shrink: 0;
+  transition: all 0.18s ease;
+}
+
+.status-filter button:hover {
+  background: var(--color-bg);
+  border-color: #cbd5e1;
+  /**transform: translateY(-1px);**/
+  box-shadow: var(--shadow-md);
+}
+
+/* ============================================================
+   COLORES POR ESTADO (usando nth-child según orden del template)
+   ============================================================ */
+/* Todos */
+.status-filter button:nth-child(1)::before {
+  background: #0563a8;
+}
+
+/* Disponibles */
+.status-filter button:nth-child(2)::before {
+  background: #0a9b65;
+}
+
+/* Reservados */
+.status-filter button:nth-child(3)::before {
+  background: #1769a7;
+}
+
+/* Reprogramación pendiente */
+.status-filter button:nth-child(4)::before {
+  background: #0f9c9c;
+}
+
+/* Inhabilitados */
+.status-filter button:nth-child(5)::before {
+  background: #8491a3;
+}
+
+/* 1. Todos */
+/*.status-filter button:nth-child(1)::before {
+  background: var(--color-primary);
+}*/
+
+/* 2. Disponibles 
+.status-filter button:nth-child(2)::before {
+  background: var(--color-success);
+}*/
+
+/* 3. Reservados 
+.status-filter button:nth-child(3)::before {
+  background: var(--color-danger);
+}*/
+
+/* 4. Reprogramación pendiente 
+.status-filter button:nth-child(4)::before {
+  background: var(--color-warning);
+}*/
+
+/* 5. Inhabilitados 
+.status-filter button:nth-child(5)::before {
+  background: var(--color-muted);
+}*/
+
+/* ============================================================
+   ESTADO SELECCIONADO (con colores por tipo)
+   ============================================================ */
+
+/* Base seleccionada */
+.status-filter button.selected {
+  color: #fff;
+  border-color: transparent;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Punto blanco cuando está seleccionado */
+.status-filter button.selected::before {
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+/* Todos (azul) */
+.status-filter button:nth-child(1).selected {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+}
+
+/* Disponibles (verde) */
+.status-filter button:nth-child(2).selected {
+  background: linear-gradient(135deg, #10b981, #34d399);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* Reservados (rojo) */
+.status-filter button:nth-child(3).selected {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Reprogramación pendiente (naranja) */
+.status-filter button:nth-child(4).selected {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+/* Inhabilitados (gris) */
+.status-filter button:nth-child(5).selected {
+  background: linear-gradient(135deg, #64748b, #94a3b8);
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+}
+
+/* Hover sobre seleccionado (mantiene color pero más claro) */
+.status-filter button.selected:hover {
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .status-filter {
+    gap: 6px;
+  }
+
+  .status-filter::before {
+    display: none;
+  }
+
+  .status-filter button {
+    padding: 5px 11px;
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .status-filter {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .status-filter::-webkit-scrollbar {
+    display: none;
+  }
+
+  .status-filter button {
+    flex-shrink: 0;
+  }
+}
