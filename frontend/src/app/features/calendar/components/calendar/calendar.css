@@ -185,6 +185,32 @@
   cursor: pointer;
   transition: all 0.15s ease;
   box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Indicadores de estado */
+.dots-container {
+  display: flex;
+  gap: 3px;
+  margin-top: 3px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.dot-available {
+  background-color: #10b981; /* Punto Verde */
+}
+
+.dot-disabled {
+  background-color: #ef4444; /* Punto Rojo */
 }
 
 .calendar-grid button:hover {
@@ -210,6 +236,11 @@
   border-color: var(--color-primary);
   color: #fff;
   box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-primary);
+}
+
+.calendar-grid button.has-disabled {
+  background-color: #fef2f2;
+  border: 1px solid #fca5a5;
 }
 
 /* ============================================================

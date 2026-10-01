@@ -340,3 +340,55 @@
     animation: none;
   }
 }
+
+/* ============================================================
+   ESTADOS DE INHABILITACIÓN Y ACCIÓN CONTEXTUAL (HU-02B)
+   ============================================================ */
+
+/* Distribución del encabezado con el botón de inhabilitar */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+/* Botón contextual de inhabilitar horario */
+.btn-contextual-disable {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
+  border: 1px solid #fecaca;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-contextual-disable:hover {
+  background-color: #fee2e2;
+  border-color: #fca5a5;
+  transform: translateY(-1px);
+}
+
+/* Estado visual cuando la tarjeta entera pasa a Inhabilitada */
+.availability-card.is-disabled {
+  background: var(--color-bg);
+  border-color: var(--color-border);
+  opacity: 0.75;
+}
+
+.availability-card.is-disabled::before {
+  background: var(--color-muted);
+}
+
+.availability-card p.status-inhabilitado {
+  background: #f1f5f9;
+  color: #475569;
+}

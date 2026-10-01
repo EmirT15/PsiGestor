@@ -1,6 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Availability } from '../../models/availability.model';
-//import { AvailabilityForm } from '../availability-form/availability-form';
 import type { StatusFilter } from '../../../../shared/components/status-filter/status-filter';
 import { CalendarService } from '../../services/calendar.service';
 import { AvailabilityCard } from '../availability-card/availability-card';
@@ -8,20 +7,20 @@ import {CalendarToolbar} from '../calendar-toolbar/calendar-toolbar';
 import { ManageScheduleModal } from '../manage-schedule-modal/manage-schedule-modal';
 
 @Component({
+  selector: 'app-calendar',
+  standalone: true,
   imports: [
-   // AvailabilityForm,
     AvailabilityCard,
     CalendarToolbar,
-    //StatusFilterComponent
     ManageScheduleModal
   ],
-  selector: 'app-calendar',
   styleUrl: './calendar.css',
   templateUrl: './calendar.html',
 })
 export class Calendar implements OnInit {
 
   availabilities: Availability[] = [];
+  disabledSchedules: any[] = []; // 1. Nuevo arreglo para inhabilitaciones
 
   currentDate = new Date();
   currentView: 'day' | 'week' | 'month' = 'week'; //se cambio month por week para que se vea la semana por default
@@ -32,22 +31,22 @@ export class Calendar implements OnInit {
   selectedAvailabilityId: number | null = null;
 
   isManageScheduleOpen = false;
+  initialModalData: any = null; // Para precompletar el modal al inhabilitar desde la agenda
 
   readonly visualTimeRows = [
-  '08:00',
-  '09:00',
-  '10:00',
-  '11:00',
-  '12:00',
-  '13:00',
-  '14:00',
-  '15:00'
-];
+    '08:00',
+    '09:00',
+    '10:00',
+    '11:00',
+    '12:00',
+    '13:00',
+    '14:00',
+    '15:00'
+  ];
 
   getDaysInMonth(): Date[] {
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth();
-
     const days: Date[] = [];
     const totalDays = new Date(year, month + 1, 0).getDate();
 
@@ -91,12 +90,54 @@ export class Calendar implements OnInit {
   }
 
   openManageSchedule(): void {
-  this.isManageScheduleOpen = true;
-}
+    this.initialModalData = null;
+    this.isManageScheduleOpen = true;
+  }
 
-closeManageSchedule(): void {
-  this.isManageScheduleOpen = false;
-}
+  closeManageSchedule(): void {
+    this.isManageScheduleOpen = false;
+    this.initialModalData = null;
+
+    // Recargar listas al cerrar el modal
+    this.loadAvailabilities();
+    this.loadDisabledSchedules();
+  }
+
+  // Inhabilitar directamente desde la tarjeta de disponibilidad completa
+  handleDisableFromCard(availability: Availability): void {
+    const dateStr = availability.date || this.formatDate(this.getCurrentViewDate());
+    this.initialModalData = {
+      startDate: dateStr,
+      endDate: dateStr,
+      startTime: availability.startTime, // Carga la hora de inicio exacta de la tarjeta seleccionada
+      endTime: availability.endTime,     // Carga la hora de fin exacta de la tarjeta seleccionada
+      activeTab: 'disabled'
+    };
+
+    this.isManageScheduleOpen = true;
+  }
+
+  // Inhabilitar un slot de tiempo específico seleccionado en vista diaria
+  handleDisableSelectedSlot(): void {
+    if (!this.selectedSlot || !this.selectedSlotDate) return;
+
+    // Convertir el rango ej. "08:00 AM - 09:00 AM" a horas
+    const parts = this.selectedSlot.split(' - ');
+    const startTime24 = parts[0] ? this.convert12to24(parts[0]) : '08:00:00';
+    const endTime24 = parts[1] ? this.convert12to24(parts[1]) : '09:00:00';
+
+    this.openManageSchedule();
+  }
+
+  // Inhabilitar una celda disponible desde la vista semanal
+  handleDisableFromWeekCell(date: Date, timeRow: string): void {
+    const dateStr = this.formatDate(date);
+    // Asignar bloque de 1 hora
+    const [h] = timeRow.split(':').map(Number);
+    const endTimeRow = `${String(h + 1).padStart(2, '0')}:00:00`;
+
+    this.openManageSchedule();
+  }
 
   getMonthName(): string {
     return this.currentDate.toLocaleDateString('es-MX', {
@@ -161,32 +202,34 @@ closeManageSchedule(): void {
 
     return days;
   }
+
   getDisplayedWeekDays(): Date[] {
-  return this.getWeekDays().slice(0, 5);
-}
+    return this.getWeekDays().slice(0, 5);
+  }
 
   isToday(date: Date): boolean {
-  const today = new Date();
+    const today = new Date();
 
-  return (
-    date.getDate() === today.getDate() &&
-    date.getMonth() === today.getMonth() &&
-    date.getFullYear() === today.getFullYear()
-  );
-}
-getWeekdayLabel(date: Date): string {
-  const weekdays = [
-    'DOM',
-    'LUN',
-    'MAR',
-    'MIÉ',
-    'JUE',
-    'VIE',
-    'SÁB'
-  ];
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  }
 
-  return weekdays[date.getDay()];
-}
+  getWeekdayLabel(date: Date): string {
+    const weekdays = [
+      'DOM',
+      'LUN',
+      'MAR',
+      'MIÉ',
+      'JUE',
+      'VIE',
+      'SÁB'
+    ];
+
+    return weekdays[date.getDay()];
+  }
 
   hasAvailability(date: Date): boolean {
     return this.getAvailabilitiesForDate(date).length > 0;
@@ -198,10 +241,8 @@ getWeekdayLabel(date: Date): string {
 
   generateSlots(availability: Availability): string[] {
     const slots: string[] = [];
-
     let currentMinutes =
       this.timeToMinutes(availability.startTime);
-
     const endMinutes =
       this.timeToMinutes(availability.endTime);
 
@@ -209,23 +250,18 @@ getWeekdayLabel(date: Date): string {
       currentMinutes + availability.duration <= endMinutes
     ) {
       const slotStart = this.formatTime12Hour(currentMinutes);
-
       const slotEnd = this.formatTime12Hour(
         currentMinutes + availability.duration
       );
-
       slots.push(`${slotStart} - ${slotEnd}`);
-
       currentMinutes +=
         availability.duration + availability.breakTime;
     }
-
     return slots;
   }
 
   private timeToMinutes(time: string): number {
     const [hours, minutes] = time.split(':').map(Number);
-
     return hours * 60 + minutes;
   }
 
@@ -251,6 +287,15 @@ getWeekdayLabel(date: Date): string {
     }
 
     return `${String(hours12).padStart(2, '0')}:${String(minutesPart).padStart(2, '0')} ${period}`;
+  }
+
+  private convert12to24(time12h: string): string {
+    const [time, modifier] = time12h.trim().split(' ');
+    let [hours, minutes] = time.split(':');
+    let h = parseInt(hours, 10);
+    if (h === 12) h = 0;
+    if (modifier === 'PM') h += 12;
+    return `${String(h).padStart(2, '0')}:${minutes}:00`;
   }
 
   formatTimeString(time: string): string {
@@ -281,6 +326,54 @@ getWeekdayLabel(date: Date): string {
 
   ngOnInit(): void {
     this.loadAvailabilities();
+    this.loadDisabledSchedules(); // 2. Cargar al iniciar
+
+    // Escucha reactiva cuando se inhabilitan o habilitan horarios
+    this.calendarService.scheduleChanged$.subscribe(() => {
+    this.loadAvailabilities();
+    this.loadDisabledSchedules();
+  });
+  }
+
+  // 3. Método para cargar inhabilitaciones
+  loadDisabledSchedules(): void {
+    this.calendarService.getDisabledSchedules().subscribe({
+      next: (data) => {
+        this.disabledSchedules = data;
+        this.changeDetectorRef.detectChanges();
+      },
+      error: (error) => console.error('Error loading disabled schedules:', error)
+    });
+  }
+
+  // 5. Filtro para obtener inhabilitaciones por día
+  getDisabledSchedulesForDate(date: Date): any[] {
+    const dateString = this.formatDate(date);
+    return this.disabledSchedules.filter((ds) => {
+      // Maneja si la inhabilitación tiene startDate/endDate o solo date
+      const start = ds.startDate || ds.date;
+      const end = ds.endDate || ds.date;
+      return dateString >= start && dateString <= end;
+    });
+  }
+
+  // 6. Verificar si un día entero tiene inhabilitaciones
+  hasDisabledSchedule(date: Date): boolean {
+    return this.getDisabledSchedulesForDate(date).length > 0;
+  }
+
+  // 7. Verificar si un bloque de hora específico (ej. "08:00") cae en una inhabilitación
+  getDisabledForTimeCell(date: Date, timeRow: string): any[] {
+    const disabledForDay = this.getDisabledSchedulesForDate(date);
+    return disabledForDay.filter(ds => {
+      // Simplificación: si la hora de inicio de la fila entra en el rango inhabilitado
+      return timeRow >= ds.startTime && timeRow < ds.endTime;
+    });
+  }
+
+  getAvailabilitiesForTimeCell(date: Date, timeRow: string): Availability[] {
+    const availForDay = this.getAvailabilitiesForDate(date);
+    return availForDay.filter(a => timeRow >= a.startTime && timeRow < a.endTime);
   }
 
   formatDate(date: Date): string {

@@ -79,35 +79,17 @@
       @if (activeTab === 'regular') {
 
         <section class="tab-workspace">
-
-          <!--
-            HU-02A
-            Aquí se integrará posteriormente
-            el componente regular-schedule.
-          -->
-
           <app-regular-schedule />
-
         </section>
 
       }
 
 
-      @if (activeTab === 'disabled') {
-
-        <section class="tab-workspace">
-
-          <!--
-            HU-02B
-            Espacio reservado para los componentes
-            desarrollados por Emir.
-          -->
-
-          <app-disabled-schedules-list />
-
-        </section>
-
-      }
+     @if (activeTab === 'disabled') {
+      <section class="tab-workspace">
+        <app-disabled-schedules-list [initialData]="initialData" />
+      </section>
+    }
 
     </main>
 

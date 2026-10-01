@@ -1,32 +1,37 @@
-<div class="availability-card">
+<div class="availability-card" [class.is-disabled]="availability.status === 'Inhabilitado'">
 
-    <h3>
+    <div class="card-header">
+        <h3>
         {{ formatTimeString(availability.startTime) }}
         -
         {{ formatTimeString(availability.endTime) }}
-    </h3>
+        </h3>
 
-    <p>
-        Duración: {{ availability.duration }} minutos
-    </p>
+        @if (availability.status === 'Disponible') {
+        <button 
+            type="button" 
+            class="btn-contextual-disable" 
+            title="Inhabilitar horario"
+            (click)="onDisableSchedule()">
+            🚫 Inhabilitar horario
+        </button>
+        }
+    </div>
 
-    <p>
-        Descanso: {{ availability.breakTime }} minutos
-    </p>
-
-    <p>
-        Estado: {{ availability.status }}
-    </p>
+    <p>Duración: {{ availability.duration }} minutos</p>
+    <p>Descanso: {{ availability.breakTime }} minutos</p>
+    <p>Estado: <strong [class.status-badge]="true">{{ availability.status }}</strong></p>
 
     <h4>Horarios disponibles</h4>
 
     @for (slot of slots; track slot) {
-    <button type="button" class="slot" [class.selected]="
-        slot === selectedSlot &&
-        availability.id === selectedAvailabilityId
-    " (click)="slotSelected.emit(slot)">
-        {{ slot }}
-    </button>
+        <button 
+            type="button" 
+            class="slot" 
+            [class.selected]="slot === selectedSlot && availability.id === selectedAvailabilityId" 
+            (click)="slotSelected.emit(slot)">
+            {{ slot }}
+        </button>
     }
 
 </div>
