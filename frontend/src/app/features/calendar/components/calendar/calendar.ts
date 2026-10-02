@@ -169,14 +169,48 @@ export class Calendar implements OnInit {
     });
   }
 
+  loadAppointments(): void {
+    this.appointmentService.getAppointments().subscribe({
+      next: (appointments) => {
+        console.log('Appointments loaded:', appointments);
+
+        this.appointments = appointments;
+      },
+
+      error: (error) => {
+        console.error('Error loading appointments:', error);
+      }
+    });
+  }
+
   isSlotReserved(slot: string, date: string): boolean {
 
     const [startTime, endTime] = slot.split(' - ');
 
+    const normalizeTime = (time: string): string => {
+
+      if (time.includes('AM') || time.includes('PM')) {
+        const [timePart, period] = time.split(' ');
+        let [hours, minutes] = timePart.split(':').map(Number);
+
+        if (period === 'PM' && hours !== 12) {
+          hours += 12;
+        }
+
+        if (period === 'AM' && hours === 12) {
+          hours = 0;
+        }
+
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+      }
+
+      return time.substring(0, 5);
+    };
+
     return this.appointments.some(appointment =>
       appointment.date === date &&
-      appointment.startTime === startTime &&
-      appointment.endTime === endTime
+      normalizeTime(appointment.startTime) === normalizeTime(startTime) &&
+      normalizeTime(appointment.endTime) === normalizeTime(endTime)
     );
   }
 
@@ -335,6 +369,7 @@ export class Calendar implements OnInit {
 
   ngOnInit(): void {
     this.loadAvailabilities();
+    this.loadAppointments();
   }
 
   formatDate(date: Date): string {
