@@ -1,24 +1,27 @@
+import { AppointmentService } from '../../../appointments/services/appointment.service';
+import { AppointmentForm } from '../../../appointments/components/appointment-form';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Availability } from '../../models/availability.model';
 import { AvailabilityForm } from '../availability-form/availability-form';
 import { AvailabilityCard } from '../availability-card/availability-card';
-import {
-  StatusFilterComponent,
-  StatusFilter
-} from '../../../../shared/components/status-filter/status-filter';
+import { Appointment } from '../../../appointments/models/appointment.model';
+import { StatusFilterComponent, StatusFilter } from '../../../../shared/components/status-filter/status-filter';
 import { CalendarService } from '../../services/calendar.service';
 
 @Component({
   imports: [
     AvailabilityForm,
     AvailabilityCard,
-    StatusFilterComponent
+    StatusFilterComponent,
+    AppointmentForm
   ],
   selector: 'app-calendar',
   styleUrl: './calendar.css',
   templateUrl: './calendar.html',
 })
 export class Calendar implements OnInit {
+  appointments: Appointment[] = [];
+  isSavingAppointment = false;
 
   availabilities: Availability[] = [];
 
@@ -29,6 +32,9 @@ export class Calendar implements OnInit {
   selectedSlot = '';
   selectedSlotDate = '';
   selectedAvailabilityId: number | null = null;
+
+  selectedAvailability: Availability | null = null;
+  showAppointmentPanel = false;
 
   getDaysInMonth(): Date[] {
     const year = this.currentDate.getFullYear();
@@ -106,6 +112,90 @@ export class Calendar implements OnInit {
     this.selectedSlot = slot;
     this.selectedSlotDate = availability.date;
     this.selectedAvailabilityId = availability.id;
+
+    this.selectedAvailability = availability;
+    this.showAppointmentPanel = true;
+  }
+
+  closeAppointmentPanel(): void {
+    this.showAppointmentPanel = false;
+  }
+  
+  onAppointmentCreated(appointment: Appointment): void {
+
+    if (this.isSavingAppointment) {
+      return;
+    }
+
+    this.isSavingAppointment = true;
+
+    this.appointmentService.createAppointment(appointment).subscribe({
+      next: (savedAppointment) => {
+
+        console.log('Appointment saved:', savedAppointment);
+
+        const localAppointment: Appointment = {
+          ...appointment,
+          id: savedAppointment.id,
+          status: savedAppointment.status
+        };
+
+        this.appointments.push(localAppointment);
+
+        // Cerrar el panel
+        this.closeAppointmentPanel();
+
+        // Limpiar selección
+        this.selectedAvailability = null;
+        this.selectedSlot = '';
+
+        // Reactivar el estado de guardado
+        this.isSavingAppointment = false;
+
+        // Forzar actualización visual de Angular
+        this.changeDetectorRef.detectChanges();
+      },
+
+      error: (error) => {
+
+        console.error('Error saving appointment:', error);
+
+        this.isSavingAppointment = false;
+
+        this.changeDetectorRef.detectChanges();
+
+        alert('No se pudo guardar la cita.');
+      }
+    });
+  }
+
+  isSlotReserved(slot: string, date: string): boolean {
+
+    const [startTime, endTime] = slot.split(' - ');
+
+    return this.appointments.some(appointment =>
+      appointment.date === date &&
+      appointment.startTime === startTime &&
+      appointment.endTime === endTime
+    );
+  }
+
+  getReservedSlots(date: string): string[] {
+
+    return this.appointments
+      .filter(appointment => appointment.date === date)
+      .map(appointment =>
+        `${appointment.startTime} - ${appointment.endTime}`
+      );
+
+  }
+
+  getAvailableSlots(availability: Availability): string[] {
+
+    return this.generateSlots(availability).filter(
+      slot => !this.isSlotReserved(slot, availability.date)
+    );
+
   }
 
   getSelectedDate(): Date {
@@ -213,21 +303,34 @@ export class Calendar implements OnInit {
   }
 
   loadAvailabilities(): void {
-    this.calendarService.getAvailabilities().subscribe({
-      next: (data) => {
-        this.availabilities = data;
-
-        this.changeDetectorRef.detectChanges();
+    this.availabilities = [
+      {
+        id: 1,
+        date: '2026-09-29',
+        startTime: '09:00',
+        endTime: '12:00',
+        duration: 45,
+        breakTime: 15,
+        status: 'Disponible'
       },
-      error: (error) => {
-        console.error('Error loading availabilities:', error);
+      {
+        id: 2,
+        date: '2026-09-29',
+        startTime: '13:00',
+        endTime: '15:00',
+        duration: 45,
+        breakTime: 15,
+        status: 'Disponible'
       }
-    });
+    ];
+
+    this.changeDetectorRef.detectChanges();
   }
 
   constructor(
     private calendarService: CalendarService,
-    private changeDetectorRef: ChangeDetectorRef
+    private changeDetectorRef: ChangeDetectorRef,
+    private appointmentService: AppointmentService
   ) { }
 
   ngOnInit(): void {

@@ -422,4 +422,86 @@
     font-size: 0.75rem;
   }
 }
+/* Layout del calendario + panel de cita */
+.calendar-layout {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    align-items: stretch;
+}
 
+.calendar-content {
+    flex: 1;
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.appointment-panel {
+    width: 420px;
+    flex-shrink: 0;
+
+    min-height: 100vh;
+    max-height: 100vh;
+
+    background: #ffffff;
+
+    border-left: 1px solid #e2e8f0;
+
+    overflow-y: auto;
+
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.08);
+}
+
+.appointment-panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    padding: 24px 28px 18px;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.appointment-panel-header h2 {
+    margin: 0;
+
+    font-size: 28px;
+    font-weight: 700;
+
+    color: #172554;
+}
+
+.appointment-panel-header p {
+    margin: 4px 0 0;
+
+    font-size: 14px;
+
+    color: #64748b;
+}
+
+.appointment-panel-close {
+    border: none;
+    background: transparent;
+
+    font-size: 30px;
+    line-height: 1;
+
+    color: #475569;
+
+    cursor: pointer;
+
+    padding: 0 4px;
+}
+
+.appointment-panel-close:hover {
+    color: #0f172a;
+}
+
+.appointment-panel .appointment-form {
+    width: 100%;
+    max-width: none;
+
+    margin: 0;
+
+    box-sizing: border-box;
+}

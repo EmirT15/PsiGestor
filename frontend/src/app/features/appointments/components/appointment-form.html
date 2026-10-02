@@ -1,0 +1,297 @@
+<div class="appointment-form">
+    <!-- Availability information -->
+
+    <section class="availability-info">
+
+        @if (availability) {
+            <div class="availability-card">
+
+                <div class="availability-top">
+
+                    <div>
+                        <span class="field-label">Fecha</span>
+                        <strong>{{ availability.date }}</strong>
+                    </div>
+
+                    <span class="status-badge">
+                        ● {{ availability.status }}
+                    </span>
+
+                </div>
+
+
+                <div class="schedule-row">
+
+                    <div class="schedule-field">
+
+                        <label for="appointmentSlot">
+                            Horario
+                        </label>
+
+                        <select
+                            id="appointmentSlot"
+                            [(ngModel)]="appointmentSlot"
+                        >
+
+                            @for (slot of getAvailableAppointmentSlots(); track slot) {
+
+                                <option [value]="slot">
+                                    {{ slot }}
+                                </option>
+
+                            }
+
+                        </select>
+
+                    </div>
+
+                    <span class="duration-label">
+                        {{ availability.duration }} min estándar
+                    </span>
+
+                </div>
+
+            </div>
+
+        } @else {
+
+            <p class="warning">
+                No se ha seleccionado ningún horario.
+            </p>
+
+        }
+
+    </section> 
+
+
+    <!-- Student search -->
+
+    <section class="student-section">
+
+    <div class="section-title-row">
+        <h3>Alumno</h3>
+
+        @if (filteredStudents.length > 0) {
+            <span class="match-badge">
+                ● {{ filteredStudents.length }}
+                {{ filteredStudents.length === 1 ? 'coincidencia' : 'coincidencias' }}
+            </span>
+        }
+    </div>
+
+    <label for="studentSearch">
+        Buscar alumno <span class="required">*</span>
+    </label>
+
+    <div class="student-search">
+        <span class="search-icon">⌕</span>
+
+        <input
+            id="studentSearch"
+            type="text"
+            placeholder="Buscar por nombre o matrícula..."
+            [(ngModel)]="searchText"
+        />
+
+        @if (searchText) {
+            <button
+                type="button"
+                class="clear-search"
+                (click)="searchText = ''; selectedStudent = null"
+                aria-label="Limpiar búsqueda"
+            >
+                ×
+            </button>
+        }
+    </div>
+
+    @if (filteredStudents.length > 0) {
+
+        <div class="student-results">
+
+            @for (student of filteredStudents; track student.id) {
+
+                <button
+                    type="button"
+                    class="student-result"
+                    (click)="selectStudent(student)"
+                >
+
+                    <span class="student-avatar">
+                        {{ student.name.charAt(0) }}
+                    </span>
+
+                    <span class="student-info">
+
+                        <strong>
+                            {{ student.name }}
+                        </strong>
+
+                        <span>
+                            {{ student.program }}
+                            • {{ student.semester }}º semestre
+                            • Matrícula: {{ student.studentId }}
+                        </span>
+
+                    </span>
+
+                    <span class="student-check">
+                        ✓
+                    </span>
+
+                </button>
+
+            }
+
+        </div>
+
+    }
+
+</section>
+
+
+    <!-- Modality -->
+
+    <section class="modality-section">
+
+        <h3>Modalidad</h3>
+
+        <div class="modality-options">
+
+            <label>
+                <input
+                    type="radio"
+                    name="modality"
+                    value="In person"
+                    [(ngModel)]="modality"
+                    (change)="onModalityChange()"
+                />
+
+                Presencial
+            </label>
+
+
+            <label>
+                <input
+                    type="radio"
+                    name="modality"
+                    value="Online"
+                    [(ngModel)]="modality"
+                    (change)="onModalityChange()"
+                />
+
+                En línea
+            </label>
+
+        </div>
+
+    </section>
+
+
+    <!-- Location -->
+
+    @if (modality === 'In person') {
+
+    <section class="location-section">
+
+        <div class="location-label-row">
+
+            <label for="location">
+                Ubicación de atención <span class="required">*</span>
+            </label>
+
+            <span class="location-hint">
+                Solo presencial
+            </span>
+ 
+        </div>
+
+        <select
+            id="location"
+            [(ngModel)]="location"
+        >
+
+            <option value="" disabled>
+                Seleccionar ubicación...
+            </option>
+
+            @for (place of locations; track place) {
+
+                <option [value]="place">
+                    {{ place }}
+                </option>
+
+            }
+
+        </select>
+
+    </section>
+
+    }
+
+
+    <!-- Meeting URL -->
+
+    @if (modality === 'Online') {
+
+    <section class="meeting-section">
+
+        <label for="meetingUrl">
+            URL de la reunión
+        </label>
+
+        <input
+            id="meetingUrl"
+            type="url"
+            placeholder="https://meet.google.com/..."
+            [(ngModel)]="meetingUrl"
+        />
+
+    </section>
+
+    }
+
+
+    <!-- Reason -->
+
+    <section class="reason-section">
+
+        <label for="reason">
+            Motivo de la cita
+        </label>
+
+        <textarea
+            id="reason"
+            rows="4"
+            placeholder="Escribe el motivo de la cita..."
+            [(ngModel)]="reason"
+        ></textarea>
+
+    </section>
+
+
+    <!-- Actions -->
+
+    <div class="form-actions">
+
+        <button
+            type="button"
+            class="cancel-button"
+            (click)="cancel()"
+        >
+            Cancelar
+        </button>
+
+
+        <button
+            type="button"
+            class="submit-button"
+            [disabled]="saving"
+            (click)="submit()"
+        >
+            {{ saving ? 'Guardando...' : 'Agendar cita' }}
+        </button>
+
+    </div>
+
+</div>
