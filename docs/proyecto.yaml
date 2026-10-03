@@ -1,4 +1,0 @@
-comando_unico: python backend/verify_environment.py
-
-salidas_esperadas:
-  - docs/verificacion_entorno.txt
