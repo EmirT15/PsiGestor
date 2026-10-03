@@ -1,184 +1,403 @@
-<app-calendar-toolbar
-  [currentDate]="currentDate"
-  [currentView]="currentView"
-  [selectedStatus]="statusFilter"
+<div class="calendar-layout" [class.sidebar-open]="isSidebarOpen">
 
-  (previous)="changeMonth(-1)"
-  (next)="changeMonth(1)"
-  (today)="goToToday()"
+  <div class="calendar-main-content">
 
-  (viewChange)="currentView = $event"
-  (statusChange)="statusFilter = $event"
+    <app-calendar-toolbar
+      [currentDate]="currentDate"
+      [currentView]="currentView"
+      [selectedStatus]="statusFilter"
 
-  (manageSchedule)="openManageSchedule()"
-/>
+      (previous)="changeMonth(-1)"
+      (next)="changeMonth(1)"
+      (today)="goToToday()"
 
-@if (isManageScheduleOpen) {
-
-  <app-manage-schedule-modal
-    (closed)="closeManageSchedule()"
-  />
-
-}
-
-@if (currentView === 'month') {
-
-<div class="calendar-weekdays">
-    <span>Dom</span>
-    <span>Lun</span>
-    <span>Mar</span>
-    <span>Mié</span>
-    <span>Jue</span>
-    <span>Vie</span>
-    <span>Sáb</span>
-</div>
-
-<div class="calendar-grid">
-
-    @for (empty of [].constructor(getFirstDayOfMonth()); track $index) {
-    <span></span>
-    }
-
-    @for (day of getDaysInMonth(); track day.getTime()) {
-    <button type="button" (click)="selectDate(day)" [class.has-availability]="hasAvailability(day)"
-        [class.selected]="isSelected(day)">
-        {{ day.getDate() }}
-    </button>
-    }
-
-</div>
-
-}
-
-@if (currentView === 'day') {
-
-<div class="day-view">
-
-    <h3>
-        {{ getCurrentViewDate().toLocaleDateString('es-MX', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-        }) }}
-    </h3>
-
-    @for (
-    availability of getAvailabilitiesForDate(
-    getCurrentViewDate()
-    );
-    track availability.id
-    ) {
-
-    <app-availability-card [availability]="availability" [slots]="generateSlots(availability)"
-        [selectedSlot]="selectedSlot" [selectedAvailabilityId]="selectedAvailabilityId"
-        (slotSelected)="selectSlot($event, availability)" />
+      (viewChange)="currentView = $event"
+      (statusChange)="statusFilter = $event"
+      (manageSchedule)="openManageSchedule()"
+    />
+    
+    @if (isManageScheduleOpen) {
+      <app-manage-schedule-modal
+     (closed)="closeManageSchedule()"
+    />
 
     }
 
-    @if (selectedSlot && selectedSlotDate === formatDate(getCurrentViewDate())) {
-    <p>Horario seleccionado: <strong>{{ selectedSlot }}</strong></p>
-    }
+    @if (currentView === 'month') {
 
-</div>
+      <div class="calendar-weekdays">
+        <span>Dom</span>
+        <span>Lun</span>
+        <span>Mar</span>
+        <span>Mié</span>
+        <span>Jue</span>
+        <span>Vie</span>
+        <span>Sáb</span>
+      </div>
 
-}
+      <div class="calendar-grid">
 
-@if (currentView === 'week') {
-
-  <section class="week-calendar">
-
-    <div class="week-calendar-scroll">
-
-      <div class="week-schedule-grid">
-
-        <!-- Esquina superior izquierda -->
-        <div class="week-grid-corner"></div>
-
-
-        <!-- Encabezados de lunes a viernes -->
         @for (
-          day of getDisplayedWeekDays();
+          empty of [].constructor(getFirstDayOfMonth());
+          track $index
+        ) {
+          <span></span>
+        }
+
+        @for (
+          day of getDaysInMonth();
           track day.getTime()
         ) {
 
-          <div
-            class="week-day-header"
-            [class.today]="isToday(day)"
+          <button
+            type="button"
+            (click)="selectDate(day)"
+            [class.has-availability]="hasAvailability(day)"
+            [class.selected]="isSelected(day)"
           >
-
-          <span
-              class="week-day-name notranslate"
-              translate="no"
-            >
-              {{ getWeekdayLabel(day) }}
-            </span>
-
-            <span class="week-day-number">
-              {{ day.getDate() }}
-            </span>
-
-          </div>
-
-        }
-
-
-       @for (
-  time of visualTimeRows;
-  track time
-) {
-
-  <div class="week-time-column">
-    <span>{{ time }}</span>
-  </div>
-
-
-          <!-- Celdas de lunes a viernes -->
-          @for (
-            day of getDisplayedWeekDays();
-            track day.getTime()
-          ) {
-
-            <div
-              class="week-calendar-cell"
-              [class.today-column]="isToday(day)"
-            >
-            </div>
-
-          }
+            {{ day.getDate() }}
+          </button>
 
         }
 
       </div>
 
-    </div>
+    }
 
-  </section>
+    @if (currentView === 'day') {
+
+      <div class="day-view">
+
+        <h3>
+          {{ getCurrentViewDate().toLocaleDateString('es-MX', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+          }) }}
+        </h3>
+
+        @for (
+          availability of getAvailabilitiesForDate(
+            getCurrentViewDate()
+          );
+          track availability.id
+        ) {
+
+          <app-availability-card
+            [availability]="availability"
+            [slots]="generateSlots(availability)"
+            [selectedSlot]="selectedSlot"
+            [selectedAvailabilityId]="selectedAvailabilityId"
+            (slotSelected)="selectSlot($event, availability)"
+          />
+
+        }
+
+        @if (
+          selectedSlot &&
+          selectedSlotDate === formatDate(getCurrentViewDate())
+        ) {
+
+          <p>
+            Horario seleccionado:
+            <strong>{{ selectedSlot }}</strong>
+          </p>
+
+        }
+
+      </div>
+
+    }
+
+    @if (currentView === 'week') {
+
+      <section class="week-calendar">
+
+        <div class="week-calendar-scroll">
+
+          <div class="week-schedule-grid">
+
+            <div class="week-grid-corner"></div>
+
+            @for (
+              day of getDisplayedWeekDays();
+              track day.getTime()
+            ) {
+
+              <div
+                class="week-day-header"
+                [class.today]="isToday(day)"
+              >
+
+                <span
+                  class="week-day-name notranslate"
+                  translate="no"
+                >
+                  {{ getWeekdayLabel(day) }}
+                </span>
+
+                <span class="week-day-number">
+                  {{ day.getDate() }}
+                </span>
+
+              </div>
+
+            }
+
+            @for (
+              time of visualTimeRows;
+              track time
+            ) {
+
+              <div class="week-time-column">
+                <span>{{ time }}</span>
+              </div>
+
+              @for (
+                day of getDisplayedWeekDays();
+                track day.getTime()
+              ) {
+
+                <div
+                  class="week-calendar-cell"
+                  [class.today-column]="isToday(day)"
+                >
+                </div>
+
+              }
+
+            }
+
+          </div>
+
+        </div>
+
+      </section>
+
+    }
+
+    @if (selectedDate) {
+
+      <div class="selected-date">
+
+        <h3>
+          Disponibilidad del {{ selectedDate }}
+        </h3>
+
+        @if (selectedSlot) {
+
+          <p>
+            Horario seleccionado:
+            <strong>{{ selectedSlot }}</strong>
+          </p>
+
+        }
+
+        @for (
+          availability of getAvailabilitiesForDate(
+            getSelectedDate()
+          );
+          track availability.id
+        ) {
+
+          <app-availability-card
+            [availability]="availability"
+            [slots]="generateSlots(availability)"
+            [selectedSlot]="selectedSlot"
+            [selectedAvailabilityId]="selectedAvailabilityId"
+            (slotSelected)="selectSlot($event, availability)"
+          />
+
+        }
+
+      </div>
+
+    }
+
+    <app-availability-form
+      (availabilityCreated)="loadAvailabilities()"
+    />
+
+  </div>
+
+
+  <!-- ========================================= -->
+  <!-- SIDEBAR DE HU-03                         -->
+  <!-- ========================================= -->
+
+  <div
+    class="calendar-sidebar-wrapper"
+    [class.open]="isSidebarOpen"
+  >
+
+    @if (isSidebarOpen) {
+
+      @if (
+        selectedAvailabilityStatus ===
+        'Reprogramacion pendiente'
+      ) {
+
+        <app-reschedule-details
+          [data]="selectedRescheduleDetails"
+          (close)="closeSidebar()"
+          (modify)="openRescheduleModal()"
+        />
+
+      } @else if (
+        selectedAvailabilityStatus ===
+        'Disponible'
+      ) {
+
+        <div class="empty-appointment-state">
+
+          <div class="header">
+
+            <h2 class="title">
+              Detalle del Bloque
+            </h2>
+
+            <button
+              type="button"
+              class="icon-btn"
+              (click)="closeSidebar()"
+            >
+
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+
+                <line
+                  x1="18"
+                  y1="6"
+                  x2="6"
+                  y2="18"
+                ></line>
+
+                <line
+                  x1="6"
+                  y1="6"
+                  x2="18"
+                  y2="18"
+                ></line>
+
+              </svg>
+
+            </button>
+
+          </div>
+
+          <div class="empty-content">
+
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#94A3B8"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              style="margin-bottom: 16px;"
+            >
+
+              <rect
+                x="3"
+                y="4"
+                width="18"
+                height="18"
+                rx="2"
+                ry="2"
+              ></rect>
+
+              <line
+                x1="16"
+                y1="2"
+                x2="16"
+                y2="6"
+              ></line>
+
+              <line
+                x1="8"
+                y1="2"
+                x2="8"
+                y2="6"
+              ></line>
+
+              <line
+                x1="3"
+                y1="10"
+                x2="21"
+                y2="10"
+              ></line>
+
+            </svg>
+
+            <h3>
+              Espacio Disponible
+            </h3>
+
+            <p>
+              Este bloque horario aún no ha sido
+              reservado por ningún alumno.
+              Se encuentra libre para agendar citas.
+            </p>
+
+          </div>
+
+        </div>
+
+      } @else {
+
+        <app-appointment-details
+          [appointment]="selectedAppointmentData"
+          (close)="closeSidebar()"
+          (reschedule)="openRescheduleModal()"
+          (cancel)="openCancelModal()"
+        />
+
+      }
+
+    }
+
+  </div>
+
+</div>
+
+
+<!-- ========================================= -->
+<!-- MODAL DE REPROGRAMACIÓN                   -->
+<!-- ========================================= -->
+
+@if (isRescheduleModalOpen) {
+
+  <app-reschedule-modal
+    [data]="rescheduleData"
+    [availableSlots]="getAvailableSlots()"
+    (close)="closeRescheduleModal()"
+    (confirm)="onRescheduleConfirm($event)"
+  />
 
 }
 
 
-<!-- @if (selectedDate) {
-<div class="selected-date">
-    <h3>Disponibilidad del {{ selectedDate }}</h3>
+<!-- ========================================= -->
+<!-- MODAL DE CANCELACIÓN                      -->
+<!-- ========================================= -->
 
-    @if (selectedSlot) {
-    <p>
-        Horario seleccionado: <strong>{{ selectedSlot }}</strong>
-    </p>
-    }
+@if (isCancelModalOpen) {
 
-    @for (
-    availability of getAvailabilitiesForDate(
-    getSelectedDate()
-    );
-    track availability.id
-    ) {
-    <app-availability-card [availability]="availability" [slots]="generateSlots(availability)"
-        [selectedSlot]="selectedSlot" [selectedAvailabilityId]="selectedAvailabilityId" (slotSelected)="selectSlot($event, availability)" />
-    }
-</div>
-} -->
+  <app-cancel-modal
+    [data]="cancelData"
+    (close)="closeCancelModal()"
+    (confirm)="onCancelConfirm($event)"
+  />
 
-
-<!-- <app-availability-form (availabilityCreated)="loadAvailabilities()" /> -->
+}
