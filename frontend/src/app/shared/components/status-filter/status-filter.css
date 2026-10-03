@@ -43,7 +43,8 @@
 
 /* Etiqueta opcional "Filtrar:" antes de los chips */
 .status-filter::before {
-  content: 'Filtrar:';
+ /*content: 'Filtrar:';*/
+ display: none; /* Oculta la etiqueta por defecto */
   font-size: 0.72rem;
   font-weight: 600;
   color: var(--color-muted);
@@ -59,19 +60,29 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
+
+  padding: 5px 12px;
+
   font-family: 'Inter', sans-serif;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 500;
+
   color: var(--color-text);
   background: var(--color-surface);
+
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
+  border-radius: 999px;
+
   cursor: pointer;
-  transition: all 0.18s ease;
-  box-shadow: var(--shadow-sm);
   white-space: nowrap;
-  line-height: 1.4;
+  line-height: 1.3;
+
+  box-shadow: none;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 /* Punto de color indicador (antes del texto) */
@@ -89,38 +100,62 @@
 .status-filter button:hover {
   background: var(--color-bg);
   border-color: #cbd5e1;
-  transform: translateY(-1px);
+  /**transform: translateY(-1px);**/
   box-shadow: var(--shadow-md);
 }
 
 /* ============================================================
    COLORES POR ESTADO (usando nth-child según orden del template)
    ============================================================ */
+/* Todos */
+.status-filter button:nth-child(1)::before {
+  background: #0563a8;
+}
+
+/* Disponibles */
+.status-filter button:nth-child(2)::before {
+  background: #0a9b65;
+}
+
+/* Reservados */
+.status-filter button:nth-child(3)::before {
+  background: #1769a7;
+}
+
+/* Reprogramación pendiente */
+.status-filter button:nth-child(4)::before {
+  background: #0f9c9c;
+}
+
+/* Inhabilitados */
+.status-filter button:nth-child(5)::before {
+  background: #8491a3;
+}
 
 /* 1. Todos */
-.status-filter button:nth-child(1)::before {
+/*.status-filter button:nth-child(1)::before {
   background: var(--color-primary);
-}
+}*/
 
-/* 2. Disponibles */
+/* 2. Disponibles 
 .status-filter button:nth-child(2)::before {
   background: var(--color-success);
-}
+}*/
 
-/* 3. Reservados */
+/* 3. Reservados 
 .status-filter button:nth-child(3)::before {
   background: var(--color-danger);
-}
+}*/
 
-/* 4. Reprogramación pendiente */
+/* 4. Reprogramación pendiente 
 .status-filter button:nth-child(4)::before {
   background: var(--color-warning);
-}
+}*/
 
-/* 5. Inhabilitados */
+/* 5. Inhabilitados 
 .status-filter button:nth-child(5)::before {
   background: var(--color-muted);
-}
+}*/
 
 /* ============================================================
    ESTADO SELECCIONADO (con colores por tipo)

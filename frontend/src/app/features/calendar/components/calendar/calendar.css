@@ -1,24 +1,20 @@
-/* ============================================================
-   VARIABLES GLOBALES Y TIPOGRAFÍA
-   ============================================================ */
+
 :host {
-  --color-primary: #1e3a8a;        /* Azul oscuro principal */
-  --color-primary-light: #3b82f6;  /* Azul brillante */
-  --color-accent: #8b5cf6;         /* Violeta */
-  --color-bg: #f8fafc;             /* Fondo general */
-  --color-surface: #ffffff;        /* Superficie de tarjetas */
-  --color-text: #1e293b;           /* Texto principal */
-  --color-muted: #64748b;          /* Texto secundario */
-  --color-border: #e2e8f0;         /* Bordes suaves */
-  
-  /* Colores de estados */
-  --color-success: #10b981;        /* Verde Disponible */
+  --color-primary: #1e3a8a;
+  --color-primary-light: #3b82f6;
+  --color-accent: #8b5cf6;
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #1e293b;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-success: #10b981;
   --color-success-bg: #ecfdf5;
-  --color-warning: #f59e0b;        /* Naranja Pendiente */
+  --color-warning: #f59e0b;
   --color-warning-bg: #fffbeb;
-  --color-danger: #ef4444;         /* Rojo Reservado */
+  --color-danger: #ef4444;
   --color-danger-bg: #fef2f2;
-  --color-info: #3b82f6;           /* Azul Informativo */
+  --color-info: #3b82f6;
   --color-info-bg: #eff6ff;
 
   --radius-sm: 6px;
@@ -37,9 +33,7 @@
   box-sizing: border-box;
 }
 
-/* ============================================================
-   ENCABEZADO DEL CALENDARIO (HEADER)
-   ============================================================ */
+
 .calendar-header {
   display: flex;
   align-items: center;
@@ -79,7 +73,6 @@
   border-color: var(--color-muted);
 }
 
-/* Botón "Hoy" */
 .calendar-header button:last-child {
   width: auto;
   padding: 0 16px;
@@ -95,9 +88,7 @@
   border-color: var(--color-primary-light);
 }
 
-/* ============================================================
-   BOTONES DE VISTA (DÍA, SEMANA, MES)
-   ============================================================ */
+
 .calendar-view-buttons {
   display: inline-flex;
   background: var(--color-surface);
@@ -134,9 +125,7 @@
   border: 1px solid var(--color-border);
 }
 
-/* ============================================================
-   DÍAS DE LA SEMANA (VISTA MENSUAL)
-   ============================================================ */
+
 .calendar-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -151,9 +140,7 @@
   color: var(--color-muted);
 }
 
-/* ============================================================
-   CUADRÍCULA MENSUAL
-   ============================================================ */
+
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -200,9 +187,7 @@
   box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-primary);
 }
 
-/* ============================================================
-   VISTA DE DÍA
-   ============================================================ */
+
 .day-view {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -220,9 +205,7 @@
   text-transform: capitalize;
 }
 
-/* ============================================================
-   VISTA SEMANAL (ESTILO TARJETAS COMO LA IMAGEN)
-   ============================================================ */
+
 .week-view {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -259,7 +242,6 @@
   letter-spacing: 0.3px;
 }
 
-/* Tarjetas de disponibilidad dentro de la vista semanal */
 .week-day .availability-card {
   padding: 8px 10px;
   border: 1px solid var(--color-border);
@@ -307,9 +289,7 @@
   border-color: var(--color-primary);
 }
 
-/* ============================================================
-   DETALLE DEL DÍA SELECCIONADO
-   ============================================================ */
+
 .selected-date {
   margin-top: 20px;
   padding: 20px;
@@ -338,9 +318,7 @@
   font-weight: 600;
 }
 
-/* ============================================================
-   ETIQUETAS DE ESTADO (BADGES)
-   ============================================================ */
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -372,9 +350,7 @@
   color: var(--color-info);
 }
 
-/* ============================================================
-   SCROLLBAR PERSONALIZADO
-   ============================================================ */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -394,9 +370,7 @@
   background: var(--color-muted);
 }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
+
 @media (max-width: 1024px) {
   .week-view {
     grid-template-columns: repeat(7, minmax(140px, 1fr));
@@ -423,6 +397,181 @@
   }
 }
 
+
+
+.week-calendar {
+  width: 100%;
+  margin-top: 14px;
+
+  background: #ffffff;
+
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+
+  overflow: hidden;
+
+  box-shadow: var(--shadow-sm);
+}
+
+
+.week-calendar-scroll {
+  width: 100%;
+
+  overflow-x: auto;
+}
+
+.week-schedule-grid {
+  display: grid;
+
+  grid-template-columns:
+    64px repeat(5, minmax(0, 1fr));
+
+  width: 100%;
+  min-width: 960px;
+}
+
+
+
+
+
+.week-grid-corner {
+  min-height: 76px;
+
+  background: #f8fafc;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+
+
+
+.week-day-header {
+  min-height: 76px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 3px;
+
+  background: #f8fafc;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+
+  box-sizing: border-box;
+}
+
+
+.week-day-name {
+  font-size: 11px;
+  font-weight: 600;
+
+  color: #5f6b7a;
+
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+
+.week-day-number {
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  color: #182230;
+}
+
+
+
+.week-day-header.today {
+  /* background: #eff6ff;*/
+  background: #eaf3ff;
+}
+
+
+.week-day-header.today .week-day-name {
+  color: var(--color-primary);
+}
+
+
+.week-day-header.today .week-day-number {
+  /* background: var(--color-primary);
+  color: #ffffff;*/
+
+  background: #075ea5;
+  color: #ffffff;
+}
+
+
+
+.week-time-column {
+  min-height: 76px;
+
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+
+  padding: 9px 10px 0 4px;
+
+  background: #ffffff;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+
+  box-sizing: border-box;
+}
+
+.week-time-column span {
+  font-size: 11px;
+  font-weight: 500;
+
+  color: #5f6b7a;
+
+  white-space: nowrap;
+}
+
+
+
+.week-calendar-cell {
+  min-height: 76px;
+
+  background: #ffffff;
+
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+
+  box-sizing: border-box;
+
+  transition: background 0.15s ease;
+}
+
+
+.week-calendar-cell:hover {
+  background: #f8fafc;
+}
+
+
+
+.week-calendar-cell.today-column {
+  background: #fbfdff;
+}
+
+
+.week-calendar-cell.today-column:hover {
+  background: #f5f9ff;
+}
 
 .calendar-layout {
   display: flex;
@@ -462,12 +611,12 @@
   .calendar-layout {
     flex-direction: column;
   }
+
   .calendar-sidebar-wrapper.open {
     width: 100%;
     height: auto;
   }
 }
-
 
 .empty-appointment-state {
   background-color: #ffffff;
@@ -513,4 +662,3 @@
   border-radius: 12px;
   border: 1px dashed #CBD5E1;
 }
-
