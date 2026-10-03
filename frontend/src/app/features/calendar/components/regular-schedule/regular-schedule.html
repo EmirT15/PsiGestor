@@ -94,42 +94,99 @@
   </div>
   <div class="general-settings">
 
-  <div class="duration-setting">
-    <div class="setting-information">
-      <h4>Duración habitual de las citas</h4>
+  <div class="duration-setting duration-setting-redesigned">
+
+  <div class="duration-heading">
+    <div>
+      <h4>Duración habitual de cada cita / sesión</h4>
 
       <p>
-        Define la duración que tendrán normalmente las sesiones.
+        Selecciona el intervalo estándar de atención.
       </p>
     </div>
 
-    <div class="duration-field">
-  <div class="duration-control">
-    <input
-      id="appointment-duration"
-      type="number"
-      min="1"
-      placeholder="Ej. 50"
-      [(ngModel)]="appointmentDuration"
-      [class.input-error]="
-        appointmentDuration !== null &&
-        !isAppointmentDurationValid()
-      "
-    />
-
-    <span>minutos</span>
+    @if (appointmentDuration !== null && isAppointmentDurationValid()) {
+      <span class="selected-duration">
+        {{ appointmentDuration }} min
+      </span>
+    }
   </div>
 
+  <div class="duration-options">
+
+    @for (duration of durationOptions; track duration) {
+      <button
+        type="button"
+        class="duration-option"
+        [class.duration-option-active]="isDurationSelected(duration)"
+        (click)="selectDuration(duration)"
+      >
+        <span class="duration-value">
+          {{ duration }} min
+        </span>
+      </button>
+    }
+
+    <button
+      type="button"
+      class="duration-option"
+      [class.duration-option-active]="customDurationEnabled"
+      (click)="enableCustomDuration()"
+    >
+      <span class="duration-value">
+        Personalizada
+      </span>
+    </button>
+
+  </div>
+
+  @if (customDurationEnabled) {
+
+    <div class="custom-duration">
+
+      <div class="custom-duration-information">
+        <span class="custom-duration-title">
+          Duración personalizada
+        </span>
+
+        <span class="custom-duration-description">
+          Define manualmente la duración habitual de la sesión.
+        </span>
+      </div>
+
+      <div class="custom-duration-control">
+
+        <input
+          id="appointment-duration"
+          type="number"
+          min="1"
+          placeholder="Ej. 50"
+          [(ngModel)]="appointmentDuration"
+          [class.input-error]="
+            appointmentDuration !== null &&
+            !isAppointmentDurationValid()
+          "
+        />
+
+        <span>minutos</span>
+
+      </div>
+
+    </div>
+
+  }
+
   @if (
+    customDurationEnabled &&
     appointmentDuration !== null &&
     !isAppointmentDurationValid()
   ) {
-    <span class="validation-error">
+    <span class="validation-error duration-validation">
       La duración debe ser mayor que 0 minutos.
     </span>
   }
+
 </div>
-  </div>
 
   <app-break-schedule
   [config]="breakConfig"

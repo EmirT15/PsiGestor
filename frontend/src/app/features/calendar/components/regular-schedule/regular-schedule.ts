@@ -43,6 +43,11 @@ saveError = '';
 
   appointmentDuration: number | null = null;
 
+  readonly durationOptions = [30, 45, 60];
+  
+  customDurationEnabled = false;
+
+
 breakConfig: BreakScheduleConfig = {
   enabled: false,
   startTime: '',
@@ -83,6 +88,28 @@ isAppointmentDurationValid(): boolean {
   return (
     this.appointmentDuration !== null &&
     this.appointmentDuration > 0
+  );
+}
+selectDuration(duration: number): void {
+  this.appointmentDuration = duration;
+  this.customDurationEnabled = false;
+}
+
+enableCustomDuration(): void {
+  this.customDurationEnabled = true;
+
+  if (
+    this.appointmentDuration !== null &&
+    this.durationOptions.includes(this.appointmentDuration)
+  ) {
+    this.appointmentDuration = null;
+  }
+}
+
+isDurationSelected(duration: number): boolean {
+  return (
+    !this.customDurationEnabled &&
+    this.appointmentDuration === duration
   );
 }
 
