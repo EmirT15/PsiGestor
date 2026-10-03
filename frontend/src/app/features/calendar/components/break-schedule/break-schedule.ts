@@ -43,4 +43,55 @@ error: string | null = null;
       endTime,
     });
   }
+  getBreakDurationMinutes(): number | null {
+  if (
+    !this.config.startTime ||
+    !this.config.endTime
+  ) {
+    return null;
+  }
+
+  const [startHours, startMinutes] =
+    this.config.startTime.split(':').map(Number);
+
+  const [endHours, endMinutes] =
+    this.config.endTime.split(':').map(Number);
+
+  const start =
+    startHours * 60 + startMinutes;
+
+  const end =
+    endHours * 60 + endMinutes;
+
+  const duration = end - start;
+
+  return duration > 0 ? duration : null;
+}
+
+getBreakDurationLabel(): string {
+  const duration =
+    this.getBreakDurationMinutes();
+
+  if (duration === null) {
+    return '';
+  }
+
+  if (duration < 60) {
+    return `${duration} min de descanso`;
+  }
+
+  if (duration % 60 === 0) {
+    const hours = duration / 60;
+
+    return hours === 1
+      ? '1 hora de descanso'
+      : `${hours} horas de descanso`;
+  }
+
+  const hours = Math.floor(duration / 60);
+  const minutes = duration % 60;
+
+  return `${hours} h ${minutes} min de descanso`;
+}
+
 }

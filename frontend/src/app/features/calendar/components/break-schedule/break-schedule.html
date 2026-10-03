@@ -1,65 +1,147 @@
-<section class="break-schedule">
-  <div class="break-header">
-    <div class="break-information">
-      <h4>Descanso habitual</h4>
+<section class="break-section">
 
-      <p>
-        Define un periodo de descanso dentro de tu jornada habitual.
-      </p>
-    </div>
+  <div class="break-section-header">
 
-    <button
-      type="button"
-      class="break-toggle"
-      [class.break-toggle-active]="config.enabled"
-      [attr.aria-pressed]="config.enabled"
-      aria-label="Activar o desactivar descanso habitual"
-      (click)="toggleBreak()"
-    >
-      <span class="toggle-circle"></span>
-    </button>
+    <span class="break-section-title">
+      Descanso habitual
+    </span>
+
+    @if (config.enabled) {
+      <span class="break-status break-status-active">
+        <span class="break-status-dot"></span>
+        Activo en días laborales
+      </span>
+    } @else {
+      <span class="break-status">
+        Desactivado
+      </span>
+    }
+
   </div>
 
-  @if (config.enabled) {
-    <div class="break-times">
 
-      <div class="time-field">
-        <label for="break-start">
-          Hora de inicio
-        </label>
+  <div class="break-card">
 
-        <input
-          id="break-start"
-          type="time"
-          [ngModel]="config.startTime"
-          (ngModelChange)="updateStartTime($event)"
-        />
+    <div class="break-main-row">
+
+      <div class="break-main-information">
+
+        <div class="break-icon">
+          ☕
+        </div>
+
+        <div class="break-text">
+
+          <span class="break-title">
+            Habilitar descanso habitual
+          </span>
+
+          <span class="break-description">
+            Pausa la agenda durante el periodo de descanso en los días laborales.
+          </span>
+
+        </div>
+
       </div>
 
-      <span class="time-separator">a</span>
 
-      <div class="time-field">
-        <label for="break-end">
-          Hora de finalización
-        </label>
+      <button
+        type="button"
+        class="break-toggle"
+        [class.break-toggle-active]="config.enabled"
+        [attr.aria-pressed]="config.enabled"
+        aria-label="Activar o desactivar descanso habitual"
+        (click)="toggleBreak()"
+      >
+        <span class="toggle-circle"></span>
+      </button>
 
-        <input
-          id="break-end"
-          type="time"
-          [ngModel]="config.endTime"
-          (ngModelChange)="updateEndTime($event)"
-        />
+    </div>
+
+
+    @if (config.enabled) {
+
+      <div class="break-divider"></div>
+
+      <div class="break-settings-row">
+
+        <div class="break-time-settings">
+
+          <div class="break-time-field">
+
+            <span class="break-time-icon">
+              ◷
+            </span>
+
+            <label for="break-start">
+              Inicio
+            </label>
+
+            <input
+              id="break-start"
+              type="time"
+              [ngModel]="config.startTime"
+              (ngModelChange)="updateStartTime($event)"
+              [class.break-input-error]="error"
+            />
+
+          </div>
+
+
+          <span class="break-time-separator">
+            hasta
+          </span>
+
+
+          <div class="break-time-field">
+
+            <span class="break-time-icon">
+              ◷
+            </span>
+
+            <label for="break-end">
+              Fin
+            </label>
+
+            <input
+              id="break-end"
+              type="time"
+              [ngModel]="config.endTime"
+              (ngModelChange)="updateEndTime($event)"
+              [class.break-input-error]="error"
+            />
+
+          </div>
+
+
+          @if (getBreakDurationMinutes() !== null) {
+
+            <span class="break-duration-badge">
+              {{ getBreakDurationLabel() }}
+            </span>
+
+          }
+
+        </div>
+
+
+        <span class="break-application-info">
+          Aplica a todas las jornadas activas
+        </span>
+
       </div>
 
-    </div>
-    @if (error) {
-  <span class="validation-error">
-    {{ error }}
-  </span>
-}
-  } @else {
-    <div class="break-disabled">
-      Sin descanso configurado
-    </div>
-  }
+
+      @if (error) {
+
+        <span class="validation-error">
+          {{ error }}
+        </span>
+
+      }
+
+    }
+
+  </div>
+
 </section>
