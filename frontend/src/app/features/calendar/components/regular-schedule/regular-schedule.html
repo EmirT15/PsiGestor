@@ -31,14 +31,16 @@
             <span class="day-name">{{ day.name }}</span>
 
             <span class="day-status">
-  {{
-    !day.enabled
-      ? 'No laborable'
-      : day.startTime && day.endTime
-        ? 'Horario configurado'
-        : 'Horario por definir'
-  }}
-</span>
+              {{
+                !day.enabled
+                ? 'No laborable'
+                : getDayError(day)
+                  ? 'Horario por definir'
+                  : 'Horario configurado'    
+              }}
+              
+  
+            </span>
           </div>
         </div>
 
@@ -135,5 +137,22 @@
   (configChange)="updateBreakConfig($event)"
 />
 
+</div>
+
+<div class="schedule-actions">
+  @if (saveError) {
+    <span class="save-error">
+      {{ saveError }}
+    </span>
+  }
+
+  <button
+    type="button"
+    class="save-button"
+    [disabled]="!isScheduleValid()"
+    (click)="saveSchedule()"
+  >
+    Guardar configuración
+  </button>
 </div>
 </section>

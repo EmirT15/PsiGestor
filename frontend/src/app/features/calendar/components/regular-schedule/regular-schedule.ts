@@ -1,17 +1,28 @@
-import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms'
+import {
+  Component,
+  EventEmitter,
+  Output,
+} from '@angular/core';
+
+import { FormsModule } from '@angular/forms';
+
 import {
   BreakSchedule,
   BreakScheduleConfig,
 } from '../break-schedule/break-schedule';
 
-interface WorkDay {
+export interface WorkDay {
   id: number;
   name: string;
   shortName: string;
   enabled: boolean;
   startTime: string;
   endTime: string;
+}
+export interface RegularScheduleConfig {
+  workDays: WorkDay[];
+  appointmentDuration: number;
+  break: BreakScheduleConfig;
 }
 
 @Component({
@@ -24,6 +35,11 @@ interface WorkDay {
   styleUrl: './regular-schedule.css',
 })
 export class RegularSchedule {
+
+  @Output()
+scheduleSaved = new EventEmitter<RegularScheduleConfig>();
+
+saveError = '';
 
   appointmentDuration: number | null = null;
 
@@ -140,6 +156,33 @@ isScheduleValid(): boolean {
   }
 
   return true;
+}
+
+saveSchedule(): void {
+  this.saveError = '';
+
+  if (!this.isScheduleValid()) {
+    this.saveError =
+      'Revisa los datos del horario habitual antes de guardar.';
+    return;
+  }
+
+  const config: RegularScheduleConfig = {
+    workDays: this.workDays
+      .filter((day) => day.enabled)
+      .map((day) => ({
+        ...day,
+      })),
+
+    appointmentDuration:
+      this.appointmentDuration as number,
+
+    break: {
+      ...this.breakConfig,
+    },
+  };
+
+  this.scheduleSaved.emit(config);
 }
 isBreakInsideWorkingHours(): boolean {
   if (!this.breakConfig.enabled) {

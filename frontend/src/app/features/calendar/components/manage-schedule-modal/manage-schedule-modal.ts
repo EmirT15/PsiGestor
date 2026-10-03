@@ -1,6 +1,13 @@
 import { Component, EventEmitter, Output } from '@angular/core';
-import { RegularSchedule } from '../regular-schedule/regular-schedule';
-import { DisabledSchedulesList } from '../disabled-schedules-list/disabled-schedules-list';
+
+import {
+  RegularSchedule,
+  RegularScheduleConfig,
+  } from '../regular-schedule/regular-schedule';
+
+import { 
+  DisabledSchedulesList 
+  } from '../disabled-schedules-list/disabled-schedules-list';
 
 type ScheduleTab = 'regular' | 'disabled';
 
@@ -22,6 +29,15 @@ export class ManageScheduleModal {
   selectTab(tab: ScheduleTab): void {
     this.activeTab = tab;
   }
+
+handleRegularScheduleSaved(
+  config: RegularScheduleConfig
+): void {
+  console.log(
+    'Configuración de horario habitual:',
+    config
+  );
+}
 
   close(): void {
     this.closed.emit();

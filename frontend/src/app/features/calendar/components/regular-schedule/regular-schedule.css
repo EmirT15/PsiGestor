@@ -316,3 +316,56 @@
 
   gap: 5px;
 }
+.schedule-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 14px;
+
+  margin-top: 18px;
+  padding-top: 16px;
+
+  border-top: 1px solid #e5e7eb;
+}
+
+.save-error {
+  margin-right: auto;
+
+  color: #b42318;
+
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.save-button {
+  height: 36px;
+
+  padding: 0 16px;
+
+  border: 0;
+  border-radius: 7px;
+
+  background: #075ea5;
+
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.save-button:hover:not(:disabled) {
+  background: #064f8a;
+}
+
+.save-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

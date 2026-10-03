@@ -86,7 +86,9 @@
             el componente regular-schedule.
           -->
 
-          <app-regular-schedule />
+          <app-regular-schedule
+          (scheduleSaved)="handleRegularScheduleSaved($event)"          
+          />
 
         </section>
 
