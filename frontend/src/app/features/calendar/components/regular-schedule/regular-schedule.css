@@ -573,3 +573,191 @@
   }
 
 }
+ /* ============================================================
+   DÍAS LABORALES HABILITADOS
+   ============================================================ */
+
+.workdays-section {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+
+  margin-bottom: 16px;
+}
+
+.workdays-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.workdays-title {
+  color: #4b5563;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.active-days-count {
+  color: #047857;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.workdays-selector {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+
+  gap: 6px;
+}
+
+.workday-button {
+  min-height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 4px;
+
+  padding: 5px 7px;
+
+  color: #6b7280;
+  background: #f3f4f6;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.workday-button:hover {
+  color: #075ea5;
+
+  background: #f4f8fc;
+  border-color: #a9c8e5;
+}
+
+.workday-button-active {
+  color: #ffffff;
+
+  background: #075ea5;
+
+  border-color: #075ea5;
+
+  box-shadow: 0 1px 3px rgba(7, 94, 165, 0.18);
+}
+
+.workday-button-active:hover {
+  color: #ffffff;
+
+  background: #064f8a;
+
+  border-color: #064f8a;
+}
+
+.workday-check {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+
+/* ============================================================
+   ENCABEZADO DE CONFIGURACIÓN POR DÍA
+   ============================================================ */
+
+.schedule-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 7px;
+}
+
+.schedule-list-header > span:first-child {
+  color: #4b5563;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.schedule-list-description {
+  color: #9ca3af;
+
+  font-size: 10px;
+  font-weight: 500;
+}
+
+
+/* ============================================================
+   SIN DÍAS LABORALES
+   ============================================================ */
+
+.no-workdays-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 4px;
+
+  padding: 22px 16px;
+
+  text-align: center;
+
+  background: #f9fafb;
+
+  border: 1px dashed #d1d5db;
+  border-radius: 9px;
+}
+
+.no-workdays-title {
+  color: #4b5563;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.no-workdays-description {
+  max-width: 360px;
+
+  color: #9ca3af;
+
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 640px) {
+
+  .workdays-selector {
+    grid-template-columns:
+      repeat(4, minmax(0, 1fr));
+  }
+
+}

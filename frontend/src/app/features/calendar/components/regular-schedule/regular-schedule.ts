@@ -294,6 +294,12 @@ isBreakInsideWorkingHours(): boolean {
     },
   ];
 
+  get activeDaysCount(): number {
+    return this.workDays.filter(
+      (day) => day.enabled
+      ).length;
+  }
+
   toggleDay(day: WorkDay): void {
     day.enabled = !day.enabled;
   }

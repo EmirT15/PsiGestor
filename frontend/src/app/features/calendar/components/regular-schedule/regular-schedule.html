@@ -8,27 +8,92 @@
       </p>
     </div>
   </div>
+<div class="workdays-section">
+
+  <div class="workdays-header">
+
+    <span class="workdays-title">
+      Días laborales habilitados
+    </span>
+
+    <span class="active-days-count">
+      {{ activeDaysCount }}
+      {{ activeDaysCount === 1 ? 'día activo' : 'días activos' }}
+    </span>
+
+  </div>
+
+  <div class="workdays-selector">
+
+    @for (day of workDays; track day.id) {
+
+      <button
+        type="button"
+        class="workday-button"
+        [class.workday-button-active]="day.enabled"
+        [attr.aria-pressed]="day.enabled"
+        [attr.aria-label]="'Activar o desactivar ' + day.name"
+        (click)="toggleDay(day)"
+      >
+
+        @if (day.enabled) {
+          <span class="workday-check">
+            ✓
+          </span>
+        }
+
+        <span>
+          {{ day.shortName }}
+        </span>
+
+      </button>
+
+    }
+
+  </div>
+
+</div>
+
+<div class="schedule-list-header">
+
+  <span>
+    Configuración independiente por día
+  </span>
+
+  <span class="schedule-list-description">
+    Jornadas personalizadas
+  </span>
+
+</div>
 
   <div class="schedule-list">
+@if (activeDaysCount === 0) {
+
+  <div class="no-workdays-message">
+
+    <span class="no-workdays-title">
+      No hay días laborales seleccionados
+    </span>
+
+    <span class="no-workdays-description">
+      Selecciona al menos un día en la parte superior para configurar su horario.
+    </span>
+
+  </div>
+
+}
     @for (day of workDays; track day.id) {
+      @if (day.enabled){
       <article
         class="schedule-row"
-        [class.schedule-row-disabled]="!day.enabled"
       >
         <div class="day-section">
-          <button
-            type="button"
-            class="toggle"
-            [class.toggle-active]="day.enabled"
-            [attr.aria-pressed]="day.enabled"
-            [attr.aria-label]="'Activar o desactivar ' + day.name"
-            (click)="toggleDay(day)"
-          >
-            <span class="toggle-circle"></span>
-          </button>
+          
 
           <div class="day-information">
-            <span class="day-name">{{ day.name }}</span>
+            <span class="day-name">
+              {{ day.name }}
+            </span>
 
             <span class="day-status">
               {{
@@ -39,9 +104,9 @@
                   : 'Horario configurado'    
               }}
               
-  
             </span>
           </div>
+
         </div>
 
         @if (day.enabled) {
@@ -84,13 +149,10 @@
       </span>
     }
   </div>
-} @else {
-  <span class="disabled-message">
-    Sin horario configurado
-  </span>
-}
+} 
       </article>
     }
+  }
   </div>
   <div class="general-settings">
 
