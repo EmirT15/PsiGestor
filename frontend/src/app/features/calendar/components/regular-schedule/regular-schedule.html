@@ -85,72 +85,130 @@
     @for (day of workDays; track day.id) {
       @if (day.enabled){
       <article
-        class="schedule-row"
+  class="schedule-row"
+  [class.schedule-row-editing]="isDayEditing(day)"
+>
+
+  <div class="day-section">
+
+    <span class="day-marker"></span>
+
+    <div class="day-information">
+
+      <span
+        class="day-name"
+        [class.day-name-editing]="isDayEditing(day)"
       >
-        <div class="day-section">
-          
-
-          <div class="day-information">
-            <span class="day-name">
-              {{ day.name }}
-            </span>
-
-            <span class="day-status">
-              {{
-                !day.enabled
-                ? 'No laborable'
-                : getDayError(day)
-                  ? 'Horario por definir'
-                  : 'Horario configurado'    
-              }}
-              
-            </span>
-          </div>
-
-        </div>
-
-        @if (day.enabled) {
-  <div class="schedule-config">
-    <div class="schedule-times">
-
-      <div class="time-field">
-        <label [for]="'start-' + day.id">
-          Hora de inicio
-        </label>
-
-        <input
-          [id]="'start-' + day.id"
-          type="time"
-          [(ngModel)]="day.startTime"
-          [class.input-error]="getDayError(day)"
-        />
-      </div>
-
-      <span class="time-separator">a</span>
-
-      <div class="time-field">
-        <label [for]="'end-' + day.id">
-          Hora de finalización
-        </label>
-
-        <input
-          [id]="'end-' + day.id"
-          type="time"
-          [(ngModel)]="day.endTime"
-          [class.input-error]="getDayError(day)"
-        />
-      </div>
+        {{ day.name }}
+      </span>
 
     </div>
 
-    @if (getDayError(day); as error) {
-      <span class="validation-error">
-        {{ error }}
-      </span>
-    }
   </div>
-} 
-      </article>
+
+
+  @if (isDayEditing(day)) {
+
+    <div class="schedule-editing">
+
+      <div class="editing-fields">
+
+        <div class="editing-time-field">
+
+          <span class="editing-label">
+            Inicio
+          </span>
+
+          <input
+            [id]="'start-' + day.id"
+            type="time"
+            [(ngModel)]="day.startTime"
+            [class.input-error]="getDayError(day)"
+          />
+
+        </div>
+
+        <span class="editing-separator">
+          hasta
+        </span>
+
+        <div class="editing-time-field">
+
+          <span class="editing-label">
+            Fin
+          </span>
+
+          <input
+            [id]="'end-' + day.id"
+            type="time"
+            [(ngModel)]="day.endTime"
+            [class.input-error]="getDayError(day)"
+          />
+
+        </div>
+
+      </div>
+
+      @if (getDayError(day); as error) {
+
+        <span class="validation-error">
+          {{ error }}
+        </span>
+
+      }
+
+    </div>
+
+
+    <button
+      type="button"
+      class="confirm-edit-button"
+      [disabled]="!isDayTimeValid(day)"
+      [attr.aria-label]="'Confirmar horario de ' + day.name"
+      (click)="confirmDayEditing(day)"
+    >
+      ✓
+    </button>
+
+  } @else {
+
+    <div class="assigned-schedule">
+
+      <span class="schedule-clock">
+        ◷
+      </span>
+
+      <span class="assigned-label">
+        Horario asignado:
+      </span>
+
+      <span class="assigned-time">
+        {{ formatTime12Hour(day.startTime) }}
+      </span>
+
+      <span class="assigned-separator">
+        a
+      </span>
+
+      <span class="assigned-time">
+        {{ formatTime12Hour(day.endTime) }}
+      </span>
+
+    </div>
+
+
+    <button
+      type="button"
+      class="edit-schedule-button"
+      [attr.aria-label]="'Editar horario de ' + day.name"
+      (click)="startEditingDay(day)"
+    >
+      ✎
+    </button>
+
+  }
+
+</article>
     }
   }
   </div>

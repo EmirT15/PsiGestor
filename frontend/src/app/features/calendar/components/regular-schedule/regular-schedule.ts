@@ -43,6 +43,8 @@ saveError = '';
 
   appointmentDuration: number | null = null;
 
+  editingDayId: number | null = null;
+
   readonly durationOptions = [30, 45, 60];
   
   customDurationEnabled = false;
@@ -299,8 +301,55 @@ isBreakInsideWorkingHours(): boolean {
       (day) => day.enabled
       ).length;
   }
+  startEditingDay(day: WorkDay): void {
+  this.editingDayId = day.id;
+}
+
+confirmDayEditing(day: WorkDay): void {
+  if (!this.isDayTimeValid(day)) {
+    return;
+  }
+
+  this.editingDayId = null;
+}
+
+isDayEditing(day: WorkDay): boolean {
+  return this.editingDayId === day.id;
+}
+
+formatTime12Hour(time: string): string {
+  if (!time) {
+    return '';
+  }
+
+  const [hours, minutes] = time
+    .split(':')
+    .map(Number);
+
+  const period = hours >= 12 ? 'PM' : 'AM';
+
+  let formattedHours = hours % 12;
+
+  if (formattedHours === 0) {
+    formattedHours = 12;
+  }
+
+  return `${String(formattedHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
+}
 
   toggleDay(day: WorkDay): void {
-    day.enabled = !day.enabled;
+  day.enabled = !day.enabled;
+
+  if (day.enabled) {
+    if (!day.startTime || !day.endTime) {
+      this.editingDayId = day.id;
+    }
+
+    return;
   }
+
+  if (this.editingDayId === day.id) {
+    this.editingDayId = null;
+  }
+}
 }
