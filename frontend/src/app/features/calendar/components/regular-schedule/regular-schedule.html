@@ -1,13 +1,5 @@
 <section class="regular-schedule">
-  <div class="schedule-heading">
-    <div>
-      <h3>Horario habitual</h3>
-
-      <p>
-        Selecciona tus días de atención y define el horario correspondiente.
-      </p>
-    </div>
-  </div>
+ 
 <div class="workdays-section">
 
   <div class="workdays-header">
@@ -317,19 +309,35 @@
 </div>
 
 <div class="schedule-actions">
-  @if (saveError) {
-    <span class="save-error">
-      {{ saveError }}
-    </span>
-  }
 
   <button
     type="button"
-    class="save-button"
-    [disabled]="!isScheduleValid()"
-    (click)="saveSchedule()"
+    class="cancel-button"
+    (click)="cancel()"
   >
-    Guardar configuración
+    Cancelar
   </button>
+
+
+  <div class="schedule-save-section">
+
+    @if (saveError) {
+      <span class="save-error">
+        {{ saveError }}
+      </span>
+    }
+
+    <button
+      type="button"
+      class="save-button"
+      [disabled]="!isScheduleValid()"
+      (click)="saveSchedule()"
+    >
+      <span class="save-icon">✓</span>
+      Guardar horario habitual
+    </button>
+
+  </div>
+
 </div>
 </section>

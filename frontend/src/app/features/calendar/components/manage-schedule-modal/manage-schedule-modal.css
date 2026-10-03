@@ -32,8 +32,8 @@
    ============================================================ */
 
 .schedule-modal {
-  width: min(720px, 100%);
-  max-height: calc(100vh - 48px);
+  width: min(760px, 100%);
+  max-height: calc(100vh - 32px);
 
   display: flex;
   flex-direction: column;
@@ -41,11 +41,11 @@
   background: #ffffff;
 
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  border-radius: 14px;
 
   box-shadow:
-    0 24px 60px rgba(15, 23, 42, 0.18),
-    0 6px 18px rgba(15, 23, 42, 0.08);
+    0 20px 50px rgba(15, 23, 42, 0.16),
+    0 5px 14px rgba(15, 23, 42, 0.07);
 
   overflow: hidden;
 }
@@ -60,9 +60,9 @@
   align-items: flex-start;
   justify-content: space-between;
 
-  gap: 16px;
+  gap: 14px;
 
-  padding: 18px 20px 12px;
+  padding: 14px 18px 10px;
 }
 
 
@@ -75,8 +75,8 @@
 
 
 .modal-icon {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
 
   flex-shrink: 0;
 
@@ -87,9 +87,9 @@
   background: #eaf3ff;
   color: #075ea5;
 
-  border-radius: 9px;
+  border-radius: 8px;
 
-  font-size: 18px;
+  font-size: 17px;
 }
 
 
@@ -152,9 +152,9 @@
   display: flex;
   align-items: flex-end;
 
-  gap: 6px;
+  gap: 18px;
 
-  padding: 0 20px;
+  padding: 0 18px;
 
   border-bottom: 1px solid #e2e8f0;
 }
@@ -163,7 +163,7 @@
 .schedule-tabs button {
   position: relative;
 
-  padding: 10px 12px;
+  padding: 9px 2px;
 
   border: 0;
 
@@ -171,7 +171,8 @@
 
   color: #64748b;
 
-  font-size: 12px;
+  font-family: inherit;
+  font-size: 11px;
   font-weight: 500;
 
   cursor: pointer;
@@ -212,9 +213,11 @@
    ============================================================ */
 
 .modal-content {
-  min-height: 360px;
+  min-height: 0;
 
-  padding: 16px 20px 20px;
+  padding: 12px 18px 14px;
+
+  background: #f8fafc;
 
   overflow-y: auto;
 }
@@ -222,7 +225,7 @@
 
 .tab-workspace {
   width: 100%;
-  min-height: 320px;
+  min-height: 0;
 }
 
 

@@ -27,7 +27,7 @@
           </h2>
 
           <p>
-            Configura tus rangos de atención y administra tus disponibilidades institucionales
+            Configura tus rangos de atención y administra los cambios de tu agenda
           </p>
 
         </div>
@@ -87,7 +87,8 @@
           -->
 
           <app-regular-schedule
-          (scheduleSaved)="handleRegularScheduleSaved($event)"          
+          (scheduleSaved)="handleRegularScheduleSaved($event)"
+          (cancelRequested)="close()"
           />
 
         </section>

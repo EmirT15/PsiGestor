@@ -316,59 +316,132 @@
 
   gap: 5px;
 }
+
+/* ============================================================
+   ACCIONES DEL HORARIO HABITUAL
+   ============================================================ */
+
 .schedule-actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
 
-  gap: 14px;
+  gap: 16px;
 
-  margin-top: 18px;
-  padding-top: 16px;
+  margin-top: 14px;
+  padding-top: 12px;
 
   border-top: 1px solid #e5e7eb;
 }
 
-.save-error {
-  margin-right: auto;
 
-  color: #b42318;
+/* ============================================================
+   CANCELAR
+   ============================================================ */
 
-  font-size: 10px;
-  line-height: 1.4;
-}
+.cancel-button {
+  min-height: 34px;
 
-.save-button {
-  height: 36px;
+  padding: 0 14px;
 
-  padding: 0 16px;
+  color: #6b7280;
+  background: #ffffff;
 
-  border: 0;
+  border: 1px solid #d1d5db;
   border-radius: 7px;
 
-  background: #075ea5;
-
-  color: #ffffff;
-
   font-family: inherit;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
 
   cursor: pointer;
 
   transition:
     background-color 0.15s ease,
-    opacity 0.15s ease;
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.cancel-button:hover {
+  color: #374151;
+
+  background: #f9fafb;
+
+  border-color: #9ca3af;
+}
+
+
+/* ============================================================
+   GUARDAR
+   ============================================================ */
+
+.schedule-save-section {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+}
+
+.save-error {
+  max-width: 260px;
+
+  color: #b42318;
+
+  font-size: 9px;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.save-button {
+  min-height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  padding: 0 15px;
+
+  color: #ffffff;
+  background: #075ea5;
+
+  border: 0;
+  border-radius: 7px;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow: 0 1px 3px rgba(7, 94, 165, 0.16);
+
+  transition:
+    background-color 0.15s ease,
+    opacity 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .save-button:hover:not(:disabled) {
   background: #064f8a;
+
+  box-shadow: 0 2px 5px rgba(7, 94, 165, 0.2);
 }
 
 .save-button:disabled {
   opacity: 0.45;
+
+  box-shadow: none;
+
   cursor: not-allowed;
 }
+
+.save-icon {
+  font-size: 12px;
+  font-weight: 700;
+}
+
 /* ============================================================
    DURACIÓN HABITUAL DE LAS CITAS
    ============================================================ */

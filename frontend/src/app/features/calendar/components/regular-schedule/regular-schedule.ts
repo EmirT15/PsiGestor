@@ -37,9 +37,12 @@ export interface RegularScheduleConfig {
 export class RegularSchedule {
 
   @Output()
-scheduleSaved = new EventEmitter<RegularScheduleConfig>();
+  scheduleSaved = new EventEmitter<RegularScheduleConfig>();
 
-saveError = '';
+  @Output()
+  cancelRequested = new EventEmitter<void>(); 
+
+  saveError = '';
 
   appointmentDuration: number | null = null;
 
@@ -186,7 +189,9 @@ isScheduleValid(): boolean {
 
   return true;
 }
-
+cancel(): void {
+  this.cancelRequested.emit();
+}
 saveSchedule(): void {
   this.saveError = '';
 
