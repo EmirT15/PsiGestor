@@ -1,46 +1,90 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+
+import { isPlatformBrowser } from '@angular/common';
 import { Availability } from '../../models/availability.model';
 import { AvailabilityForm } from '../availability-form/availability-form';
-import { StatusFilterComponent, type StatusFilter } from '../../../../shared/components/status-filter/status-filter';
-import { CalendarService } from '../../services/calendar.service';
 import { AvailabilityCard } from '../availability-card/availability-card';
-import {CalendarToolbar} from '../calendar-toolbar/calendar-toolbar';
+import { AppointmentDetails } from '../appointment-details/appointment-details';
+import { RescheduleDetails } from '../reschedule-details/reschedule-details';
+import {
+  RescheduleModal,
+  RescheduleData
+} from '../reschedule-modal/reschedule-modal';
+import {
+  CancelModal,
+  CancelModalData
+} from '../cancel-modal/cancel-modal';
+import type { StatusFilter } from '../../../../shared/components/status-filter/status-filter';
+import { CalendarService } from '../../services/calendar.service';
+import { CalendarToolbar } from '../calendar-toolbar/calendar-toolbar';
+
 
 
 @Component({
   imports: [
     AvailabilityForm,
     AvailabilityCard,
+    AppointmentDetails,
+    RescheduleDetails,
+    RescheduleModal,
+    CancelModal,
     CalendarToolbar,
-    StatusFilterComponent
   ],
   selector: 'app-calendar',
   styleUrl: './calendar.css',
   templateUrl: './calendar.html',
 })
-
 export class Calendar implements OnInit {
+
+  private isBrowser: boolean;
 
   availabilities: Availability[] = [];
 
   currentDate = new Date();
-  currentView: 'day' | 'week' | 'month' = 'week'; //se cambio month por week para que se vea la semana por default
+
+  currentView: 'day' | 'week' | 'month' = 'week';
+
   statusFilter: StatusFilter = 'all';
+
   selectedDate = '';
   selectedSlot = '';
   selectedSlotDate = '';
   selectedAvailabilityId: number | null = null;
 
+  selectedAvailabilityStatus = '';
+
+  isSidebarOpen = false;
+  isRescheduleModalOpen = false;
+  isCancelModalOpen = false;
+
+  selectedAppointmentData: any = null;
+  selectedRescheduleDetails: any = null;
+
+  rescheduleData: RescheduleData = {
+    studentName: '',
+    studentInfo: '',
+    modality: '',
+    currentDate: '',
+    currentTime: ''
+  };
+
+  cancelData: CancelModalData = {
+    folio: '',
+    dateStr: '',
+    timeStr: '',
+    originalReason: ''
+  };
+
   readonly visualTimeRows = [
-  '08:00',
-  '09:00',
-  '10:00',
-  '11:00',
-  '12:00',
-  '13:00',
-  '14:00',
-  '15:00'
-];
+    '08:00',
+    '09:00',
+    '10:00',
+    '11:00',
+    '12:00',
+    '13:00',
+    '14:00',
+    '15:00'
+  ];
 
   getDaysInMonth(): Date[] {
     const year = this.currentDate.getFullYear();
@@ -97,6 +141,7 @@ export class Calendar implements OnInit {
 
   getAvailabilitiesForDate(date: Date): Availability[] {
     const dateString = this.formatDate(date);
+
     return this.availabilities.filter((availability) => {
       const sameDate = availability.date === dateString;
 
@@ -111,6 +156,7 @@ export class Calendar implements OnInit {
   selectDate(date: Date): void {
     this.selectedDate = this.formatDate(date);
     this.selectedSlot = '';
+
     this.changeDetectorRef.detectChanges();
   }
 
@@ -118,6 +164,146 @@ export class Calendar implements OnInit {
     this.selectedSlot = slot;
     this.selectedSlotDate = availability.date;
     this.selectedAvailabilityId = availability.id;
+    this.selectedAvailabilityStatus = availability.status;
+
+    this.cancelData = {
+      folio: availability.folio || 'PSI-2026-0000',
+      dateStr: availability.date,
+      timeStr: `${availability.startTime} - ${availability.endTime} (${availability.duration} min)`,
+      originalReason: availability.consultationReason || 'Consulta general'
+    };
+
+    this.rescheduleData = {
+      studentName: availability.studentName || 'Alumno',
+      studentInfo:
+        `${availability.studentAge || 0} años • ` +
+        `${availability.studentSemester || ''} - ` +
+        `${availability.studentProgram || ''}`,
+      modality:
+        `${availability.modality || 'Presencial'} ` +
+        `(${availability.location || ''})`,
+      currentDate: availability.date,
+      currentTime:
+        `${availability.startTime} - ${availability.endTime}`
+    };
+
+    this.selectedAppointmentData = {
+      id: availability.id,
+      status: availability.status,
+      studentName: availability.studentName || 'Alumno',
+      studentAge: availability.studentAge || 0,
+      studentSemester: availability.studentSemester || '',
+      studentProgram: availability.studentProgram || '',
+      dateStr:
+        availability.date +
+        ', ' +
+        availability.startTime +
+        ' - ' +
+        availability.endTime,
+      sessionType: 'Sesión individual',
+      duration: availability.duration || 45,
+      modality: availability.modality || 'Presencial',
+      location: availability.location || 'Cubículo',
+      locationDetail: 'Consultorio psicopedagógico',
+      reason: availability.consultationReason || '',
+      derivedBy: 'Asignación directa',
+      sessionCount: '1ra Sesión'
+    };
+
+    this.selectedRescheduleDetails = {
+      id: availability.id,
+      studentName: availability.studentName || 'Alumno',
+      studentInitials: availability.studentInitials || 'AL',
+      studentAge: availability.studentAge || 0,
+      studentSemester: availability.studentSemester || '',
+      studentProgram: availability.studentProgram || '',
+      originalDateStr:
+        availability.date +
+        ', ' +
+        availability.startTime +
+        ' - ' +
+        availability.endTime,
+      originalDetails:
+        `${availability.modality || 'Presencial'} • ` +
+        `${availability.location || ''} • ` +
+        `${availability.duration} min`,
+      proposedDateStr: availability.proposedDate
+        ? `${availability.proposedDate}, ` +
+        `${availability.proposedStartTime} - ` +
+        `${availability.proposedEndTime}`
+        : 'Propuesta pendiente',
+      proposedDetails:
+        `${availability.modality || 'Presencial'} • ` +
+        `${availability.location || ''} • ` +
+        `${availability.duration} min`,
+      sentAtStr: 'Recientemente',
+      reason: availability.consultationReason || ''
+    };
+
+    this.isSidebarOpen = true;
+  }
+
+  closeSidebar(): void {
+    this.isSidebarOpen = false;
+  }
+
+  openRescheduleModal(): void {
+    this.isRescheduleModalOpen = true;
+  }
+
+  closeRescheduleModal(): void {
+    this.isRescheduleModalOpen = false;
+  }
+
+  onRescheduleConfirm(data: any): void {
+    if (this.selectedAvailabilityId === null) {
+      return;
+    }
+
+    this.calendarService.rescheduleAppointment(
+      this.selectedAvailabilityId,
+      data.date,
+      data.startTime,
+      data.endTime
+    ).subscribe({
+      next: () => {
+        this.closeRescheduleModal();
+        this.closeSidebar();
+        this.loadAvailabilities();
+      },
+      error: (error) => {
+        console.error('Error al reprogramar:', error);
+      }
+    });
+  }
+
+  openCancelModal(): void {
+    this.isCancelModalOpen = true;
+  }
+
+  closeCancelModal(): void {
+    this.isCancelModalOpen = false;
+  }
+
+  onCancelConfirm(data: any): void {
+    if (this.selectedAvailabilityId === null) {
+      return;
+    }
+
+    this.calendarService.cancelAppointment(
+      this.selectedAvailabilityId,
+      data.reason,
+      data.observation
+    ).subscribe({
+      next: () => {
+        this.closeCancelModal();
+        this.closeSidebar();
+        this.loadAvailabilities();
+      },
+      error: (error) => {
+        console.error('Error al cancelar:', error);
+      }
+    });
   }
 
   getSelectedDate(): Date {
@@ -133,53 +319,69 @@ export class Calendar implements OnInit {
   }
 
   getWeekDays(): Date[] {
-   
     const date = this.getCurrentViewDate();
+
     const dayOfWeek = date.getDay();
-    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const daysFromMonday =
+      dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
     const startOfWeek = new Date(date);
-    startOfWeek.setDate(date.getDate() - daysFromMonday);
+
+    startOfWeek.setDate(
+      date.getDate() - daysFromMonday
+    );
 
     const days: Date[] = [];
 
     for (let i = 0; i < 7; i++) {
       const day = new Date(startOfWeek);
-      day.setDate(startOfWeek.getDate() + i);
+
+      day.setDate(
+        startOfWeek.getDate() + i
+      );
+
       days.push(day);
     }
 
     return days;
   }
+
   getDisplayedWeekDays(): Date[] {
-  return this.getWeekDays().slice(0, 5);
-}
+    return this.getWeekDays().slice(0, 5);
+  }
 
   isToday(date: Date): boolean {
-  const today = new Date();
+    const today = new Date();
 
-  return (
-    date.getDate() === today.getDate() &&
-    date.getMonth() === today.getMonth() &&
-    date.getFullYear() === today.getFullYear()
-  );
-}
-getWeekdayLabel(date: Date): string {
-  const weekdays = [
-    'DOM',
-    'LUN',
-    'MAR',
-    'MIÉ',
-    'JUE',
-    'VIE',
-    'SÁB'
-  ];
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  }
 
-  return weekdays[date.getDay()];
-}
+  getWeekdayLabel(date: Date): string {
+    const weekdays = [
+      'DOM',
+      'LUN',
+      'MAR',
+      'MIÉ',
+      'JUE',
+      'VIE',
+      'SÁB'
+    ];
+
+    return weekdays[date.getDay()];
+  }
 
   hasAvailability(date: Date): boolean {
     return this.getAvailabilitiesForDate(date).length > 0;
+  }
+
+  getAvailableSlots(): Availability[] {
+    return this.availabilities.filter(
+      availability => availability.status === 'Disponible'
+    );
   }
 
   isSelected(date: Date): boolean {
@@ -198,23 +400,29 @@ getWeekdayLabel(date: Date): string {
     while (
       currentMinutes + availability.duration <= endMinutes
     ) {
-      const slotStart = this.formatTime12Hour(currentMinutes);
+      const slotStart =
+        this.formatTime12Hour(currentMinutes);
 
-      const slotEnd = this.formatTime12Hour(
-        currentMinutes + availability.duration
+      const slotEnd =
+        this.formatTime12Hour(
+          currentMinutes + availability.duration
+        );
+
+      slots.push(
+        `${slotStart} - ${slotEnd}`
       );
 
-      slots.push(`${slotStart} - ${slotEnd}`);
-
       currentMinutes +=
-        availability.duration + availability.breakTime;
+        availability.duration +
+        availability.breakTime;
     }
 
     return slots;
   }
 
   private timeToMinutes(time: string): number {
-    const [hours, minutes] = time.split(':').map(Number);
+    const [hours, minutes] =
+      time.split(':').map(Number);
 
     return hours * 60 + minutes;
   }
@@ -223,16 +431,18 @@ getWeekdayLabel(date: Date): string {
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
 
-    return `${hours.toString().padStart(2, '0')}:${remainingMinutes
-      .toString()
-      .padStart(2, '0')}`;
+    return (
+      `${hours.toString().padStart(2, '0')}:` +
+      `${remainingMinutes.toString().padStart(2, '0')}`
+    );
   }
 
   formatTime12Hour(minutes: number): string {
     const hours24 = Math.floor(minutes / 60);
     const minutesPart = minutes % 60;
 
-    const period = hours24 >= 12 ? 'PM' : 'AM';
+    const period =
+      hours24 >= 12 ? 'PM' : 'AM';
 
     let hours12 = hours24 % 12;
 
@@ -240,13 +450,19 @@ getWeekdayLabel(date: Date): string {
       hours12 = 12;
     }
 
-    return `${String(hours12).padStart(2, '0')}:${String(minutesPart).padStart(2, '0')} ${period}`;
+    return (
+      `${String(hours12).padStart(2, '0')}:` +
+      `${String(minutesPart).padStart(2, '0')} ` +
+      period
+    );
   }
 
   formatTimeString(time: string): string {
-    const [hours, minutes] = time.split(':').map(Number);
+    const [hours, minutes] =
+      time.split(':').map(Number);
 
-    const totalMinutes = hours * 60 + minutes;
+    const totalMinutes =
+      hours * 60 + minutes;
 
     return this.formatTime12Hour(totalMinutes);
   }
@@ -259,24 +475,36 @@ getWeekdayLabel(date: Date): string {
         this.changeDetectorRef.detectChanges();
       },
       error: (error) => {
-        console.error('Error loading availabilities:', error);
+        console.error(
+          'Error loading availabilities:',
+          error
+        );
       }
     });
   }
 
   constructor(
     private calendarService: CalendarService,
-    private changeDetectorRef: ChangeDetectorRef
-  ) { }
+    private changeDetectorRef: ChangeDetectorRef,
+    @Inject(PLATFORM_ID) platformId: object
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   ngOnInit(): void {
-    this.loadAvailabilities();
+    if (this.isBrowser) {
+      this.loadAvailabilities();
+    }
   }
 
   formatDate(date: Date): string {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+
+    const month =
+      String(date.getMonth() + 1).padStart(2, '0');
+
+    const day =
+      String(date.getDate()).padStart(2, '0');
 
     return `${year}-${month}-${day}`;
   }

@@ -1,0 +1,91 @@
+<div class="modal-backdrop" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="title-section">
+        <h2>Proponer Reprogramación</h2>
+        <span class="badge">HU-03 Gestión de Citas</span>
+      </div>
+      <button class="close-btn" (click)="closeModal()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <p class="description">
+      Selecciona una nueva fecha y horario disponible para sugerir el cambio de cita al estudiante <strong>{{ data.studentName }}</strong>.
+    </p>
+
+    <div class="current-schedule-card">
+      <div class="card-header-label">HORARIO ACTUAL FIJADO</div>
+      <div class="card-body">
+        <div class="icon-side">
+          <div class="icon-wrapper">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          </div>
+        </div>
+        <div class="details-side">
+          <div class="details-row top-row">
+            <div class="student-info-text">
+              <strong>{{ data.studentName }}</strong> <span class="muted-text">({{ data.studentInfo }})</span>
+            </div>
+            <div class="modality-text">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M4 10v12"></path><path d="M20 10v12"></path><path d="M4 10a8 8 0 0 1 16 0"></path><path d="M4 14h16"></path><path d="M12 14v8"></path></svg>
+              {{ data.modality }}
+            </div>
+          </div>
+          <div class="details-row">
+            <div class="date-info">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              {{ data.currentDate }} <span style="margin: 0 8px;">&bull;</span> 
+              <span class="danger-text">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                {{ data.currentTime }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider">
+      <div class="divider-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="#3B82F6" stroke="none"><circle cx="12" cy="12" r="12"></circle></svg>
+      </div>
+    </div>
+
+    <div class="new-schedule-section">
+      <div class="section-header">
+        <h3 class="section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12a10 10 0 1 0 10-10 10 10 0 0 0-10 10"></path><polyline points="12 6 12 12 16 14"></polyline></svg>
+          Nueva fecha y horario propuesto
+        </h3>
+        <span class="validation-status">
+          <span class="dot-green"></span> Horarios validados por agenda
+        </span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group date-group" style="width: 100%;">
+          <label>Horario seleccionado de la agenda</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <select class="form-control" style="padding-left: 40px" (change)="selectedSlotId = $any($event.target).value" [value]="selectedSlotId">
+              <option value="" disabled selected>Elige un espacio disponible...</option>
+              @for (slot of availableSlots; track slot.id) {
+                <option [value]="slot.id">
+                  {{ slot.date }} • {{ slot.startTime }} a {{ slot.endTime }}
+                </option>
+              }
+            </select>
+          </div>
+          <span class="help-text">Solo se muestran los bloques que abriste en el calendario (Estado: Disponible)</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-actions">
+       <!-- Action buttons could go here, but design doesn't show the bottom part clearly, 
+            I'll assume there is a Send button or it's implied by selection -->
+       <button class="btn-primary" (click)="submit()">Enviar propuesta</button>
+    </div>
+  </div>
+</div>

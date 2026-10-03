@@ -1,0 +1,333 @@
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(200, 210, 225, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.modal-content {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 700px;
+  max-width: 90vw;
+  max-height: 95vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  padding: 32px;
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.title-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title-section h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #1E293B;
+  font-weight: 600;
+}
+
+.badge {
+  background-color: #E0E7FF;
+  color: #4F46E5;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748B;
+  padding: 4px;
+}
+
+.description {
+  color: #64748B;
+  font-size: 14px;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.current-schedule-card {
+  background-color: #F1F5F9;
+  border-radius: 12px;
+  padding: 16px;
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.card-header-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748B;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.card-body {
+  display: flex;
+  gap: 16px;
+}
+
+.icon-side .icon-wrapper {
+  background-color: #E2E8F0;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+}
+
+.details-side {
+  flex-grow: 1;
+}
+
+.details-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.top-row {
+  margin-bottom: 6px;
+}
+
+.student-info-text {
+  font-size: 15px;
+  color: #1E293B;
+}
+
+.muted-text {
+  color: #64748B;
+  font-size: 14px;
+  font-weight: normal;
+}
+
+.modality-text {
+  font-size: 13px;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  background-color: #E2E8F0;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.date-info {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #475569;
+}
+
+.date-info svg {
+  margin-right: 6px;
+}
+
+.danger-text {
+  color: #EF4444;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.danger-text svg {
+  margin-right: 6px;
+}
+
+.divider {
+  height: 1px;
+  background-color: #E2E8F0;
+  margin: 32px 0;
+  position: relative;
+}
+
+.divider-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #ffffff;
+  padding: 0 10px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+  color: #2563EB;
+}
+
+.validation-status {
+  font-size: 12px;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot-green {
+  width: 6px;
+  height: 6px;
+  background-color: #059669;
+  border-radius: 50%;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.input-with-icon {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 12px 10px 40px;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #1E293B;
+  background-color: #ffffff;
+  box-sizing: border-box;
+  appearance: none;
+}
+
+.text-center {
+  padding-left: 32px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.help-text {
+  display: block;
+  font-size: 12px;
+  color: #64748B;
+  margin-top: 6px;
+}
+
+.time-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.time-header label {
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.recommended-badge {
+  background-color: #EFF6FF;
+  color: #2563EB;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.time-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.sub-label {
+  font-size: 12px !important;
+  color: #64748B !important;
+  margin-bottom: 4px !important;
+}
+
+.input-with-icon-left {
+  position: relative;
+}
+
+.input-with-icon-left svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.success-text {
+  font-size: 12px;
+  color: #2563EB;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-actions {
+  margin-top: 32px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-primary {
+  background-color: #2563EB;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #1D4ED8;
+}
