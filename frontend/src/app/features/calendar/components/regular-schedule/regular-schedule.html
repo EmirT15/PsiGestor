@@ -1,150 +1,349 @@
 <section class="regular-schedule">
- 
-<div class="workdays-section">
 
-  <div class="workdays-header">
+  <div class="workdays-section">
 
-    <span class="workdays-title">
-      Días laborales habilitados
-    </span>
+    <div class="workdays-header">
 
-    <span class="active-days-count">
-      {{ activeDaysCount }}
-      {{ activeDaysCount === 1 ? 'día activo' : 'días activos' }}
-    </span>
-
-  </div>
-
-  <div class="workdays-selector">
-
-    @for (day of workDays; track day.id) {
-
-      <button
-        type="button"
-        class="workday-button"
-        [class.workday-button-active]="day.enabled"
-        [attr.aria-pressed]="day.enabled"
-        [attr.aria-label]="'Activar o desactivar ' + day.name"
-        (click)="toggleDay(day)"
-      >
-
-        @if (day.enabled) {
-          <span class="workday-check">
-            ✓
-          </span>
-        }
-
-        <span>
-          {{ day.shortName }}
-        </span>
-
-      </button>
-
-    }
-
-  </div>
-
-</div>
-
-<div class="schedule-list-header">
-
-  <span>
-    Configuración independiente por día
-  </span>
-
-  <span class="schedule-list-description">
-    Jornadas personalizadas
-  </span>
-
-</div>
-
-  <div class="schedule-list">
-@if (activeDaysCount === 0) {
-
-  <div class="no-workdays-message">
-
-    <span class="no-workdays-title">
-      No hay días laborales seleccionados
-    </span>
-
-    <span class="no-workdays-description">
-      Selecciona al menos un día en la parte superior para configurar su horario.
-    </span>
-
-  </div>
-
-}
-    @for (day of workDays; track day.id) {
-      @if (day.enabled){
-      <article
-  class="schedule-row"
-  [class.schedule-row-editing]="isDayEditing(day)"
->
-
-  <div class="day-section">
-
-    <span class="day-marker"></span>
-
-    <div class="day-information">
-
-      <span
-        class="day-name"
-        [class.day-name-editing]="isDayEditing(day)"
-      >
-        {{ day.name }}
+      <span class="workdays-title">
+        Días laborales habilitados
       </span>
+
+      <span class="active-days-count">
+        {{ activeDaysCount }}
+        {{ activeDaysCount === 1 ? 'día activo' : 'días activos' }}
+      </span>
+
+    </div>
+
+    <div class="workdays-selector">
+
+      @for (day of workDays; track day.id) {
+
+        <button
+          type="button"
+          class="workday-button"
+          [class.workday-button-active]="day.enabled"
+          [attr.aria-pressed]="day.enabled"
+          [attr.aria-label]="'Activar o desactivar ' + day.name"
+          (click)="toggleDay(day)"
+        >
+
+          @if (day.enabled) {
+            <span class="workday-check">
+              ✓
+            </span>
+          }
+
+          <span>
+            {{ day.shortName }}
+          </span>
+
+        </button>
+
+      }
 
     </div>
 
   </div>
 
 
-  @if (isDayEditing(day)) {
+  <div class="schedule-list-header">
 
-    <div class="schedule-editing">
+    <span>
+      Configuración independiente por día
+    </span>
 
-      <div class="editing-fields">
+    <span class="schedule-list-description">
+      Jornadas personalizadas
+    </span>
 
-        <div class="editing-time-field">
+  </div>
 
-          <span class="editing-label">
-            Inicio
-          </span>
 
-          <input
-            [id]="'start-' + day.id"
-            type="time"
-            [(ngModel)]="day.startTime"
-            [class.input-error]="getDayError(day)"
-          />
+  <div class="schedule-list">
 
-        </div>
+    @if (activeDaysCount === 0) {
 
-        <span class="editing-separator">
-          hasta
+      <div class="no-workdays-message">
+
+        <span class="no-workdays-title">
+          No hay días laborales seleccionados
         </span>
 
-        <div class="editing-time-field">
-
-          <span class="editing-label">
-            Fin
-          </span>
-
-          <input
-            [id]="'end-' + day.id"
-            type="time"
-            [(ngModel)]="day.endTime"
-            [class.input-error]="getDayError(day)"
-          />
-
-        </div>
+        <span class="no-workdays-description">
+          Selecciona al menos un día en la parte superior para configurar su horario.
+        </span>
 
       </div>
 
-      @if (getDayError(day); as error) {
+    }
 
-        <span class="validation-error">
-          {{ error }}
+
+    @for (day of workDays; track day.id) {
+
+      @if (day.enabled) {
+
+        <article
+          class="schedule-row"
+          [class.schedule-row-editing]="isDayEditing(day)"
+        >
+
+          <div class="day-section">
+
+            <span class="day-marker"></span>
+
+            <div class="day-information">
+
+              <span
+                class="day-name"
+                [class.day-name-editing]="isDayEditing(day)"
+              >
+                {{ day.name }}
+              </span>
+
+            </div>
+
+          </div>
+
+
+          @if (isDayEditing(day)) {
+
+            <div class="schedule-editing">
+
+              <div class="editing-fields">
+
+                <div class="editing-time-field">
+
+                  <span class="editing-label">
+                    Inicio
+                  </span>
+
+                  <input
+                    [id]="'start-' + day.id"
+                    type="time"
+                    [(ngModel)]="day.startTime"
+                    [class.input-error]="getDayError(day)"
+                  />
+
+                </div>
+
+
+                <span class="editing-separator">
+                  hasta
+                </span>
+
+
+                <div class="editing-time-field">
+
+                  <span class="editing-label">
+                    Fin
+                  </span>
+
+                  <input
+                    [id]="'end-' + day.id"
+                    type="time"
+                    [(ngModel)]="day.endTime"
+                    [class.input-error]="getDayError(day)"
+                  />
+
+                </div>
+
+              </div>
+
+
+              @if (getDayError(day); as error) {
+
+                <span class="validation-error">
+                  {{ error }}
+                </span>
+
+              }
+
+            </div>
+
+
+            <button
+              type="button"
+              class="confirm-edit-button"
+              [disabled]="!isDayTimeValid(day)"
+              [attr.aria-label]="'Confirmar horario de ' + day.name"
+              (click)="confirmDayEditing(day)"
+            >
+              ✓
+            </button>
+
+          } @else {
+
+            <div class="assigned-schedule">
+
+              <span class="schedule-clock">
+                ◷
+              </span>
+
+              <span class="assigned-label">
+                Horario asignado:
+              </span>
+
+              <span class="assigned-time">
+                {{ formatTime12Hour(day.startTime) }}
+              </span>
+
+              <span class="assigned-separator">
+                a
+              </span>
+
+              <span class="assigned-time">
+                {{ formatTime12Hour(day.endTime) }}
+              </span>
+
+            </div>
+
+
+            <button
+              type="button"
+              class="edit-schedule-button"
+              [attr.aria-label]="'Editar horario de ' + day.name"
+              (click)="startEditingDay(day)"
+            >
+              ✎
+            </button>
+
+          }
+
+        </article>
+
+      }
+
+    }
+
+  </div>
+
+
+  <div class="general-settings">
+
+    <!-- =====================================================
+         DURACIÓN HABITUAL DE CADA CITA
+         ===================================================== -->
+
+    <div class="duration-setting duration-setting-redesigned">
+
+      <div class="duration-heading">
+
+        <div>
+
+          <h4>
+            Duración habitual de cada cita / sesión
+          </h4>
+
+          <p>
+            Selecciona el intervalo estándar de atención.
+          </p>
+
+        </div>
+
+
+        @if (
+          appointmentDuration !== null &&
+          isAppointmentDurationValid()
+        ) {
+
+          <span class="selected-duration">
+            {{ appointmentDuration }} min
+          </span>
+
+        }
+
+      </div>
+
+
+      <div class="duration-options">
+
+        @for (duration of durationOptions; track duration) {
+
+          <button
+            type="button"
+            class="duration-option"
+            [class.duration-option-active]="
+              isDurationSelected(duration)
+            "
+            (click)="selectDuration(duration)"
+          >
+
+            <span class="duration-value">
+              {{ duration }} min
+            </span>
+
+          </button>
+
+        }
+
+
+        <button
+          type="button"
+          class="duration-option"
+          [class.duration-option-active]="customDurationEnabled"
+          (click)="enableCustomDuration()"
+        >
+
+          <span class="duration-value">
+            Personalizada
+          </span>
+
+        </button>
+
+      </div>
+
+
+      @if (customDurationEnabled) {
+
+        <div class="custom-duration">
+
+          <div class="custom-duration-information">
+
+            <span class="custom-duration-title">
+              Duración personalizada
+            </span>
+
+            <span class="custom-duration-description">
+              Define manualmente la duración habitual de la sesión.
+            </span>
+
+          </div>
+
+
+          <div class="custom-duration-control">
+
+            <input
+              id="appointment-duration"
+              type="number"
+              min="1"
+              placeholder="Ej. 50"
+              [(ngModel)]="appointmentDuration"
+              [class.input-error]="
+                appointmentDuration !== null &&
+                !isAppointmentDurationValid()
+              "
+            />
+
+            <span>
+              minutos
+            </span>
+
+          </div>
+
+        </div>
+
+      }
+
+
+      @if (
+        customDurationEnabled &&
+        appointmentDuration !== null &&
+        !isAppointmentDurationValid()
+      ) {
+
+        <span class="validation-error duration-validation">
+          La duración debe ser mayor que 0 minutos.
         </span>
 
       }
@@ -152,192 +351,204 @@
     </div>
 
 
-    <button
-      type="button"
-      class="confirm-edit-button"
-      [disabled]="!isDayTimeValid(day)"
-      [attr.aria-label]="'Confirmar horario de ' + day.name"
-      (click)="confirmDayEditing(day)"
+    <!-- =====================================================
+         PAUSA ENTRE CITAS
+         ===================================================== -->
+
+    <div
+      class="duration-setting duration-setting-redesigned appointment-gap-setting"
     >
-      ✓
-    </button>
 
-  } @else {
+      <div class="duration-heading">
 
-    <div class="assigned-schedule">
+        <div>
 
-      <span class="schedule-clock">
-        ◷
-      </span>
+          <h4>
+            Pausa entre citas
+          </h4>
 
-      <span class="assigned-label">
-        Horario asignado:
-      </span>
+          <p>
+            Define si deseas dejar un intervalo libre entre una cita y la siguiente.
+          </p>
 
-      <span class="assigned-time">
-        {{ formatTime12Hour(day.startTime) }}
-      </span>
+        </div>
 
-      <span class="assigned-separator">
-        a
-      </span>
 
-      <span class="assigned-time">
-        {{ formatTime12Hour(day.endTime) }}
-      </span>
+        @if (
+          appointmentGapMinutes !== null &&
+          isAppointmentGapValid()
+        ) {
+
+          <span class="selected-duration">
+
+            @if (appointmentGapMinutes === 0) {
+              Sin pausa
+            } @else {
+              {{ appointmentGapMinutes }} min
+            }
+
+          </span>
+
+        }
+
+      </div>
+
+
+      <div class="duration-options appointment-gap-options">
+
+        @for (gap of appointmentGapOptions; track gap) {
+
+          <button
+            type="button"
+            class="duration-option"
+            [class.duration-option-active]="
+              isAppointmentGapSelected(gap)
+            "
+            (click)="selectAppointmentGap(gap)"
+          >
+
+            <span class="duration-value">
+
+              @if (gap === 0) {
+                Sin pausa
+              } @else {
+                {{ gap }} min
+              }
+
+            </span>
+
+          </button>
+
+        }
+
+
+        <button
+          type="button"
+          class="duration-option"
+          [class.duration-option-active]="
+            customAppointmentGapEnabled
+          "
+          (click)="enableCustomAppointmentGap()"
+        >
+
+          <span class="duration-value">
+            Personalizada
+          </span>
+
+        </button>
+
+      </div>
+
+
+      @if (customAppointmentGapEnabled) {
+
+        <div class="custom-duration">
+
+          <div class="custom-duration-information">
+
+            <span class="custom-duration-title">
+              Pausa personalizada
+            </span>
+
+            <span class="custom-duration-description">
+              Indica cuántos minutos deseas dejar libres después de cada cita.
+            </span>
+
+          </div>
+
+
+          <div class="custom-duration-control">
+
+            <input
+              id="appointment-gap"
+              type="number"
+              min="1"
+              placeholder="Ej. 20"
+              [(ngModel)]="appointmentGapMinutes"
+              [class.input-error]="
+                appointmentGapMinutes !== null &&
+                !isAppointmentGapValid()
+              "
+            />
+
+            <span>
+              minutos
+            </span>
+
+          </div>
+
+        </div>
+
+      }
+
+
+      @if (
+        customAppointmentGapEnabled &&
+        appointmentGapMinutes !== null &&
+        !isAppointmentGapValid()
+      ) {
+
+        <span class="validation-error duration-validation">
+          La pausa debe ser mayor que 0 minutos.
+        </span>
+
+      }
 
     </div>
 
 
+    <!-- =====================================================
+         DESCANSO HABITUAL
+         ===================================================== -->
+
+    <app-break-schedule
+      [config]="breakConfig"
+      [error]="getBreakError()"
+      (configChange)="updateBreakConfig($event)"
+    />
+
+  </div>
+
+
+  <div class="schedule-actions">
+
     <button
       type="button"
-      class="edit-schedule-button"
-      [attr.aria-label]="'Editar horario de ' + day.name"
-      (click)="startEditingDay(day)"
+      class="cancel-button"
+      (click)="cancel()"
     >
-      ✎
+      Cancelar
     </button>
 
-  }
 
-</article>
-    }
-  }
-  </div>
-  <div class="general-settings">
+    <div class="schedule-save-section">
 
-  <div class="duration-setting duration-setting-redesigned">
+      @if (saveError) {
 
-  <div class="duration-heading">
-    <div>
-      <h4>Duración habitual de cada cita / sesión</h4>
+        <span class="save-error">
+          {{ saveError }}
+        </span>
 
-      <p>
-        Selecciona el intervalo estándar de atención.
-      </p>
-    </div>
+      }
 
-    @if (appointmentDuration !== null && isAppointmentDurationValid()) {
-      <span class="selected-duration">
-        {{ appointmentDuration }} min
-      </span>
-    }
-  </div>
 
-  <div class="duration-options">
-
-    @for (duration of durationOptions; track duration) {
       <button
         type="button"
-        class="duration-option"
-        [class.duration-option-active]="isDurationSelected(duration)"
-        (click)="selectDuration(duration)"
+        class="save-button"
+        [disabled]="!isScheduleValid()"
+        (click)="saveSchedule()"
       >
-        <span class="duration-value">
-          {{ duration }} min
+
+        <span class="save-icon">
+          ✓
         </span>
+
+        Guardar horario habitual
+
       </button>
-    }
-
-    <button
-      type="button"
-      class="duration-option"
-      [class.duration-option-active]="customDurationEnabled"
-      (click)="enableCustomDuration()"
-    >
-      <span class="duration-value">
-        Personalizada
-      </span>
-    </button>
-
-  </div>
-
-  @if (customDurationEnabled) {
-
-    <div class="custom-duration">
-
-      <div class="custom-duration-information">
-        <span class="custom-duration-title">
-          Duración personalizada
-        </span>
-
-        <span class="custom-duration-description">
-          Define manualmente la duración habitual de la sesión.
-        </span>
-      </div>
-
-      <div class="custom-duration-control">
-
-        <input
-          id="appointment-duration"
-          type="number"
-          min="1"
-          placeholder="Ej. 50"
-          [(ngModel)]="appointmentDuration"
-          [class.input-error]="
-            appointmentDuration !== null &&
-            !isAppointmentDurationValid()
-          "
-        />
-
-        <span>minutos</span>
-
-      </div>
 
     </div>
 
-  }
-
-  @if (
-    customDurationEnabled &&
-    appointmentDuration !== null &&
-    !isAppointmentDurationValid()
-  ) {
-    <span class="validation-error duration-validation">
-      La duración debe ser mayor que 0 minutos.
-    </span>
-  }
-
-</div>
-
-  <app-break-schedule
-  [config]="breakConfig"
-  [error]="getBreakError()"
-  (configChange)="updateBreakConfig($event)"
-/>
-
-</div>
-
-<div class="schedule-actions">
-
-  <button
-    type="button"
-    class="cancel-button"
-    (click)="cancel()"
-  >
-    Cancelar
-  </button>
-
-
-  <div class="schedule-save-section">
-
-    @if (saveError) {
-      <span class="save-error">
-        {{ saveError }}
-      </span>
-    }
-
-    <button
-      type="button"
-      class="save-button"
-      [disabled]="!isScheduleValid()"
-      (click)="saveSchedule()"
-    >
-      <span class="save-icon">✓</span>
-      Guardar horario habitual
-    </button>
-
   </div>
 
-</div>
 </section>

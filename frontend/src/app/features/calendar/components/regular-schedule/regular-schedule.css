@@ -646,6 +646,24 @@
   }
 
 }
+
+/* ============================================================
+   PAUSA ENTRE CITAS
+   ============================================================ */
+
+.appointment-gap-setting {
+  padding-top: 14px;
+}
+
+.appointment-gap-options {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+@media (max-width: 760px) {
+  .appointment-gap-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
  /* ============================================================
    DÍAS LABORALES HABILITADOS
    ============================================================ */
