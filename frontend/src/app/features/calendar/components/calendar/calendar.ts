@@ -2,7 +2,6 @@ import { ChangeDetectorRef, Component, Inject, OnInit, PLATFORM_ID } from '@angu
 
 import { isPlatformBrowser } from '@angular/common';
 import { Availability } from '../../models/availability.model';
-import { AvailabilityForm } from '../availability-form/availability-form';
 import { AvailabilityCard } from '../availability-card/availability-card';
 import { AppointmentDetails } from '../appointment-details/appointment-details';
 import { RescheduleDetails } from '../reschedule-details/reschedule-details';
@@ -22,7 +21,6 @@ import { ManageScheduleModal } from '../manage-schedule-modal/manage-schedule-mo
 
 @Component({
   imports: [
-    AvailabilityForm,
     AvailabilityCard,
     AppointmentDetails,
     RescheduleDetails,
