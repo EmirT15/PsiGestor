@@ -26,46 +26,93 @@
 
     @if (currentView === 'month') {
 
-      <div class="calendar-weekdays">
-        <span>Dom</span>
-        <span>Lun</span>
-        <span>Mar</span>
-        <span>Mié</span>
-        <span>Jue</span>
-        <span>Vie</span>
-        <span>Sáb</span>
-      </div>
+  <div class="calendar-weekdays">
+    <span>Dom</span>
+    <span>Lun</span>
+    <span>Mar</span>
+    <span>Mié</span>
+    <span>Jue</span>
+    <span>Vie</span>
+    <span>Sáb</span>
+  </div>
 
-      <div class="calendar-grid">
 
-        @for (
-          empty of [].constructor(getFirstDayOfMonth());
-          track $index
-        ) {
-          <span></span>
-        }
+  <div class="calendar-grid">
 
-        @for (
-          day of getDaysInMonth();
-          track day.getTime()
-        ) {
+    @for (
+      empty of [].constructor(
+        getFirstDayOfMonth()
+      );
+      track $index
+    ) {
 
-          <button
-            type="button"
-            (click)="selectDate(day)"
-            [class.has-availability]="hasAvailability(day)"
-            [class.selected]="isSelected(day)"
-          >
-            {{ day.getDate() }}
-          </button>
-
-        }
-
-      </div>
+      <span></span>
 
     }
 
-   @if (currentView === 'day') {
+
+    @for (
+  day of getDaysInMonth();
+  track day.getTime()
+) {
+
+  <button
+    type="button"
+    class="month-day-cell"
+    (click)="selectDate(day)"
+    [class.selected]="isSelected(day)"
+    [class.today]="isToday(day)"
+  >
+
+    <div class="month-day-header">
+
+      @if (isToday(day)) {
+
+        <span class="month-today-badge">
+          {{ day.getDate() }} HOY
+        </span>
+
+      } @else {
+
+        <span class="month-day-number">
+          {{ day.getDate() }}
+        </span>
+
+      }
+
+    </div>
+
+
+    <div class="month-day-body">
+
+      @if (
+        getAvailableCountForDate(day) > 0
+      ) {
+
+        <span class="month-availability-summary">
+
+          <span
+            class="month-availability-dot"
+          ></span>
+
+          {{ getAvailableCountForDate(day) }}
+          disp.
+
+        </span>
+
+      }
+
+    </div>
+
+  </button>
+
+}
+
+  </div>
+
+}
+
+    @if (currentView === 'day') {
 
   <div class="day-view">
 

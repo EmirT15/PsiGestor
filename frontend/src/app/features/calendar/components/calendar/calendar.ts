@@ -562,6 +562,27 @@ selectAvailableSlot(
     return this.getAvailabilitiesForDate(date).length > 0;
   }
 
+  getAvailableCountForDate(
+  date: Date
+): number {
+
+  if (
+    this.statusFilter !== 'all' &&
+    this.statusFilter !== 'Disponible'
+  ) {
+    return 0;
+  }
+
+  const dateString =
+    this.formatDate(date);
+
+  return this.availabilities.filter(
+    (availability) =>
+      availability.date === dateString &&
+      availability.status === 'Disponible'
+  ).length;
+}
+
   getAvailableSlots(): Availability[] {
     return this.availabilities.filter(
       availability => availability.status === 'Disponible'
