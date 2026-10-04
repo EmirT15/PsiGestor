@@ -22,6 +22,7 @@ export interface WorkDay {
 export interface RegularScheduleConfig {
   workDays: WorkDay[];
   appointmentDuration: number;
+  appointmentGapMinutes: number;
   break: BreakScheduleConfig;
 }
 
@@ -51,6 +52,12 @@ export class RegularSchedule {
   readonly durationOptions = [30, 45, 60];
   
   customDurationEnabled = false;
+
+  readonly appointmentGapOptions = [0, 5, 10, 15];
+
+  appointmentGapMinutes: number | null = 0;
+
+  customAppointmentGapEnabled = false;
 
 
 breakConfig: BreakScheduleConfig = {
@@ -118,6 +125,47 @@ isDurationSelected(duration: number): boolean {
   );
 }
 
+selectAppointmentGap(minutes: number): void {
+  this.appointmentGapMinutes = minutes;
+  this.customAppointmentGapEnabled = false;
+}
+
+enableCustomAppointmentGap(): void {
+  this.customAppointmentGapEnabled = true;
+
+  if (
+    this.appointmentGapMinutes !== null &&
+    this.appointmentGapOptions.includes(
+      this.appointmentGapMinutes
+    )
+  ) {
+    this.appointmentGapMinutes = null;
+  }
+}
+
+isAppointmentGapSelected(minutes: number): boolean {
+  return (
+    !this.customAppointmentGapEnabled &&
+    this.appointmentGapMinutes === minutes
+  );
+}
+
+isAppointmentGapValid(): boolean {
+  if (this.appointmentGapMinutes === null) {
+    return false;
+  }
+
+  if (!Number.isFinite(this.appointmentGapMinutes)) {
+    return false;
+  }
+
+  if (this.customAppointmentGapEnabled) {
+    return this.appointmentGapMinutes > 0;
+  }
+
+  return this.appointmentGapMinutes >= 0;
+}
+
 isBreakTimeValid(): boolean {
   if (!this.breakConfig.enabled) {
     return true;
@@ -179,6 +227,10 @@ isScheduleValid(): boolean {
     return false;
   }
 
+  if (!this.isAppointmentGapValid()) {
+  return false;
+  }
+
   if (!this.isBreakTimeValid()) {
     return false;
   }
@@ -210,6 +262,9 @@ saveSchedule(): void {
 
     appointmentDuration:
       this.appointmentDuration as number,
+
+    appointmentGapMinutes:
+      this.appointmentGapMinutes as number,
 
     break: {
       ...this.breakConfig,
