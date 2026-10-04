@@ -652,17 +652,82 @@
    ============================================================ */
 
 .appointment-gap-setting {
+  width: 100%;
+  min-width: 0;
+
   padding-top: 14px;
+
+  box-sizing: border-box;
 }
 
 .appointment-gap-options {
+  width: 100%;
+
+  display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
+
+  gap: 8px;
 }
 
-@media (max-width: 760px) {
+.appointment-gap-options .duration-option {
+  min-width: 0;
+
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.appointment-gap-options .duration-value {
+  max-width: 100%;
+
+  line-height: 1.2;
+  text-align: center;
+
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+
+/* Pantallas medianas */
+
+@media (max-width: 900px) {
+
+  .appointment-gap-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+}
+
+
+/* Tablets y móviles */
+
+@media (max-width: 640px) {
+
+  .appointment-gap-setting .duration-heading {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 8px;
+  }
+
+  .appointment-gap-setting .selected-duration {
+    align-self: flex-start;
+  }
+
   .appointment-gap-options {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+}
+
+
+/* Móviles pequeños */
+
+@media (max-width: 380px) {
+
+  .appointment-gap-options {
+    grid-template-columns: 1fr;
+  }
+
 }
  /* ============================================================
    DÍAS LABORALES HABILITADOS
