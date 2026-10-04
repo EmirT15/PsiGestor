@@ -1,8 +1,24 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from app.repositories.regular_schedule_repository import (
     get_regular_schedule as get_regular_schedule_repo,
     save_regular_schedule as save_regular_schedule_repo
+)
+
+from app.services.availability_generation_service import (
+    generate_slots_for_range
+)
+
+from app.repositories.generated_availability_repository import (
+    replace_generated_availabilities
+)
+
+
+AVAILABILITY_GENERATION_DAYS = 90
+
+LOCAL_TIMEZONE = ZoneInfo(
+    'America/Merida'
 )
 
 
@@ -17,6 +33,7 @@ def parse_time(value, field_name):
             value,
             '%H:%M'
         ).time()
+
     except ValueError as error:
         raise ValueError(
             f'El campo {field_name} debe tener formato HH:MM.'
@@ -25,7 +42,10 @@ def parse_time(value, field_name):
     return parsed_time
 
 
-def validate_positive_integer(value, field_name):
+def validate_positive_integer(
+    value,
+    field_name
+):
     if (
         isinstance(value, bool)
         or not isinstance(value, int)
@@ -36,7 +56,10 @@ def validate_positive_integer(value, field_name):
         )
 
 
-def validate_non_negative_integer(value, field_name):
+def validate_non_negative_integer(
+    value,
+    field_name
+):
     if (
         isinstance(value, bool)
         or not isinstance(value, int)
@@ -82,7 +105,10 @@ def save_regular_schedule_config(data):
     )
 
 
-    if not isinstance(work_days, list) or not work_days:
+    if (
+        not isinstance(work_days, list)
+        or not work_days
+    ):
         raise ValueError(
             'Debes seleccionar al menos un día laboral.'
         )
@@ -201,7 +227,11 @@ def save_regular_schedule_config(data):
                 )
 
 
-    return save_regular_schedule_repo(
+    # ---------------------------------------------------------
+    # GUARDAR CONFIGURACIÓN DEL HORARIO HABITUAL
+    # ---------------------------------------------------------
+
+    save_regular_schedule_repo(
         appointment_duration,
         appointment_gap_minutes,
         break_enabled,
@@ -211,6 +241,83 @@ def save_regular_schedule_config(data):
     )
 
 
+    # ---------------------------------------------------------
+    # RECUPERAR CONFIGURACIÓN NORMALIZADA
+    # ---------------------------------------------------------
+
+    saved_schedule = get_regular_schedule_config()
+
+    if saved_schedule is None:
+        raise ValueError(
+            'No fue posible recuperar el horario habitual guardado.'
+        )
+
+
+    # ---------------------------------------------------------
+    # DEFINIR RANGO DE GENERACIÓN
+    # ---------------------------------------------------------
+
+    generation_start_date = datetime.now(
+        LOCAL_TIMEZONE
+    ).date()
+
+    generation_end_date = (
+        generation_start_date
+        + timedelta(
+            days=AVAILABILITY_GENERATION_DAYS - 1
+        )
+    )
+
+
+    # ---------------------------------------------------------
+    # GENERAR DISPONIBILIDADES
+    # ---------------------------------------------------------
+
+    generated_slots = generate_slots_for_range(
+        saved_schedule,
+        generation_start_date,
+        generation_end_date
+    )
+
+
+    # ---------------------------------------------------------
+    # GUARDAR DISPONIBILIDADES GENERADAS
+    # ---------------------------------------------------------
+
+    generation_result = replace_generated_availabilities(
+        generation_start_date,
+        generation_end_date,
+        generated_slots,
+        saved_schedule['id']
+    )
+
+
+    return {
+        'schedule': saved_schedule,
+
+        'generation': {
+            'startDate': generation_start_date.isoformat(),
+            'endDate': generation_end_date.isoformat(),
+
+            'generated': len(
+                generated_slots
+            ),
+
+            'deleted': generation_result[
+                'deleted'
+            ],
+
+            'inserted': generation_result[
+                'inserted'
+            ],
+
+            'skipped': generation_result[
+                'skipped'
+            ]
+        }
+    }
+
+
 def get_regular_schedule_config():
     result = get_regular_schedule_repo()
 
@@ -218,9 +325,13 @@ def get_regular_schedule_config():
         return None
 
 
-    schedule = result['schedule']
+    schedule = result[
+        'schedule'
+    ]
 
-    work_days = result['work_days']
+    work_days = result[
+        'work_days'
+    ]
 
 
     return {
@@ -234,13 +345,17 @@ def get_regular_schedule_config():
             'enabled': schedule[3],
 
             'startTime': (
-                schedule[4].strftime('%H:%M')
+                schedule[4].strftime(
+                    '%H:%M'
+                )
                 if schedule[4]
                 else None
             ),
 
             'endTime': (
-                schedule[5].strftime('%H:%M')
+                schedule[5].strftime(
+                    '%H:%M'
+                )
                 if schedule[5]
                 else None
             )
@@ -258,10 +373,15 @@ def get_regular_schedule_config():
                     '%H:%M'
                 )
             }
+
             for day in work_days
         ],
 
-        'createdAt': schedule[6].isoformat(),
+        'createdAt': schedule[
+            6
+        ].isoformat(),
 
-        'updatedAt': schedule[7].isoformat()
+        'updatedAt': schedule[
+            7
+        ].isoformat()
     }
