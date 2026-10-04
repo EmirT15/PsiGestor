@@ -15,10 +15,11 @@
       (statusChange)="statusFilter = $event"
       (manageSchedule)="openManageSchedule()"
     />
-    
+
     @if (isManageScheduleOpen) {
       <app-manage-schedule-modal
-     (closed)="closeManageSchedule()"
+      (scheduleUpdated)="loadAvailabilities()"
+      (closed)="closeManageSchedule()"
     />
 
     }
