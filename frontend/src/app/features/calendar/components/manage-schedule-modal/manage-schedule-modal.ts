@@ -1,6 +1,7 @@
 import {
   Component,
   EventEmitter,
+  OnInit,
   Output,
 } from '@angular/core';
 
@@ -36,7 +37,7 @@ type ScheduleTab =
 
   styleUrl: './manage-schedule-modal.css',
 })
-export class ManageScheduleModal {
+export class ManageScheduleModal implements OnInit {
 
   @Output()
   closed = new EventEmitter<void>();
@@ -48,16 +49,128 @@ export class ManageScheduleModal {
   activeTab: ScheduleTab =
     'regular';
 
-
   isSaving = false;
-
   saveError = '';
+
+  isLoadingRegularSchedule = true;
+
+  loadError = '';
+
+  regularScheduleConfig:
+    RegularScheduleConfig | null = null;
 
 
   constructor(
     private regularScheduleService:
       RegularScheduleService
   ) {}
+
+  ngOnInit(): void {
+  this.loadRegularSchedule();
+}
+
+private loadRegularSchedule(): void {
+
+  this.isLoadingRegularSchedule = true;
+
+  this.loadError = '';
+
+
+  this.regularScheduleService
+    .getRegularSchedule()
+    .subscribe({
+
+      next: (schedule) => {
+
+        if (!schedule) {
+          this.regularScheduleConfig = null;
+
+          this.isLoadingRegularSchedule =
+            false;
+
+          return;
+        }
+
+
+        this.regularScheduleConfig = {
+
+          appointmentDuration:
+            schedule.appointmentDuration,
+
+          appointmentGapMinutes:
+            schedule.appointmentGapMinutes,
+
+          workDays:
+            schedule.workDays.map(
+              (day) => {
+
+                const metadata =
+                  this.dayMetadata[
+                    day.dayOfWeek
+                  ];
+
+
+                return {
+
+                  id:
+                    day.dayOfWeek,
+
+                  name:
+                    metadata.name,
+
+                  shortName:
+                    metadata.shortName,
+
+                  enabled:
+                    true,
+
+                  startTime:
+                    day.startTime,
+
+                  endTime:
+                    day.endTime,
+                };
+              }
+            ),
+
+          break: {
+
+            enabled:
+              schedule.break.enabled,
+
+            startTime:
+              schedule.break.startTime
+              ?? '',
+
+            endTime:
+              schedule.break.endTime
+              ?? '',
+          },
+        };
+
+
+        this.isLoadingRegularSchedule =
+          false;
+      },
+
+
+      error: (error) => {
+
+        console.error(
+          'Error al cargar el horario habitual:',
+          error
+        );
+
+        this.loadError =
+          'No fue posible cargar el horario habitual.';
+
+        this.isLoadingRegularSchedule =
+          false;
+      }
+    });
+}
+
+
 
 
   selectTab(
@@ -146,4 +259,47 @@ export class ManageScheduleModal {
   close(): void {
     this.closed.emit();
   }
+  private readonly dayMetadata: Record<
+  number,
+  {
+    name: string;
+    shortName: string;
+  }
+> = {
+
+  1: {
+    name: 'Lunes',
+    shortName: 'LUN',
+  },
+
+  2: {
+    name: 'Martes',
+    shortName: 'MAR',
+  },
+
+  3: {
+    name: 'Miércoles',
+    shortName: 'MIÉ',
+  },
+
+  4: {
+    name: 'Jueves',
+    shortName: 'JUE',
+  },
+
+  5: {
+    name: 'Viernes',
+    shortName: 'VIE',
+  },
+
+  6: {
+    name: 'Sábado',
+    shortName: 'SÁB',
+  },
+
+  7: {
+    name: 'Domingo',
+    shortName: 'DOM',
+  },
+};
 }

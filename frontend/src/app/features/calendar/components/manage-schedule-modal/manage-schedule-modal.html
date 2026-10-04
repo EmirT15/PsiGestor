@@ -80,16 +80,27 @@
 
         <section class="tab-workspace">
 
-          <!--
-            HU-02A
-            Aquí se integrará posteriormente
-            el componente regular-schedule.
-          -->
+          @if (isLoadingRegularSchedule) {
 
-          <app-regular-schedule
-          (scheduleSaved)="handleRegularScheduleSaved($event)"
-          (cancelRequested)="close()"
-          />
+  <p>
+    Cargando horario habitual...
+  </p>
+
+} @else if (loadError) {
+
+  <p>
+    {{ loadError }}
+  </p>
+
+} @else {
+
+  <app-regular-schedule
+    [initialConfig]="regularScheduleConfig"
+    (scheduleSaved)="handleRegularScheduleSaved($event)"
+    (cancelRequested)="close()"
+  />
+
+}
 
         </section>
 

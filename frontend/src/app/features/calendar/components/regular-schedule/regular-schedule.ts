@@ -1,6 +1,7 @@
 import {
   Component,
   EventEmitter,
+  Input,
   Output,
 } from '@angular/core';
 
@@ -36,6 +37,14 @@ export interface RegularScheduleConfig {
   styleUrl: './regular-schedule.css',
 })
 export class RegularSchedule {
+
+  @Input()
+  set initialConfig(
+    config: RegularScheduleConfig | null) {
+      if (config) {
+      this.applyInitialConfig(config);
+      }
+    }
 
   @Output()
   scheduleSaved = new EventEmitter<RegularScheduleConfig>();
@@ -411,5 +420,78 @@ formatTime12Hour(time: string): string {
   if (this.editingDayId === day.id) {
     this.editingDayId = null;
   }
+}
+
+private applyInitialConfig(
+  config: RegularScheduleConfig
+): void {
+
+  const configuredDays = new Map(
+    config.workDays.map(
+      (day) => [day.id, day]
+    )
+  );
+
+
+  this.workDays = this.workDays.map(
+    (day) => {
+
+      const configuredDay =
+        configuredDays.get(day.id);
+
+
+      if (!configuredDay) {
+        return {
+          ...day,
+          enabled: false,
+          startTime: '',
+          endTime: '',
+        };
+      }
+
+
+      return {
+        ...day,
+
+        enabled: true,
+
+        startTime:
+          configuredDay.startTime,
+
+        endTime:
+          configuredDay.endTime,
+      };
+    }
+  );
+
+
+  this.appointmentDuration =
+    config.appointmentDuration;
+
+
+  this.customDurationEnabled =
+    !this.durationOptions.includes(
+      config.appointmentDuration
+    );
+
+
+  this.appointmentGapMinutes =
+    config.appointmentGapMinutes;
+
+
+  this.customAppointmentGapEnabled =
+    !this.appointmentGapOptions.includes(
+      config.appointmentGapMinutes
+    );
+
+
+  this.breakConfig = {
+    ...config.break,
+  };
+
+
+  this.editingDayId = null;
+
+  this.saveError = '';
 }
 }
