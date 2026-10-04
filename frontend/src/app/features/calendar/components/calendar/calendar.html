@@ -65,51 +65,115 @@
 
     }
 
-    @if (currentView === 'day') {
+   @if (currentView === 'day') {
 
-      <div class="day-view">
+  <div class="day-view">
 
-        <h3>
-          {{ getCurrentViewDate().toLocaleDateString('es-MX', {
+    <h3>
+      {{
+        getCurrentViewDate().toLocaleDateString(
+          'es-MX',
+          {
             weekday: 'long',
             day: 'numeric',
             month: 'long',
             year: 'numeric'
-          }) }}
-        </h3>
+          }
+        )
+      }}
+    </h3>
 
-        @for (
-          availability of getAvailabilitiesForDate(
-            getCurrentViewDate()
-          );
-          track availability.id
-        ) {
 
-          <app-availability-card
-            [availability]="availability"
-            [slots]="generateSlots(availability)"
-            [selectedSlot]="selectedSlot"
-            [selectedAvailabilityId]="selectedAvailabilityId"
-            (slotSelected)="selectSlot($event, availability)"
-          />
+    @for (
+      availability of getAvailabilitiesForDate(
+        getCurrentViewDate()
+      );
+      track availability.id
+    ) {
 
-        }
+      @if (
+        availability.status === 'Disponible'
+      ) {
 
-        @if (
-          selectedSlot &&
-          selectedSlotDate === formatDate(getCurrentViewDate())
-        ) {
+        <button
+          type="button"
+          class="day-availability-card"
+          [class.day-availability-card-selected]="
+            selectedAvailabilityId ===
+            availability.id
+          "
+          (click)="
+            selectAvailableSlot(
+              availability
+            )
+          "
+        >
 
-          <p>
-            Horario seleccionado:
-            <strong>{{ selectedSlot }}</strong>
-          </p>
+          <div class="day-availability-icon">
+            ✓
+          </div>
 
-        }
 
-      </div>
+          <div class="day-availability-content">
+
+            <div class="day-availability-header">
+
+              <span class="day-availability-time">
+                {{
+                  getAvailabilityTimeRange(
+                    availability
+                  )
+                }}
+              </span>
+
+
+              <span class="day-availability-badge">
+
+                <span
+                  class="day-availability-dot"
+                ></span>
+
+                Disponible
+
+              </span>
+
+
+              <span
+                class="day-availability-duration"
+              >
+                Duración:
+                {{ availability.duration }} min
+              </span>
+
+            </div>
+          </div>
+
+        </button>
+
+      } @else {
+
+        <app-availability-card
+          [availability]="availability"
+          [slots]="generateSlots(availability)"
+          [selectedSlot]="selectedSlot"
+          [selectedAvailabilityId]="
+            selectedAvailabilityId
+          "
+          (slotSelected)="
+            selectSlot(
+              $event,
+              availability
+            )
+          "
+        />
+
+      }
 
     }
+
+  </div>
+
+}
 
     @if (currentView === 'week') {
 
