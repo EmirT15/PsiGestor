@@ -545,6 +545,12 @@
 
 
 .week-calendar-cell {
+
+  padding: 6px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   min-height: 76px;
 
   background: #ffffff;
@@ -555,6 +561,103 @@
   box-sizing: border-box;
 
   transition: background 0.15s ease;
+}
+
+.week-availability-card {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  gap: 3px;
+
+  padding: 8px 9px;
+
+  border: 1px solid #b7e9cf;
+  border-radius: 8px;
+
+  background: #ecfdf3;
+
+  color: #182230;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  box-sizing: border-box;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+
+.week-availability-card:hover {
+  background: #e1faec;
+
+  border-color: #7dd3a8;
+
+  box-shadow:
+    0 2px 6px
+    rgba(16, 185, 129, 0.08);
+}
+
+
+.week-availability-card:active {
+  transform: scale(0.99);
+}
+
+
+.week-availability-card-selected {
+  border-color: #168454;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(22, 132, 84, 0.12);
+}
+
+
+.week-availability-time {
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  color: #13724a;
+}
+
+
+.week-availability-dot {
+  width: 6px;
+  height: 6px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #168454;
+}
+
+
+.week-availability-status {
+  font-size: 12px;
+  font-weight: 600;
+
+  color: #11663f;
+}
+
+
+.week-availability-duration {
+  font-size: 10px;
+  font-weight: 500;
+
+  color: #667085;
 }
 
 

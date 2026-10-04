@@ -147,7 +147,7 @@
             }
 
             @for (
-              time of visualTimeRows;
+              time of getWeekTimeRows();
               track time
             ) {
 
@@ -161,10 +161,68 @@
               ) {
 
                 <div
-                  class="week-calendar-cell"
-                  [class.today-column]="isToday(day)"
-                >
-                </div>
+  class="week-calendar-cell"
+  [class.today-column]="isToday(day)"
+>
+
+  @for (
+    availability of
+      getAvailableSlotsForHour(
+        day,
+        time
+      );
+    track availability.id
+  ) {
+
+    <button
+      type="button"
+      class="week-availability-card"
+      [class.week-availability-card-selected]="
+        selectedAvailabilityId ===
+        availability.id
+      "
+      (click)="
+        selectAvailableSlot(
+          availability
+        )
+      "
+    >
+
+      <span
+        class="week-availability-time"
+      >
+
+        <span
+          class="week-availability-dot"
+        ></span>
+
+        {{
+          getAvailabilityTimeRange(
+            availability
+          )
+        }}
+
+      </span>
+
+
+      <span
+        class="week-availability-status"
+      >
+        Disponible
+      </span>
+
+
+      <span
+        class="week-availability-duration"
+      >
+        {{ availability.duration }} min
+      </span>
+
+    </button>
+
+  }
+
+</div>
 
               }
 

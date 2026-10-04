@@ -359,6 +359,181 @@ closeManageSchedule(): void {
     return this.getWeekDays().slice(0, 5);
   }
 
+  getWeekTimeRows(): string[] {
+
+  const displayedDates = new Set(
+    this.getDisplayedWeekDays().map(
+      (day) => this.formatDate(day)
+    )
+  );
+
+
+  const weekAvailabilities =
+    this.availabilities.filter(
+      (availability) =>
+        displayedDates.has(
+          availability.date
+        ) &&
+        availability.status ===
+          'Disponible'
+    );
+
+
+  if (weekAvailabilities.length === 0) {
+    return this.visualTimeRows;
+  }
+
+
+  const startHours =
+    weekAvailabilities.map(
+      (availability) =>
+        Math.floor(
+          this.timeToMinutes(
+            availability.startTime
+          ) / 60
+        )
+    );
+
+
+  const firstHour =
+    Math.min(...startHours);
+
+  const lastHour =
+    Math.max(...startHours);
+
+
+  const rows: string[] = [];
+
+
+  for (
+    let hour = firstHour;
+    hour <= lastHour;
+    hour++
+  ) {
+    rows.push(
+      `${hour
+        .toString()
+        .padStart(2, '0')}:00`
+    );
+  }
+
+
+  return rows;
+}
+
+getAvailableSlotsForHour(
+  date: Date,
+  hour: string
+): Availability[] {
+
+  if (
+    this.statusFilter !== 'all' &&
+    this.statusFilter !== 'Disponible'
+  ) {
+    return [];
+  }
+
+
+  const dateString =
+    this.formatDate(date);
+
+  const hourStart =
+    this.timeToMinutes(hour);
+
+  const hourEnd =
+    hourStart + 60;
+
+
+  return this.availabilities
+    .filter(
+      (availability) => {
+
+        if (
+          availability.date !==
+          dateString
+        ) {
+          return false;
+        }
+
+
+        if (
+          availability.status !==
+          'Disponible'
+        ) {
+          return false;
+        }
+
+
+        const availabilityStart =
+          this.timeToMinutes(
+            availability.startTime
+          );
+
+
+        return (
+          availabilityStart >=
+            hourStart &&
+          availabilityStart <
+            hourEnd
+        );
+      }
+    )
+    .sort(
+      (first, second) =>
+        this.timeToMinutes(
+          first.startTime
+        ) -
+        this.timeToMinutes(
+          second.startTime
+        )
+    );
+}
+
+formatAvailabilityTime(
+  time: string
+): string {
+
+  return time.substring(
+    0,
+    5
+  );
+}
+
+getAvailabilityTimeRange(
+  availability: Availability
+): string {
+
+  return (
+    this.formatAvailabilityTime(
+      availability.startTime
+    )
+    +
+    ' - '
+    +
+    this.formatAvailabilityTime(
+      availability.endTime
+    )
+  );
+}
+
+selectAvailableSlot(
+  availability: Availability
+): void {
+
+  this.selectedAvailabilityId =
+    availability.id;
+
+  this.selectedSlotDate =
+    availability.date;
+
+  this.selectedSlot =
+    this.getAvailabilityTimeRange(
+      availability
+    );
+}
+
+
+
   isToday(date: Date): boolean {
     const today = new Date();
 
