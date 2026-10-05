@@ -271,9 +271,7 @@
 }
 
   </div>
-
 }
-
       @if (currentView === 'week') {
 
   <section class="week-calendar">
@@ -351,7 +349,9 @@
     track day.getTime()
   ) {
 
-    @if (isRegularWorkDay(day)) {
+    @if (
+  doesHabitualBreakApplyToDay(day)
+) {
 
       <div
         class="week-habitual-break-cell"

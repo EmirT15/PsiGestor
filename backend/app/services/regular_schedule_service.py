@@ -215,17 +215,28 @@ def save_regular_schedule_config(data):
             )
 
 
-        for day in normalized_work_days:
-            if (
-                break_start_time < day['start_time']
-                or break_end_time > day['end_time']
-            ):
-                raise ValueError(
-                    'El descanso habitual debe encontrarse '
-                    'dentro del horario de atención de todos '
-                    'los días habilitados.'
-                )
+    for day in normalized_work_days:
 
+        overlaps = (
+            break_start_time < day['end_time']
+            and
+            break_end_time > day['start_time']
+        )
+
+        fully_inside = (
+            break_start_time >= day['start_time']
+            and
+            break_end_time <= day['end_time']
+        )
+
+        if overlaps and not fully_inside:
+            raise ValueError(
+                'El descanso habitual se cruza '
+                'parcialmente con uno o más '
+                'horarios de atención. Debe '
+                'quedar completamente dentro '
+                'o fuera de cada jornada.'
+            )
 
     # ---------------------------------------------------------
     # GUARDAR CONFIGURACIÓN DEL HORARIO HABITUAL
@@ -251,7 +262,6 @@ def save_regular_schedule_config(data):
         raise ValueError(
             'No fue posible recuperar el horario habitual guardado.'
         )
-
 
     # ---------------------------------------------------------
     # DEFINIR RANGO DE GENERACIÓN

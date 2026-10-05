@@ -750,14 +750,10 @@ selectAvailableSlot(
 
   shouldShowHabitualBreakForCurrentDay(): boolean {
 
-  const currentDay =
-    this.getCurrentViewDate();
-
-  return (
-    this.hasHabitualBreak() &&
-    this.isRegularWorkDay(currentDay)
+  return this.doesHabitualBreakApplyToDay(
+    this.getCurrentViewDate()
   );
-}
+  }
 
 
  getDayTimelineItems(
@@ -809,8 +805,7 @@ selectAvailableSlot(
    * si corresponde a esta fecha.
    */
   if (
-    this.hasHabitualBreak() &&
-    this.isRegularWorkDay(date)
+      this.doesHabitualBreakApplyToDay(date)
   ) {
 
     items.push({
@@ -894,14 +889,69 @@ isRegularWorkDay(date: Date): boolean {
     (day) => day.dayOfWeek === dayOfWeek
   );
 }
+ doesHabitualBreakApplyToDay(
+  date: Date
+): boolean {
+
+  if (
+    !this.hasHabitualBreak() ||
+    !this.regularSchedule
+  ) {
+    return false;
+  }
+
+
+  const javascriptDay =
+    date.getDay();
+
+
+  const dayOfWeek =
+    javascriptDay === 0
+      ? 7
+      : javascriptDay;
+
+
+  const workDay =
+    this.regularSchedule.workDays.find(
+      (day) =>
+        day.dayOfWeek === dayOfWeek
+    );
+
+
+  if (!workDay) {
+    return false;
+  }
+
+
+  const breakStart =
+    this.getHabitualBreakStartTime();
+
+  const breakEnd =
+    this.getHabitualBreakEndTime();
+
+
+  const workStart =
+    workDay.startTime.slice(0, 5);
+
+  const workEnd =
+    workDay.endTime.slice(0, 5);
+
+
+  return (
+    breakStart >= workStart &&
+    breakEnd <= workEnd
+  );
+}
 
   isHabitualBreakSegmentStart(
   date: Date
 ): boolean {
 
-  if (!this.isRegularWorkDay(date)) {
-    return false;
-  }
+  if (
+  !this.doesHabitualBreakApplyToDay(date)
+) {
+  return false;
+}
 
   const days =
     this.getDisplayedWeekDays();
@@ -917,9 +967,9 @@ isRegularWorkDay(date: Date): boolean {
     return true;
   }
 
-  return !this.isRegularWorkDay(
-    days[index - 1]
-  );
+  return !this.doesHabitualBreakApplyToDay(
+  days[index - 1]
+);
 }
 
 
@@ -927,7 +977,9 @@ isHabitualBreakSegmentEnd(
   date: Date
 ): boolean {
 
-  if (!this.isRegularWorkDay(date)) {
+  if (
+    !this.doesHabitualBreakApplyToDay(date)
+  ) {
     return false;
   }
 
@@ -948,7 +1000,7 @@ isHabitualBreakSegmentEnd(
     return true;
   }
 
-  return !this.isRegularWorkDay(
+  return !this.doesHabitualBreakApplyToDay(
     days[index + 1]
   );
 }

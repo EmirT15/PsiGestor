@@ -189,28 +189,122 @@ isBreakTimeValid(): boolean {
 
   return this.breakConfig.startTime < this.breakConfig.endTime;
 }
+
+doesBreakApplyToWorkDay(
+  day: WorkDay
+): boolean {
+
+  if (
+    !this.breakConfig.enabled ||
+    !this.isBreakTimeValid() ||
+    !day.enabled ||
+    !this.isDayTimeValid(day)
+  ) {
+    return false;
+  }
+
+  return (
+    this.breakConfig.startTime >=
+      day.startTime &&
+    this.breakConfig.endTime <=
+      day.endTime
+  );
+}
+
+
+doesBreakPartiallyOverlapWorkDay(
+  day: WorkDay
+): boolean {
+
+  if (
+    !this.breakConfig.enabled ||
+    !this.isBreakTimeValid() ||
+    !day.enabled ||
+    !this.isDayTimeValid(day)
+  ) {
+    return false;
+  }
+
+
+  const overlaps =
+    this.breakConfig.startTime <
+      day.endTime &&
+    this.breakConfig.endTime >
+      day.startTime;
+
+
+  const fullyInside =
+    this.doesBreakApplyToWorkDay(day);
+
+
+  return (
+    overlaps &&
+    !fullyInside
+  );
+}
+
+
+getBreakConflictDays(): WorkDay[] {
+
+  return this.workDays.filter(
+    (day) =>
+      this.doesBreakPartiallyOverlapWorkDay(
+        day
+      )
+  );
+}
+
 getBreakError(): string | null {
+
   if (!this.breakConfig.enabled) {
     return null;
   }
+
 
   if (
     !this.breakConfig.startTime ||
     !this.breakConfig.endTime
   ) {
-    return 'Debes definir el inicio y la finalización del descanso.';
+
+    return (
+      'Debes definir el inicio y la ' +
+      'finalización del descanso.'
+    );
   }
+
 
   if (
     this.breakConfig.startTime >=
     this.breakConfig.endTime
   ) {
-    return 'La hora inicial del descanso debe ser anterior a la hora final.';
+
+    return (
+      'La hora inicial del descanso debe ' +
+      'ser anterior a la hora final.'
+    );
   }
 
-  if (!this.isBreakInsideWorkingHours()) {
-    return 'El descanso debe encontrarse dentro del horario de atención de los días habilitados.';
+
+  const conflictDays =
+    this.getBreakConflictDays();
+
+
+  if (conflictDays.length > 0) {
+
+    const dayNames =
+      conflictDays
+        .map((day) => day.name)
+        .join(', ');
+
+
+    return (
+      'El descanso se cruza parcialmente ' +
+      `con: ${dayNames}. ` +
+      'Debe quedar completamente dentro ' +
+      'o fuera de cada jornada.'
+    );
   }
+
 
   return null;
 }
@@ -243,13 +337,13 @@ isScheduleValid(): boolean {
   if (!this.isBreakTimeValid()) {
     return false;
   }
-
-  if (!this.isBreakInsideWorkingHours()) {
-    return false;
+  if (
+      this.getBreakConflictDays().length > 0
+    ) {
+      return false;
+    }
+      return true;
   }
-
-  return true;
-}
 cancel(): void {
   this.cancelRequested.emit();
 }
@@ -281,30 +375,6 @@ saveSchedule(): void {
   };
 
   this.scheduleSaved.emit(config);
-}
-isBreakInsideWorkingHours(): boolean {
-  if (!this.breakConfig.enabled) {
-    return true;
-  }
-
-  if (!this.isBreakTimeValid()) {
-    return false;
-  }
-
-  const enabledDays = this.workDays.filter(
-    (day) => day.enabled && this.isDayTimeValid(day)
-  );
-
-  if (enabledDays.length === 0) {
-    return false;
-  }
-
-  return enabledDays.every((day) => {
-    return (
-      this.breakConfig.startTime >= day.startTime &&
-      this.breakConfig.endTime <= day.endTime
-    );
-  });
 }
   workDays: WorkDay[] = [
     {
