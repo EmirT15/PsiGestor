@@ -174,10 +174,43 @@
   box-shadow: none;
   box-sizing: border-box;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+
+  transition:
+  border-color 0.15s ease,
+  background 0.15s ease,
+  box-shadow 0.15s ease;
+  
   min-height: 92px;
   padding: 6px;
+  position: relative;
 }
+
+/* ============================================================
+   INDICADORES DE ESTADO EN VISTA MES
+   ============================================================ */
+
+.dots-container {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 3px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-available {
+  background-color: #10b981;
+}
+
+.dot-disabled {
+  background-color: #ef4444;
+}
+
 
 .calendar-grid button.month-day-cell:hover {
   background: #f8fbff;
@@ -264,6 +297,11 @@
   width: 5px;
   height: 5px;
   background: #138a57;
+}
+
+.calendar-grid button.has-disabled {
+  background-color: #fef2f2;
+  border: 1px solid #fca5a5;
 }
 
 /* ============================================================

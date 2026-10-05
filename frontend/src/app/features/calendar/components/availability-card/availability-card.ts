@@ -3,6 +3,7 @@ import { Availability } from '../../models/availability.model';
 
 @Component({
   selector: 'app-availability-card',
+  standalone: true,
   imports: [],
   templateUrl: './availability-card.html',
   styleUrl: './availability-card.css',
@@ -12,16 +13,14 @@ export class AvailabilityCard {
   @Input() availability!: Availability;
   @Input() slots: string[] = [];
   @Input() selectedSlot = '';
-  @Output() slotSelected = new EventEmitter<string>();
   @Input() selectedAvailabilityId: number | null = null;
+  @Output() slotSelected = new EventEmitter<string>();
+  @Output() disableRequested = new EventEmitter<Availability>();
 
   formatTimeString(time: string): string {
     const [hours, minutes] = time.split(':').map(Number);
-
     const totalMinutes = hours * 60 + minutes;
-
     const period = hours >= 12 ? 'PM' : 'AM';
-
     let hours12 = hours % 12;
 
     if (hours12 === 0) {
@@ -29,6 +28,10 @@ export class AvailabilityCard {
     }
 
     return `${String(hours12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
+  }
+
+  onDisableSchedule(): void {
+    this.disableRequested.emit(this.availability);
   }
 
 }

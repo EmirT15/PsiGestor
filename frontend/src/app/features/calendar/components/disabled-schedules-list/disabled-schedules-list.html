@@ -1,3 +1,260 @@
 <div class="disabled-schedules-root">
-  <!-- HU-02B: Administración de horarios inhabilitados -->
+  
+  <!-- Encabezado de la pestaña y botón de acción superior -->
+  <div class="header-section">
+    <div>
+      <h3 class="section-title">
+        <span class="calendar-icon">📅</span> Horarios inhabilitados
+      </h3>
+      <p class="section-subtitle">
+        Consulta y administra los horarios que fueron inhabilitados sin modificar tu horario habitual.
+      </p>
+    </div>
+    <button type="button" class="btn-primary" (click)="openNewForm()">
+      🚫 Inhabilitar horario
+    </button>
+  </div>
+
+  <!-- Filtros tipo Tabs/Pills -->
+  <div class="filters-container">
+    <button 
+      type="button" 
+      class="filter-pill" 
+      [class.active]="filterType === 'Todos'"
+      (click)="filterType = 'Todos'">
+      Todos <span class="badge-count">{{ schedules.length }}</span>
+    </button>
+    <button 
+      type="button" 
+      class="filter-pill" 
+      [class.active]="filterType === 'Puntual'"
+      (click)="filterType = 'Puntual'">
+      Puntuales <span class="badge-count">{{ getCount('Puntual') }}</span>
+    </button>
+    <button 
+      type="button" 
+      class="filter-pill" 
+      [class.active]="filterType === 'Rango de fechas'"
+      (click)="filterType = 'Rango de fechas'">
+      Rangos de fechas <span class="badge-count">{{ getCount('Rango de fechas') }}</span>
+    </button>
+  </div>
+
+  <!-- Lista de Tarjetas de Horarios Inhabilitados -->
+  <div class="schedules-list">
+    @for (item of filteredSchedules; track item.id) {
+      <div class="schedule-card">
+        <div class="card-left-border"></div>
+        <div class="card-content">
+          <div class="card-header-line">
+            <span class="icon">📅</span>
+            <strong class="date-text">
+              @if (item.type === 'Rango de fechas') {
+                Del {{ item.startDate }} al {{ item.endDate }}
+              } @else {
+                {{ item.startDate }}
+              }
+            </strong>
+            <span class="bullet">•</span>
+            <span class="time-text">🕒 {{ item.startTime }} a {{ item.endTime }}</span>
+            <span class="bullet">•</span>
+            <span class="status-tag" [class.is-range]="item.type === 'Rango de fechas'">
+              ● Inhabilitado {{ item.type === 'Rango de fechas' ? '(Rango)' : '' }}
+            </span>
+          </div>
+
+          <div class="card-reason-line">
+            <span class="reason-label">Motivo:</span> {{ item.reason }} 
+            @if (item.observation) { ({{ item.observation }}) }
+          </div>
+
+          @if (item.hasConflict) {
+            <div class="conflict-alert">
+              ⚠️ 1 cita asociada previa en revisión por coordinación
+            </div>
+          }
+        </div>
+
+        <!-- Botones de Acción directos en cada Tarjeta -->
+        <div class="card-actions" style="display: flex; gap: 8px; align-items: center;">
+          <button type="button" class="btn-cancel" style="padding: 4px 8px; font-size: 12px;" (click)="viewDetails(item)">👁️ Ver</button>
+          <button type="button" class="btn-cancel" style="padding: 4px 8px; font-size: 12px;" (click)="editSchedule(item)">✏️ Editar</button>
+          <button type="button" class="btn-cancel" style="padding: 4px 8px; font-size: 12px; color: #dc2626; border-color: #fca5a5;" (click)="rehabilitate(item.id)">🔓 Rehabilitar</button>
+        </div>
+      </div>
+    } @empty {
+      <div class="empty-state">
+        No hay horarios inhabilitados registrados en esta categoría.
+      </div>
+    }
+  </div>
+
+  <!-- MODAL / FORMULARIO: Inhabilitar Horario Completo -->
+  @if (showForm) {
+    <div class="modal-overlay" (click)="closeForm()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        
+        <div class="modal-header">
+          <div class="title-with-icon">
+            <div class="blue-icon-box">📅</div>
+            <div>
+              <h3>{{ isEditing ? 'Editar horario inhabilitado' : 'Inhabilitar horario' }}</h3>
+              <p>Selecciona una o más fechas y el horario que deseas marcar como no disponible.</p>
+            </div>
+          </div>
+          <button type="button" class="close-btn" (click)="closeForm()">×</button>
+        </div>
+
+        <form (ngSubmit)="saveSchedule()" class="modal-body" novalidate>
+          
+          <!-- Modalidad de aplicación -->
+          <div class="form-group">
+            <label class="group-label">Modalidad de aplicación</label>
+            <div class="toggle-group">
+              <button 
+                type="button" 
+                class="toggle-btn" 
+                [class.active]="formData.type === 'Puntual'"
+                (click)="formData.type = 'Puntual'">
+                Día único
+              </button>
+              <button 
+                type="button" 
+                class="toggle-btn" 
+                [class.active]="formData.type === 'Rango de fechas'"
+                (click)="formData.type = 'Rango de fechas'">
+                📅 Rango de fechas
+              </button>
+            </div>
+          </div>
+
+          <!-- Fechas -->
+          <div class="form-row">
+            <div class="field-container">
+              <label>📅 Fecha inicio</label>
+              <input type="date" [(ngModel)]="formData.startDate" name="startDate" required />
+            </div>
+
+            @if (formData.type === 'Rango de fechas') {
+              <div class="field-container">
+                <label>📅 Fecha fin</label>
+                <input type="date" [(ngModel)]="formData.endDate" name="endDate" required />
+              </div>
+            }
+          </div>
+
+          <!-- Franja horaria -->
+          <div class="time-box">
+            <div class="time-box-header">
+              <span>🕒 Franja horaria del bloqueo</span>
+              <span class="duration-pill">Duración: 1h 30m</span>
+            </div>
+            <div class="form-row">
+              <div class="field-container">
+                <label class="sub-label">HORA DE INICIO</label>
+                <input type="time" [(ngModel)]="formData.startTime" name="startTime" required />
+              </div>
+              <div class="field-container">
+                <label class="sub-label">HORA DE FINALIZACIÓN</label>
+                <input type="time" [(ngModel)]="formData.endTime" name="endTime" required />
+              </div>
+            </div>
+          </div>
+
+          <!-- Motivo -->
+          <div class="form-group">
+            <label class="group-label">Motivo institucional o personal *</label>
+            <div class="reasons-grid">
+              @for (reason of reasons; track reason) {
+                <label 
+                  class="reason-card" 
+                  [class.selected]="formData.reason === reason">
+                  <input 
+                    type="radio" 
+                    name="reason" 
+                    [value]="reason" 
+                    [(ngModel)]="formData.reason" />
+                  <span>{{ reason }}</span>
+                </label>
+              }
+            </div>
+          </div>
+
+          <!-- Observación -->
+          <div class="form-group">
+            <div class="label-with-optional">
+              <label>Observación institucional</label>
+              <span class="optional-text">Opcional</span>
+            </div>
+            <textarea 
+              [(ngModel)]="formData.observation" 
+              name="observation" 
+              rows="2" 
+              placeholder="Escribe un detalle adicional...">
+            </textarea>
+          </div>
+
+          <!-- Advertencia de Conflicto si existen citas -->
+          @if (hasConflictWarning) {
+            <div class="conflict-alert" style="background-color: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+              <strong>⚠️ Advertencia de conflicto:</strong> 
+              Existe(n) {{ conflictCount }} cita(s) programada(s) en esta franja horaria. Si confirma, las citas requerirán reprogramación.
+            </div>
+          }
+
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="closeForm()">Cancelar</button>
+            <button type="submit" class="btn-confirm" [disabled]="isSubmitting">{{ isSubmitting ? 'Guardando...' : 'Confirmar inhabilitación' }}
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+  }
+
+  <!-- MODAL CONSULTAR DETALLE DE INHABILITACIÓN -->
+  @if (selectedItemForDetail) {
+    <div class="modal-overlay" (click)="closeDetails()">
+      <div class="modal-card" (click)="$event.stopPropagation()" style="max-width: 480px;">
+        <div class="modal-header">
+          <h3>📋 Detalle de la Inhabilitación</h3>
+          <button type="button" class="close-btn" (click)="closeDetails()">×</button>
+        </div>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px; font-size: 14px;">
+          <div><strong>Tipo:</strong> {{ selectedItemForDetail.type }}</div>
+          <div><strong>Fecha:</strong> {{ selectedItemForDetail.startDate }} {{ selectedItemForDetail.endDate ? 'al ' + selectedItemForDetail.endDate : '' }}</div>
+          <div><strong>Horario:</strong> {{ selectedItemForDetail.startTime }} - {{ selectedItemForDetail.endTime }}</div>
+          <div><strong>Motivo:</strong> {{ selectedItemForDetail.reason }}</div>
+          <div><strong>Observación:</strong> {{ selectedItemForDetail.observation || 'Sin observaciones' }}</div>
+          <div><strong>Estado:</strong> <span style="color: #dc2626; font-weight: bold;">Inhabilitado</span></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" (click)="closeDetails()">Cerrar</button>
+          <button type="button" class="btn-confirm" (click)="editSchedule(selectedItemForDetail)">Editar</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL CONFIRMACIÓN PARA REHABILITAR -->
+  @if (showConfirmModal) {
+    <div class="modal-overlay" (click)="cancelRehabilitate()">
+      <div class="modal-card" (click)="$event.stopPropagation()" style="max-width: 400px; text-align: center;">
+        <div class="modal-header" style="justify-content: center;">
+          <h3 style="color: #dc2626;">🔓 ¿Rehabilitar Horario?</h3>
+        </div>
+        <div class="modal-body" style="padding: 16px 0;">
+          <p>¿Está seguro de que desea rehabilitar este horario?</p>
+          <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">El registro será eliminado de los inhabilitados y el espacio volverá a estar disponible.</p>
+        </div>
+        <div class="modal-footer" style="justify-content: center; gap: 12px;">
+          <button type="button" class="btn-cancel" (click)="cancelRehabilitate()">Cancelar</button>
+          <button type="button" class="btn-confirm" style="background-color: #dc2626;" (click)="confirmRehabilitate()">Sí, rehabilitar</button>
+        </div>
+      </div>
+    </div>
+  }
+
 </div>

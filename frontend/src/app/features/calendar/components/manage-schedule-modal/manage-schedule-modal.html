@@ -79,49 +79,37 @@
       @if (activeTab === 'regular') {
 
         <section class="tab-workspace">
-
           @if (isLoadingRegularSchedule) {
 
-  <p>
-    Cargando horario habitual...
-  </p>
+            <p>
+              Cargando horario habitual...
+            </p>
 
-} @else if (loadError) {
+          } @else if (loadError) {
 
-  <p>
-    {{ loadError }}
-  </p>
+            <p>
+              {{ loadError }}
+            </p>
 
-} @else {
+          } @else {
 
-  <app-regular-schedule
-    [initialConfig]="regularScheduleConfig"
-    (scheduleSaved)="handleRegularScheduleSaved($event)"
-    (cancelRequested)="close()"
-  />
+            <app-regular-schedule
+              [initialConfig]="regularScheduleConfig"
+              (scheduleSaved)="handleRegularScheduleSaved($event)"
+              (cancelRequested)="close()"
+            />
 
-}
-
+          }
         </section>
 
       }
 
 
-      @if (activeTab === 'disabled') {
-
-        <section class="tab-workspace">
-
-          <!--
-            HU-02B
-            Espacio reservado para los componentes
-            desarrollados por Emir.
-          -->
-
-          <app-disabled-schedules-list />
-
-        </section>
-
-      }
+     @if (activeTab === 'disabled') {
+      <section class="tab-workspace">
+        <app-disabled-schedules-list [initialData]="initialData" />
+      </section>
+    }
 
     </main>
 
