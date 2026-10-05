@@ -51,47 +51,83 @@ export class CalendarToolbar {
     }
 
 
-    if (this.currentView === 'week') {
+      if (this.currentView === 'week') {
 
-      const date = new Date(this.currentDate);
+  const date =
+    new Date(this.currentDate);
 
-      const dayOfWeek = date.getDay();
+  const dayOfWeek =
+    date.getDay();
 
-      const daysFromMonday =
-        dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-
-
-      const startOfWeek = new Date(date);
-
-      startOfWeek.setDate(
-        date.getDate() - daysFromMonday
-      );
-
-
-      const endOfWeek = new Date(startOfWeek);
-
-      endOfWeek.setDate(
-        startOfWeek.getDate() + 4
-      );
+  /*
+   * Primero obtenemos el lunes usando
+   * la misma lógica de Calendar.
+   */
+  const monday =
+    new Date(date);
 
 
-      const startLabel =
-        startOfWeek.toLocaleDateString('es-MX', {
-          day: 'numeric',
-          month: 'short'
-        });
+  if (dayOfWeek === 0) {
+
+    monday.setDate(
+      date.getDate() + 1
+    );
+
+  } else {
+
+    monday.setDate(
+      date.getDate() - (dayOfWeek - 1)
+    );
+  }
 
 
-      const endLabel =
-        endOfWeek.toLocaleDateString('es-MX', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric'
-        });
+  /*
+   * La vista visual inicia el domingo
+   * anterior a ese lunes.
+   */
+  const startOfWeek =
+    new Date(monday);
+
+  startOfWeek.setDate(
+    monday.getDate() - 1
+  );
 
 
-      return `${startLabel} – ${endLabel}`;
-    }
+  /*
+   * Y termina seis días después:
+   * domingo → sábado.
+   */
+  const endOfWeek =
+    new Date(startOfWeek);
+
+  endOfWeek.setDate(
+    startOfWeek.getDate() + 6
+  );
+
+
+  const startLabel =
+    startOfWeek.toLocaleDateString(
+      'es-MX',
+      {
+        day: 'numeric',
+        month: 'short'
+      }
+    );
+
+
+  const endLabel =
+    endOfWeek.toLocaleDateString(
+      'es-MX',
+      {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      }
+    );
+
+
+  return `${startLabel} – ${endLabel}`;
+}
 
 
     return this.currentDate.toLocaleDateString('es-MX', {

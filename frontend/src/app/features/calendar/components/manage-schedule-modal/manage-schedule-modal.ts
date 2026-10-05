@@ -19,7 +19,6 @@ import {
   SaveRegularScheduleRequest,
 } from '../../services/regular-schedule.service';
 
-
 type ScheduleTab =
   'regular'
   | 'disabled';
@@ -42,8 +41,9 @@ export class ManageScheduleModal implements OnInit {
   @Output()
   closed = new EventEmitter<void>();
 
-  @Output()
-  scheduleUpdated = new EventEmitter<void>();
+ @Output()
+scheduleUpdated =
+  new EventEmitter<RegularScheduleConfig>();
 
 
   activeTab: ScheduleTab =
@@ -232,13 +232,16 @@ private loadRegularSchedule(): void {
       .saveRegularSchedule(request)
       .subscribe({
 
-        next: () => {
-          this.isSaving = false;
 
-          this.scheduleUpdated.emit();
+      next: () => {
+  this.isSaving = false;
 
-          this.close();
-        },
+  this.scheduleUpdated.emit(
+    config
+  );
+
+  this.close();
+},
 
         error: (error) => {
           console.error(

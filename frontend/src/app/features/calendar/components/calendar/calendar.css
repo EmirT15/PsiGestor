@@ -406,9 +406,10 @@
 
 .week-schedule-grid {
   display: grid;
-  grid-template-columns: 64px repeat(5, minmax(0, 1fr));
+  grid-template-columns:
+    64px repeat(7, minmax(0, 1fr));
   width: 100%;
-  min-width: 960px;
+  min-width: 1180px;
 }
 
 .week-grid-corner {
@@ -506,6 +507,158 @@
 
 .week-calendar-cell.today-column:hover {
   background: #f5f9ff;
+}
+/* ============================================================
+   VISTA SEMANA - DESCANSO HABITUAL
+   ============================================================ */
+
+.week-habitual-break-cell {
+  min-height: 76px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 10px 14px;
+
+  position: relative;
+
+  background: #f1f5fb;
+
+  border-top: 1px solid #dce5f0;
+  border-bottom: 1px solid #dce5f0;
+
+  box-sizing: border-box;
+}
+
+
+/*
+ * Las celdas consecutivas comparten el mismo fondo.
+ * No se dibuja separación vertical entre ellas.
+ */
+.week-habitual-break-cell:not(.segment-start) {
+  border-left: none;
+}
+
+
+.week-habitual-break-cell:not(.segment-end) {
+  border-right: none;
+}
+
+
+/*
+ * Inicio del bloque continuo.
+ */
+.week-habitual-break-cell.segment-start {
+  border-left: 1px solid #dce5f0;
+
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+
+/*
+ * Final del bloque continuo.
+ */
+.week-habitual-break-cell.segment-end {
+  border-right: 1px solid #dce5f0;
+
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+
+/*
+ * Si existe un solo día laboral, la misma celda
+ * será inicio y final del segmento.
+ */
+.week-habitual-break-cell.segment-start.segment-end {
+  border: 1px solid #dce5f0;
+  border-radius: 8px;
+}
+
+
+.week-habitual-break-information {
+  flex: 1;
+
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  position: relative;
+  z-index: 1;
+}
+
+
+.week-habitual-break-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 8px;
+}
+
+
+.week-habitual-break-time {
+  color: #334155;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+
+.week-habitual-break-badge {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 3px 8px;
+
+  border-radius: 999px;
+
+  background: #dce6f2;
+  color: #52657a;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+
+.week-habitual-break-description {
+  color: #64748b;
+
+  font-size: 10px;
+  font-weight: 500;
+
+  white-space: nowrap;
+}
+
+
+.week-habitual-break-duration {
+  margin-left: auto;
+
+  color: #7c8998;
+
+  font-size: 10px;
+  font-weight: 500;
+
+  white-space: nowrap;
+}
+
+
+/*
+ * Días sin descanso dentro de esa misma fila.
+ * Mantienen la estructura normal de la cuadrícula.
+ */
+.week-habitual-break-empty {
+  background: #ffffff;
 }
 
 /* ============================================================

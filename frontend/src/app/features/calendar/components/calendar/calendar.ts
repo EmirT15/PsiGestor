@@ -1,22 +1,36 @@
-import { ChangeDetectorRef, Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
-
 import { isPlatformBrowser } from '@angular/common';
-import { Availability } from '../../models/availability.model';
-import { AvailabilityCard } from '../availability-card/availability-card';
-import { AppointmentDetails } from '../appointment-details/appointment-details';
-import { RescheduleDetails } from '../reschedule-details/reschedule-details';
 import {
-  RescheduleModal,
-  RescheduleData
-} from '../reschedule-modal/reschedule-modal';
+  afterNextRender,
+  ChangeDetectorRef,
+  Component,
+  Inject,
+  PLATFORM_ID,
+  signal
+} from '@angular/core';
+import { forkJoin } from 'rxjs';
+import type { StatusFilter } from '../../../../shared/components/status-filter/status-filter';
+import { Availability } from '../../models/availability.model';
+import { CalendarService } from '../../services/calendar.service';
+import type {
+  RegularScheduleResponse
+} from '../../services/regular-schedule.service';
+import { RegularScheduleService } from '../../services/regular-schedule.service';
+import { AppointmentDetails } from '../appointment-details/appointment-details';
+import { AvailabilityCard } from '../availability-card/availability-card';
+import { CalendarToolbar } from '../calendar-toolbar/calendar-toolbar';
 import {
   CancelModal,
   CancelModalData
 } from '../cancel-modal/cancel-modal';
-import type { StatusFilter } from '../../../../shared/components/status-filter/status-filter';
-import { CalendarService } from '../../services/calendar.service';
-import { CalendarToolbar } from '../calendar-toolbar/calendar-toolbar';
 import { ManageScheduleModal } from '../manage-schedule-modal/manage-schedule-modal';
+import type {
+  RegularScheduleConfig
+} from '../regular-schedule/regular-schedule';
+import { RescheduleDetails } from '../reschedule-details/reschedule-details';
+import {
+  RescheduleData,
+  RescheduleModal
+} from '../reschedule-modal/reschedule-modal';
 
 
 @Component({
@@ -33,11 +47,16 @@ import { ManageScheduleModal } from '../manage-schedule-modal/manage-schedule-mo
   styleUrl: './calendar.css',
   templateUrl: './calendar.html',
 })
-export class Calendar implements OnInit {
+export class Calendar{
 
   private isBrowser: boolean;
 
+  readonly calendarRenderVersion =
+  signal(0);
+
   availabilities: Availability[] = [];
+
+  regularSchedule: RegularScheduleResponse | null = null;
 
   currentDate = new Date();
 
@@ -325,37 +344,92 @@ closeManageSchedule(): void {
     return this.currentDate;
   }
 
-  getWeekDays(): Date[] {
-    const date = this.getCurrentViewDate();
+    getWeekDays(): Date[] {
+  const date =
+    this.getCurrentViewDate();
 
-    const dayOfWeek = date.getDay();
+  const dayOfWeek =
+    date.getDay();
+
+  const startOfWeek =
+    new Date(date);
+
+
+  if (dayOfWeek === 0) {
+
+    /*
+     * Si la fecha de referencia es domingo,
+     * mostrar la siguiente semana laboral.
+     */
+    startOfWeek.setDate(
+      date.getDate() + 1
+    );
+
+  } else {
+
+    /*
+     * Para lunes a sábado,
+     * obtener el lunes de la semana actual.
+     */
     const daysFromMonday =
-      dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-
-    const startOfWeek = new Date(date);
+      dayOfWeek - 1;
 
     startOfWeek.setDate(
       date.getDate() - daysFromMonday
     );
-
-    const days: Date[] = [];
-
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(startOfWeek);
-
-      day.setDate(
-        startOfWeek.getDate() + i
-      );
-
-      days.push(day);
-    }
-
-    return days;
   }
 
-  getDisplayedWeekDays(): Date[] {
-    return this.getWeekDays().slice(0, 5);
+
+  const days: Date[] = [];
+
+
+  for (
+    let index = 0;
+    index < 7;
+    index++
+  ) {
+
+    const day =
+      new Date(startOfWeek);
+
+    day.setDate(
+      startOfWeek.getDate() + index
+    );
+
+    days.push(day);
   }
+
+
+  return days;
+}
+
+ getDisplayedWeekDays(): Date[] {
+
+  const weekDays =
+    this.getWeekDays();
+
+  /*
+   * getWeekDays() conserva la lógica interna
+   * lunes-domingo que ya funcionaba.
+   *
+   * Para mostrar la agenda como el calendario
+   * mensual, agregamos el domingo anterior
+   * y mostramos hasta sábado.
+   */
+
+  const sunday =
+    new Date(weekDays[0]);
+
+  sunday.setDate(
+    sunday.getDate() - 1
+  );
+
+
+  return [
+    sunday,
+    ...weekDays.slice(0, 6)
+  ];
+}
 
   getWeekTimeRows(): string[] {
 
@@ -670,35 +744,343 @@ selectAvailableSlot(
     return this.formatTime12Hour(totalMinutes);
   }
 
-  loadAvailabilities(): void {
-    this.calendarService.getAvailabilities().subscribe({
-      next: (data) => {
-        this.availabilities = data;
+  /* ============================================================
+   DESCANSO HABITUAL
+   ============================================================ */
 
-        this.changeDetectorRef.detectChanges();
+  hasHabitualBreak(): boolean {
+    const breakConfig = this.regularSchedule?.break;
+
+    return Boolean(
+      breakConfig?.enabled &&
+      breakConfig.startTime &&
+      breakConfig.endTime
+    );
+  }
+
+isRegularWorkDay(date: Date): boolean {
+  if (!this.regularSchedule) {
+    return false;
+  }
+
+  const javascriptDay = date.getDay();
+
+  const dayOfWeek =
+    javascriptDay === 0
+      ? 7
+      : javascriptDay;
+
+  return this.regularSchedule.workDays.some(
+    (day) => day.dayOfWeek === dayOfWeek
+  );
+}
+
+  isHabitualBreakSegmentStart(
+  date: Date
+): boolean {
+
+  if (!this.isRegularWorkDay(date)) {
+    return false;
+  }
+
+  const days =
+    this.getDisplayedWeekDays();
+
+  const index =
+    days.findIndex(
+      (day) =>
+        this.formatDate(day) ===
+        this.formatDate(date)
+    );
+
+  if (index <= 0) {
+    return true;
+  }
+
+  return !this.isRegularWorkDay(
+    days[index - 1]
+  );
+}
+
+
+isHabitualBreakSegmentEnd(
+  date: Date
+): boolean {
+
+  if (!this.isRegularWorkDay(date)) {
+    return false;
+  }
+
+  const days =
+    this.getDisplayedWeekDays();
+
+  const index =
+    days.findIndex(
+      (day) =>
+        this.formatDate(day) ===
+        this.formatDate(date)
+    );
+
+  if (
+    index === -1 ||
+    index === days.length - 1
+  ) {
+    return true;
+  }
+
+  return !this.isRegularWorkDay(
+    days[index + 1]
+  );
+}
+
+
+   /* getHabitualBreakSegments():
+  { gridColumn: string }[] {
+
+  const days =
+    this.getDisplayedWeekDays();
+
+  const segments:
+    { gridColumn: string }[] = [];
+
+  let startIndex: number | null = null;
+
+  days.forEach((day, index) => {
+
+    const isWorkDay =
+      this.isRegularWorkDay(day);
+
+    if (
+      isWorkDay &&
+      startIndex === null
+    ) {
+      startIndex = index;
+    }
+
+    const isLastDay =
+      index === days.length - 1;
+
+    if (
+      startIndex !== null &&
+      (!isWorkDay || isLastDay)
+    ) {
+
+      const endIndex =
+        isWorkDay && isLastDay
+          ? index
+          : index - 1;
+
+      segments.push({
+        gridColumn:
+          `${startIndex + 1} / ${endIndex + 2}`
+      });
+
+      startIndex = null;
+    }
+
+  });
+
+  return segments;
+}*/
+
+  getHabitualBreakStartTime(): string {
+    return (
+      this.regularSchedule?.break.startTime?.slice(0, 5) ??
+      ''
+    );
+  }
+
+
+  getHabitualBreakEndTime(): string {
+    return (
+      this.regularSchedule?.break.endTime?.slice(0, 5) ??
+      ''
+    );
+  }
+
+
+  getHabitualBreakRange(): string {
+    if (!this.hasHabitualBreak()) {
+      return '';
+    }
+
+    return (
+      `${this.getHabitualBreakStartTime()} - ` +
+      `${this.getHabitualBreakEndTime()}`
+    );
+  }
+
+
+  getHabitualBreakDuration(): number {
+    if (!this.hasHabitualBreak()) {
+      return 0;
+    }
+
+    const start =
+      this.timeToMinutes(
+        this.getHabitualBreakStartTime()
+      );
+
+    const end =
+      this.timeToMinutes(
+        this.getHabitualBreakEndTime()
+      );
+
+    return Math.max(0, end - start);
+  }
+
+
+  isHabitualBreakRow(time: string): boolean {
+  if (!this.hasHabitualBreak()) {
+    return false;
+  }
+
+  const breakStart =
+    this.timeToMinutes(
+      this.getHabitualBreakStartTime()
+    );
+
+  const rowStart =
+    this.timeToMinutes(time);
+
+  const rowEnd =
+    rowStart + 60;
+
+  return (
+    breakStart >= rowStart &&
+    breakStart < rowEnd
+  );
+}
+
+    private notifyCalendarDataChanged(): void {
+
+      this.calendarRenderVersion.update(
+        version => version + 1
+      );
+    }
+
+  loadAvailabilities(): void {
+
+  this.calendarService
+    .getAvailabilities()
+    .subscribe({
+
+      next: (data) => {
+
+        this.availabilities =
+          data;
+
+        this.notifyCalendarDataChanged();
       },
+
       error: (error) => {
+
         console.error(
           'Error loading availabilities:',
           error
         );
       }
+
     });
-  }
+}
+
+   loadRegularSchedule(): void {
+
+  this.regularScheduleService
+    .getRegularSchedule()
+    .subscribe({
+
+      next: (schedule) => {
+
+        this.regularSchedule =
+          schedule;
+
+        this.notifyCalendarDataChanged();
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Error loading regular schedule:',
+          error
+        );
+      }
+
+    });
+}
+refreshCalendarData(): void {
+
+  forkJoin({
+
+    availabilities:
+      this.calendarService
+        .getAvailabilities(),
+
+    schedule:
+      this.regularScheduleService
+        .getRegularSchedule()
+
+  })
+  .subscribe({
+
+    next: ({
+      availabilities,
+      schedule
+    }) => {
+
+      this.availabilities =
+        availabilities;
+
+      this.regularSchedule =
+        schedule;
+
+      this.notifyCalendarDataChanged();
+    },
+
+    error: (error) => {
+
+      console.error(
+        'Error al actualizar los datos del calendario:',
+        error
+      );
+    }
+
+  });
+}
+  handleScheduleUpdated(
+  _config: RegularScheduleConfig
+): void {
+
+  this.refreshCalendarData();
+}
 
   constructor(
-    private calendarService: CalendarService,
-    private changeDetectorRef: ChangeDetectorRef,
-    @Inject(PLATFORM_ID) platformId: object
-  ) {
-    this.isBrowser = isPlatformBrowser(platformId);
-  }
+  private calendarService:
+    CalendarService,
 
-  ngOnInit(): void {
-    if (this.isBrowser) {
-      this.loadAvailabilities();
+  private regularScheduleService:
+    RegularScheduleService,
+
+  private changeDetectorRef:
+    ChangeDetectorRef,
+
+  @Inject(PLATFORM_ID)
+  platformId: object
+) {
+
+  this.isBrowser =
+    isPlatformBrowser(platformId);
+
+
+  afterNextRender(() => {
+
+    if (!this.isBrowser) {
+      return;
     }
-  }
+
+    this.refreshCalendarData();
+  });
+}
 
   formatDate(date: Date): string {
     const year = date.getFullYear();

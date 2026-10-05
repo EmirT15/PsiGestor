@@ -1,5 +1,8 @@
-<div class="calendar-layout" [class.sidebar-open]="isSidebarOpen">
-
+<div
+  class="calendar-layout"
+  [class.sidebar-open]="isSidebarOpen"
+  [attr.data-render-version]="calendarRenderVersion()"
+>
   <div class="calendar-main-content">
 
     <app-calendar-toolbar
@@ -18,10 +21,9 @@
 
     @if (isManageScheduleOpen) {
       <app-manage-schedule-modal
-      (scheduleUpdated)="loadAvailabilities()"
       (closed)="closeManageSchedule()"
-    />
-
+      (scheduleUpdated)="handleScheduleUpdated($event)"
+      />
     }
 
     @if (currentView === 'month') {
@@ -222,130 +224,240 @@
 
 }
 
-    @if (currentView === 'week') {
+      @if (currentView === 'week') {
 
-      <section class="week-calendar">
+  <section class="week-calendar">
 
-        <div class="week-calendar-scroll">
+    <div class="week-calendar-scroll">
 
-          <div class="week-schedule-grid">
+      <div class="week-schedule-grid">
 
-            <div class="week-grid-corner"></div>
+        <!-- ========================================= -->
+        <!-- ESQUINA SUPERIOR IZQUIERDA               -->
+        <!-- ========================================= -->
 
-            @for (
-              day of getDisplayedWeekDays();
-              track day.getTime()
-            ) {
-
-              <div
-                class="week-day-header"
-                [class.today]="isToday(day)"
-              >
-
-                <span
-                  class="week-day-name notranslate"
-                  translate="no"
-                >
-                  {{ getWeekdayLabel(day) }}
-                </span>
-
-                <span class="week-day-number">
-                  {{ day.getDate() }}
-                </span>
-
-              </div>
-
-            }
-
-            @for (
-              time of getWeekTimeRows();
-              track time
-            ) {
-
-              <div class="week-time-column">
-                <span>{{ time }}</span>
-              </div>
-
-              @for (
-                day of getDisplayedWeekDays();
-                track day.getTime()
-              ) {
-
-                <div
-  class="week-calendar-cell"
-  [class.today-column]="isToday(day)"
->
-
-  @for (
-    availability of
-      getAvailableSlotsForHour(
-        day,
-        time
-      );
-    track availability.id
-  ) {
-
-    <button
-      type="button"
-      class="week-availability-card"
-      [class.week-availability-card-selected]="
-        selectedAvailabilityId ===
-        availability.id
-      "
-      (click)="
-        selectAvailableSlot(
-          availability
-        )
-      "
-    >
-
-      <span
-        class="week-availability-time"
-      >
-
-        <span
-          class="week-availability-dot"
-        ></span>
-
-        {{
-          getAvailabilityTimeRange(
-            availability
-          )
-        }}
-
-      </span>
+        <div class="week-grid-corner"></div>
 
 
-      <span
-        class="week-availability-status"
-      >
-        Disponible
-      </span>
+        <!-- ========================================= -->
+        <!-- ENCABEZADOS DE LUNES A VIERNES           -->
+        <!-- ========================================= -->
 
+        @for (
+          day of getDisplayedWeekDays();
+          track day.getTime()
+        ) {
 
-      <span
-        class="week-availability-duration"
-      >
-        {{ availability.duration }} min
-      </span>
+          <div
+            class="week-day-header"
+            [class.today]="isToday(day)"
+          >
 
-    </button>
+            <span
+              class="week-day-name notranslate"
+              translate="no"
+            >
+              {{ getWeekdayLabel(day) }}
+            </span>
 
-  }
-
-</div>
-
-              }
-
-            }
+            <span class="week-day-number">
+              {{ day.getDate() }}
+            </span>
 
           </div>
 
-        </div>
+        }
 
-      </section>
+
+        <!-- ========================================= -->
+        <!-- FILAS DE HORARIO                         -->
+        <!-- ========================================= -->
+
+        @for (
+          time of visualTimeRows;
+          track time
+        ) {
+
+          <!-- ======================================= -->
+          <!-- COLUMNA DE HORA                        -->
+          <!-- ======================================= -->
+
+          <div class="week-time-column">
+            <span>{{ time }}</span>
+          </div>
+
+
+          <!-- ======================================= -->
+          <!-- DESCANSO HABITUAL                      -->
+          <!-- ======================================= -->
+          @if (isHabitualBreakRow(time)) {
+
+  <!-- ======================================= -->
+  <!-- DESCANSO HABITUAL POR DÍA              -->
+  <!-- ======================================= -->
+
+  @for (
+    day of getDisplayedWeekDays();
+    track day.getTime()
+  ) {
+
+    @if (isRegularWorkDay(day)) {
+
+      <div
+        class="week-habitual-break-cell"
+        [class.segment-start]="
+          isHabitualBreakSegmentStart(day)
+        "
+        [class.segment-end]="
+          isHabitualBreakSegmentEnd(day)
+        "
+      >
+
+        @if (
+          isHabitualBreakSegmentStart(day)
+        ) {
+
+          <div
+            class="week-habitual-break-information"
+          >
+
+            <div
+              class="week-habitual-break-header"
+            >
+
+              <span
+                class="week-habitual-break-time"
+              >
+                {{ getHabitualBreakRange() }}
+              </span>
+
+              <span
+                class="week-habitual-break-badge"
+              >
+                Descanso habitual
+              </span>
+
+            </div>
+
+
+            <span
+              class="week-habitual-break-description"
+            >
+              Pausa dentro del horario habitual de atención
+            </span>
+
+          </div>
+
+        }
+
+
+        @if (
+          isHabitualBreakSegmentEnd(day)
+        ) {
+
+          <span
+            class="week-habitual-break-duration"
+          >
+            {{ getHabitualBreakDuration() }}
+            min bloqueados
+          </span>
+
+        }
+
+      </div>
+
+    } @else {
+
+      <div
+        class="week-calendar-cell week-habitual-break-empty"
+        [class.today-column]="isToday(day)"
+      >
+      </div>
 
     }
+
+  }
+
+} @else {
+
+  <!-- ===================================== -->
+  <!-- CELDAS NORMALES DE LA SEMANA         -->
+  <!-- ===================================== -->
+
+  @for (
+    day of getDisplayedWeekDays();
+    track day.getTime()
+  ) {
+
+    <div
+      class="week-calendar-cell"
+      [class.today-column]="isToday(day)"
+    >
+
+      @for (
+        availability of getAvailableSlotsForHour(
+          day,
+          time
+        );
+        track availability.id
+      ) {
+
+        <button
+          type="button"
+          class="week-availability-card"
+          [class.week-availability-card-selected]="
+            selectedAvailabilityId ===
+            availability.id
+          "
+          (click)="
+            selectAvailableSlot(
+              availability
+            )
+          "
+        >
+
+          <span class="week-availability-time">
+
+            <span
+              class="week-availability-dot"
+            ></span>
+
+            {{
+              getAvailabilityTimeRange(
+                availability
+              )
+            }}
+
+          </span>
+
+
+          <span class="week-availability-status">
+            Disponible
+          </span>
+
+
+          <span class="week-availability-duration">
+            {{ availability.duration }} min
+          </span>
+
+        </button>
+
+      }
+
+    </div>
+
+  }
+
+}
+        }
+
+      </div>
+
+    </div>
+
+  </section>
+
+}
 
     @if (selectedDate) {
 
