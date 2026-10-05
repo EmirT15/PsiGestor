@@ -41,6 +41,11 @@ def parse_time(value, field_name):
 
     return parsed_time
 
+def time_to_minutes(value):
+    return (
+        value.hour * 60
+        + value.minute
+    )
 
 def validate_positive_integer(
     value,
@@ -195,24 +200,23 @@ def save_regular_schedule_config(data):
     break_start_time = None
     break_end_time = None
 
-
     if break_enabled:
         break_start_time = parse_time(
-            break_config.get('startTime'),
-            'inicio del descanso habitual'
+        break_config.get('startTime'),
+        'inicio del descanso habitual'
+    )
+
+    break_end_time = parse_time(
+        break_config.get('endTime'),
+        'finalización del descanso habitual'
+    )
+
+
+    if break_start_time >= break_end_time:
+        raise ValueError(
+            'La hora inicial del descanso debe ser '
+            'anterior a la hora final.'
         )
-
-        break_end_time = parse_time(
-            break_config.get('endTime'),
-            'finalización del descanso habitual'
-        )
-
-
-        if break_start_time >= break_end_time:
-            raise ValueError(
-                'La hora inicial del descanso debe ser '
-                'anterior a la hora final.'
-            )
 
 
     for day in normalized_work_days:
@@ -238,6 +242,101 @@ def save_regular_schedule_config(data):
                 'o fuera de cada jornada.'
             )
 
+            day_names = {
+    1: 'Lunes',
+    2: 'Martes',
+    3: 'Miércoles',
+    4: 'Jueves',
+    5: 'Viernes',
+    6: 'Sábado',
+    7: 'Domingo'
+}
+
+
+    for day in normalized_work_days:
+
+     work_start_minutes = time_to_minutes(
+        day['start_time']
+    )
+
+    work_end_minutes = time_to_minutes(
+        day['end_time']
+    )
+
+
+    has_capacity = (
+        work_start_minutes
+        + appointment_duration
+        <=
+        work_end_minutes
+    )
+
+
+    if (
+        break_enabled
+        and break_start_time is not None
+        and break_end_time is not None
+    ):
+
+        break_applies = (
+            break_start_time
+            >= day['start_time']
+            and
+            break_end_time
+            <= day['end_time']
+        )
+
+
+        if break_applies:
+
+            break_start_minutes = (
+                time_to_minutes(
+                    break_start_time
+                )
+            )
+
+            break_end_minutes = (
+                time_to_minutes(
+                    break_end_time
+                )
+            )
+
+
+            fits_before_break = (
+                work_start_minutes
+                + appointment_duration
+                <=
+                break_start_minutes
+            )
+
+
+            fits_after_break = (
+                break_end_minutes
+                + appointment_duration
+                <=
+                work_end_minutes
+            )
+
+
+            has_capacity = (
+                fits_before_break
+                or fits_after_break
+            )
+
+
+    if not has_capacity:
+
+        day_name = day_names.get(
+            day['day_of_week'],
+            'Día laboral'
+        )
+
+        raise ValueError(
+            f'El horario de {day_name} no tiene '
+            f'espacio suficiente para generar '
+            f'al menos una cita de '
+            f'{appointment_duration} minutos.'
+        )
     # ---------------------------------------------------------
     # GUARDAR CONFIGURACIÓN DEL HORARIO HABITUAL
     # ---------------------------------------------------------

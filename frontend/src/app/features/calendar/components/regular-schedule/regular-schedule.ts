@@ -103,12 +103,38 @@ getDayError(day: WorkDay): string | null {
     return 'La hora de inicio debe ser anterior a la hora de finalización.';
   }
 
+  if (
+  this.isAppointmentDurationValid() &&
+  !this.doesDayHaveAppointmentCapacity(
+    day
+  )
+) {
+
+  return (
+    `La jornada no tiene espacio suficiente ` +
+    `para generar una cita de ` +
+    `${this.appointmentDuration} minutos.`
+  );
+}
+
   return null;
 }
 isAppointmentDurationValid(): boolean {
   return (
     this.appointmentDuration !== null &&
     this.appointmentDuration > 0
+  );
+}
+private timeToMinutes(
+  time: string
+): number {
+
+  const [hours, minutes] =
+    time.split(':').map(Number);
+
+  return (
+    hours * 60 +
+    minutes
   );
 }
 selectDuration(duration: number): void {
@@ -194,6 +220,8 @@ doesBreakApplyToWorkDay(
   day: WorkDay
 ): boolean {
 
+  
+
   if (
     !this.breakConfig.enabled ||
     !this.isBreakTimeValid() ||
@@ -211,7 +239,123 @@ doesBreakApplyToWorkDay(
   );
 }
 
+doesDayHaveAppointmentCapacity(
+  day: WorkDay
+): boolean {
 
+  if (!day.enabled) {
+    return true;
+  }
+
+
+  if (!this.isDayTimeValid(day)) {
+    return false;
+  }
+
+
+  /*
+   * Si todavía no hay duración válida,
+   * dejamos que la validación de duración
+   * muestre su propio error.
+   */
+  if (
+    !this.isAppointmentDurationValid()
+  ) {
+    return true;
+  }
+
+
+  /*
+   * Si existe un cruce parcial con el
+   * descanso, ese error se muestra por
+   * separado.
+   */
+  if (
+    this.doesBreakPartiallyOverlapWorkDay(
+      day
+    )
+  ) {
+    return true;
+  }
+
+
+  const appointmentDuration =
+    this.appointmentDuration as number;
+
+
+  const workStart =
+    this.timeToMinutes(
+      day.startTime
+    );
+
+  const workEnd =
+    this.timeToMinutes(
+      day.endTime
+    );
+
+
+  /*
+   * Si el descanso habitual realmente
+   * aplica en esta jornada, debe caber
+   * al menos una cita antes o después.
+   */
+  if (
+    this.doesBreakApplyToWorkDay(day)
+  ) {
+
+    const breakStart =
+      this.timeToMinutes(
+        this.breakConfig.startTime
+      );
+
+    const breakEnd =
+      this.timeToMinutes(
+        this.breakConfig.endTime
+      );
+
+
+    const fitsBeforeBreak =
+      workStart +
+      appointmentDuration
+      <=
+      breakStart;
+
+
+    const fitsAfterBreak =
+      breakEnd +
+      appointmentDuration
+      <=
+      workEnd;
+
+
+    return (
+      fitsBeforeBreak ||
+      fitsAfterBreak
+    );
+  }
+
+
+  /*
+   * Jornada sin descanso aplicable.
+   */
+  return (
+    workStart +
+    appointmentDuration
+    <=
+    workEnd
+  );
+}
+getDaysWithoutAppointmentCapacity():
+  WorkDay[] {
+
+  return this.workDays.filter(
+    (day) =>
+      day.enabled &&
+      !this.doesDayHaveAppointmentCapacity(
+        day
+      )
+  );
+}
 doesBreakPartiallyOverlapWorkDay(
   day: WorkDay
 ): boolean {
@@ -342,6 +486,13 @@ isScheduleValid(): boolean {
     ) {
       return false;
     }
+
+    if (
+  this.getDaysWithoutAppointmentCapacity()
+    .length > 0
+) {
+  return false;
+}
       return true;
   }
 cancel(): void {
