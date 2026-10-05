@@ -133,92 +133,142 @@
     </h3>
 
 
-    @for (
-      availability of getAvailabilitiesForDate(
-        getCurrentViewDate()
-      );
-      track availability.id
+
+   @for (
+  item of getDayTimelineItems(
+    getCurrentViewDate()
+  );
+  track
+    item.type === 'availability'
+      ? item.availability.id
+      : 'habitual-break'
+) {
+
+  @if (
+    item.type === 'habitualBreak'
+  ) {
+
+    <div class="day-habitual-break-card">
+
+      <div class="day-habitual-break-main">
+
+        <span class="day-habitual-break-time">
+          {{ getHabitualBreakRange() }}
+        </span>
+
+        <span class="day-habitual-break-badge">
+          Descanso habitual
+        </span>
+
+      </div>
+
+
+      <div class="day-habitual-break-secondary">
+
+        <span>
+          Pausa dentro del horario habitual de atención
+        </span>
+
+        <span class="day-habitual-break-duration">
+          {{ getHabitualBreakDuration() }}
+          min bloqueados
+        </span>
+
+      </div>
+
+    </div>
+
+  } @else {
+
+    @if (
+      item.availability.status ===
+      'Disponible'
     ) {
 
-      @if (
-        availability.status === 'Disponible'
-      ) {
+      <button
+        type="button"
+        class="day-availability-card"
+        [class.day-availability-card-selected]="
+          selectedAvailabilityId ===
+          item.availability.id
+        "
+        (click)="
+          selectAvailableSlot(
+            item.availability
+          )
+        "
+      >
 
-        <button
-          type="button"
-          class="day-availability-card"
-          [class.day-availability-card-selected]="
-            selectedAvailabilityId ===
-            availability.id
-          "
-          (click)="
-            selectAvailableSlot(
-              availability
-            )
-          "
-        >
-
-          <div class="day-availability-icon">
-            ✓
-          </div>
+        <div class="day-availability-icon">
+          ✓
+        </div>
 
 
-          <div class="day-availability-content">
+        <div class="day-availability-content">
 
-            <div class="day-availability-header">
+          <div class="day-availability-header">
 
-              <span class="day-availability-time">
-                {{
-                  getAvailabilityTimeRange(
-                    availability
-                  )
-                }}
-              </span>
+            <span class="day-availability-time">
+
+              {{
+                getAvailabilityTimeRange(
+                  item.availability
+                )
+              }}
+
+            </span>
 
 
-              <span class="day-availability-badge">
-
-                <span
-                  class="day-availability-dot"
-                ></span>
-
-                Disponible
-
-              </span>
-
+            <span class="day-availability-badge">
 
               <span
-                class="day-availability-duration"
-              >
-                Duración:
-                {{ availability.duration }} min
-              </span>
+                class="day-availability-dot"
+              ></span>
 
-            </div>
+              Disponible
+
+            </span>
+
+
+            <span
+              class="day-availability-duration"
+            >
+              Duración:
+              {{ item.availability.duration }} min
+            </span>
+
           </div>
 
-        </button>
+        </div>
 
-      } @else {
+      </button>
 
-        <app-availability-card
-          [availability]="availability"
-          [slots]="generateSlots(availability)"
-          [selectedSlot]="selectedSlot"
-          [selectedAvailabilityId]="
-            selectedAvailabilityId
-          "
-          (slotSelected)="
-            selectSlot(
-              $event,
-              availability
-            )
-          "
-        />
+    } @else {
 
-      }
+      <app-availability-card
+        [availability]="item.availability"
+        [slots]="
+          generateSlots(
+            item.availability
+          )
+        "
+        [selectedSlot]="selectedSlot"
+        [selectedAvailabilityId]="
+          selectedAvailabilityId
+        "
+        (slotSelected)="
+          selectSlot(
+            $event,
+            item.availability
+          )
+        "
+      />
 
     }
+
+  }
+
+}
 
   </div>
 

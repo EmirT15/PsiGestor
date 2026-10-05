@@ -291,6 +291,71 @@
 }
 
 /* ============================================================
+   VISTA DÍA - DESCANSO HABITUAL
+   ============================================================ */
+
+.day-habitual-break-card {
+  width: 100%;
+  padding: 14px 16px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  box-sizing: border-box;
+
+  background: #f1f5fb;
+  border: 1px solid #d7e1ee;
+  border-radius: 10px;
+
+  cursor: default;
+}
+
+.day-habitual-break-main {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.day-habitual-break-time {
+  font-size: 15px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.day-habitual-break-badge {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 3px 9px;
+
+  border-radius: 999px;
+
+  background: #dde7f3;
+  color: #475569;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.day-habitual-break-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  font-size: 12px;
+  color: #64748b;
+}
+
+.day-habitual-break-duration {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* ============================================================
    VISTA DÍA - TARJETAS DE DISPONIBILIDAD
    ============================================================ */
 

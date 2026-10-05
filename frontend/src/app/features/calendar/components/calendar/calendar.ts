@@ -748,6 +748,126 @@ selectAvailableSlot(
    DESCANSO HABITUAL
    ============================================================ */
 
+  shouldShowHabitualBreakForCurrentDay(): boolean {
+
+  const currentDay =
+    this.getCurrentViewDate();
+
+  return (
+    this.hasHabitualBreak() &&
+    this.isRegularWorkDay(currentDay)
+  );
+}
+
+
+ getDayTimelineItems(
+  date: Date
+): Array<
+  | {
+      type: 'availability';
+      startTime: string;
+      availability: Availability;
+    }
+  | {
+      type: 'habitualBreak';
+      startTime: string;
+    }
+> {
+
+  const items: Array<
+    | {
+        type: 'availability';
+        startTime: string;
+        availability: Availability;
+      }
+    | {
+        type: 'habitualBreak';
+        startTime: string;
+      }
+  > = [];
+
+
+  /*
+   * Agregar todas las disponibilidades
+   * correspondientes al día.
+   */
+  for (
+    const availability of
+    this.getAvailabilitiesForDate(date)
+  ) {
+
+    items.push({
+      type: 'availability',
+      startTime: availability.startTime,
+      availability
+    });
+  }
+
+
+  /*
+   * Agregar el descanso habitual solamente
+   * si corresponde a esta fecha.
+   */
+  if (
+    this.hasHabitualBreak() &&
+    this.isRegularWorkDay(date)
+  ) {
+
+    items.push({
+      type: 'habitualBreak',
+      startTime:
+        this.getHabitualBreakStartTime()
+    });
+  }
+
+
+  /*
+   * Ordenar todo cronológicamente.
+   */
+  items.sort(
+    (first, second) => {
+
+      const timeDifference =
+        this.timeToMinutes(
+          first.startTime
+        ) -
+        this.timeToMinutes(
+          second.startTime
+        );
+
+
+      if (timeDifference !== 0) {
+        return timeDifference;
+      }
+
+
+      /*
+       * Si dos elementos comienzan exactamente
+       * a la misma hora, el descanso aparece primero.
+       */
+      if (
+        first.type === 'habitualBreak' &&
+        second.type !== 'habitualBreak'
+      ) {
+        return -1;
+      }
+
+      if (
+        second.type === 'habitualBreak' &&
+        first.type !== 'habitualBreak'
+      ) {
+        return 1;
+      }
+
+
+      return 0;
+    }
+  );
+
+
+  return items;
+}
+
   hasHabitualBreak(): boolean {
     const breakConfig = this.regularSchedule?.break;
 
