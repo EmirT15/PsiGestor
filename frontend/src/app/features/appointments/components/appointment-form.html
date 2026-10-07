@@ -191,11 +191,8 @@
     <!-- Location -->
 
     @if (modality === 'In person') {
-
     <section class="location-section">
-
         <div class="location-label-row">
-
             <label for="location">
                 Ubicación de atención <span class="required">*</span>
             </label>
@@ -203,30 +200,15 @@
             <span class="location-hint">
                 Solo presencial
             </span>
- 
         </div>
 
-        <select
+        <input
             id="location"
+            type="text"
+            placeholder="Escribe la ubicación de atención..."
             [(ngModel)]="location"
-        >
-
-            <option value="" disabled>
-                Seleccionar ubicación...
-            </option>
-
-            @for (place of locations; track place) {
-
-                <option [value]="place">
-                    {{ place }}
-                </option>
-
-            }
-
-        </select>
-
+        />
     </section>
-
     }
 
 

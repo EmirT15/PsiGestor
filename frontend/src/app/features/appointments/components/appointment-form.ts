@@ -188,8 +188,8 @@ export class AppointmentForm implements OnChanges {
       return;
     }
 
-    if (this.modality === 'In person' && !this.location) {
-      alert('Selecciona una ubicación.');
+    if (this.modality === 'In person' && !this.location.trim()) {
+      alert('Please enter the location.');
       return;
     }
 
