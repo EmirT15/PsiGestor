@@ -1,0 +1,1094 @@
+/* ============================================================
+   BASE DEL COMPONENTE Y VARIABLES
+   ============================================================ */
+
+:host {
+  --color-primary: #1e3a8a;
+  --color-primary-light: #3b82f6;
+  --color-accent: #8b5cf6;
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #1e293b;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-success: #10b981;
+  --color-success-bg: #ecfdf5;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fffbeb;
+  --color-danger: #ef4444;
+  --color-danger-bg: #fef2f2;
+  --color-info: #3b82f6;
+  --color-info-bg: #eff6ff;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: block;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  color: var(--color-text);
+  background: var(--color-bg);
+  box-sizing: border-box;
+}
+
+/* ============================================================
+   CONTROLES GENERALES DEL CALENDARIO
+   ============================================================ */
+/* estilo que posiblemente ya no se usa
+.calendar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.calendar-header h2 {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+}
+*/
+
+/*
+.calendar-header button {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-sm);
+}
+*/
+
+/*
+.calendar-header button:hover {
+  background: var(--color-bg);
+  border-color: var(--color-muted);
+}
+*/
+
+/*
+.calendar-header button:last-child {
+  width: auto;
+  padding: 0 16px;
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+
+
+.calendar-header button:last-child:hover {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary-light);
+}
+  */
+
+  /*
+.calendar-view-buttons {
+  display: inline-flex;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.calendar-view-buttons button {
+  padding: 6px 18px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-muted);
+  font-family: "Inter", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.calendar-view-buttons button:hover {
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+.calendar-view-buttons button.selected {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+}
+  */
+
+/* ============================================================
+   VISTA MES - ENCABEZADOS Y CUADRÍCULA
+   ============================================================ */
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+  text-align: center;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.calendar-grid button.month-day-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border: 1px solid #d9e2ec;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #182230;
+  box-shadow: none;
+  box-sizing: border-box;
+  cursor: pointer;
+
+  transition:
+  border-color 0.15s ease,
+  background 0.15s ease,
+  box-shadow 0.15s ease;
+  
+  min-height: 92px;
+  padding: 6px;
+  position: relative;
+}
+
+/* ============================================================
+   INDICADORES DE ESTADO EN VISTA MES
+   ============================================================ */
+
+.dots-container {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 3px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-available {
+  background-color: #10b981;
+}
+
+.dot-disabled {
+  background-color: #ef4444;
+}
+
+
+.calendar-grid button.month-day-cell:hover {
+  background: #f8fbff;
+  border-color: #aebdcb;
+}
+
+.calendar-grid button.month-day-cell.today {
+  background: #edf5ff;
+  border-color: #9fc5ec;
+}
+
+.calendar-grid button.month-day-cell.selected {
+  outline: none;
+  border-color: #075ea5;
+  background: #ffffff;
+  color: #182230;
+  box-shadow: 0 0 0 2px rgba(7, 94, 165, 0.12);
+}
+
+.calendar-grid button.month-day-cell.today.selected {
+  background: #edf5ff;
+}
+
+/* ============================================================
+   VISTA MES - CONTENIDO DE CADA DÍA
+   ============================================================ */
+
+.month-day-header {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-height: 22px;
+}
+
+.month-day-number {
+  line-height: 1;
+  color: #344054;
+  padding: 1px 3px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.month-today-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #075ea5;
+  color: #ffffff;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.month-day-body {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-top: 6px;
+}
+
+.month-availability-summary {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+  box-sizing: border-box;
+  min-height: 23px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  background: #7ee8a8;
+  color: #145c38;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.month-availability-dot {
+  flex-shrink: 0;
+  border-radius: 50%;
+  width: 5px;
+  height: 5px;
+  background: #138a57;
+}
+
+.calendar-grid button.has-disabled {
+  background-color: #fef2f2;
+  border: 1px solid #fca5a5;
+}
+
+/* ============================================================
+   VISTA DÍA - CONTENEDOR Y ENCABEZADO
+   ============================================================ */
+
+.day-view {
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  background: #ffffff;
+  border-radius: 14px;
+}
+
+.day-view > h3 {
+  font-family: "Poppins", sans-serif;
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #182230;
+  text-transform: capitalize;
+}
+
+/* ============================================================
+   VISTA DÍA - DESCANSO HABITUAL
+   ============================================================ */
+
+.day-habitual-break-card {
+  width: 100%;
+  padding: 14px 16px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  box-sizing: border-box;
+
+  background: #f1f5fb;
+  border: 1px solid #d7e1ee;
+  border-radius: 10px;
+
+  cursor: default;
+}
+
+.day-habitual-break-main {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.day-habitual-break-time {
+  font-size: 15px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.day-habitual-break-badge {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 3px 9px;
+
+  border-radius: 999px;
+
+  background: #dde7f3;
+  color: #475569;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.day-habitual-break-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  font-size: 12px;
+  color: #64748b;
+}
+
+.day-habitual-break-duration {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* ============================================================
+   VISTA DÍA - TARJETAS DE DISPONIBILIDAD
+   ============================================================ */
+
+.day-availability-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #d9e4ee;
+  border-radius: 12px;
+  background: #f4f8fc;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.day-availability-card:hover {
+  background: #eef7f2;
+  border-color: #a7ddc0;
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.08);
+}
+
+.day-availability-card:active {
+  transform: scale(0.995);
+}
+
+.day-availability-card-selected {
+  background: #ecfdf3;
+  border-color: #168454;
+  box-shadow: 0 0 0 2px rgba(22, 132, 84, 0.10);
+}
+
+.day-availability-icon {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: #b7f4d0;
+  color: #147749;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.day-availability-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.day-availability-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.day-availability-time {
+  font-size: 15px;
+  font-weight: 600;
+  color: #182230;
+}
+
+.day-availability-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #168454;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.day-availability-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.day-availability-duration {
+  font-size: 11px;
+  font-weight: 500;
+  color: #667085;
+}
+
+/* ============================================================
+   VISTA SEMANA - CUADRÍCULA PRINCIPAL
+   ============================================================ */
+
+.week-calendar {
+  width: 100%;
+  margin-top: 14px;
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.week-calendar-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.week-schedule-grid {
+  display: grid;
+  grid-template-columns:
+    64px repeat(7, minmax(0, 1fr));
+  width: 100%;
+  min-width: 1180px;
+}
+
+.week-grid-corner {
+  min-height: 76px;
+  background: #f8fafc;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.week-day-header {
+  min-height: 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: #f8fafc;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  box-sizing: border-box;
+}
+
+.week-day-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #5f6b7a;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.week-day-number {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 15px;
+  font-weight: 600;
+  color: #182230;
+}
+
+.week-day-header.today {
+  background: #eaf3ff;
+}
+
+.week-day-header.today .week-day-name {
+  color: var(--color-primary);
+}
+
+.week-day-header.today .week-day-number {
+  background: #075ea5;
+  color: #ffffff;
+}
+
+.week-time-column {
+  min-height: 76px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 9px 10px 0 4px;
+  background: #ffffff;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  box-sizing: border-box;
+}
+
+.week-time-column span {
+  font-size: 11px;
+  font-weight: 500;
+  color: #5f6b7a;
+  white-space: nowrap;
+}
+
+.week-calendar-cell {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 76px;
+  background: #ffffff;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  box-sizing: border-box;
+  transition: background 0.15s ease;
+}
+
+.week-calendar-cell:hover {
+  background: #f8fafc;
+}
+
+.week-calendar-cell.today-column {
+  background: #fbfdff;
+}
+
+.week-calendar-cell.today-column:hover {
+  background: #f5f9ff;
+}
+/* ============================================================
+   VISTA SEMANA - DESCANSO HABITUAL
+   ============================================================ */
+
+.week-habitual-break-cell {
+  min-height: 76px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 10px 14px;
+
+  position: relative;
+
+  background: #f1f5fb;
+
+  border-top: 1px solid #dce5f0;
+  border-bottom: 1px solid #dce5f0;
+
+  box-sizing: border-box;
+}
+
+
+/*
+ * Las celdas consecutivas comparten el mismo fondo.
+ * No se dibuja separación vertical entre ellas.
+ */
+.week-habitual-break-cell:not(.segment-start) {
+  border-left: none;
+}
+
+
+.week-habitual-break-cell:not(.segment-end) {
+  border-right: none;
+}
+
+
+/*
+ * Inicio del bloque continuo.
+ */
+.week-habitual-break-cell.segment-start {
+  border-left: 1px solid #dce5f0;
+
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+
+/*
+ * Final del bloque continuo.
+ */
+.week-habitual-break-cell.segment-end {
+  border-right: 1px solid #dce5f0;
+
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+
+/*
+ * Si existe un solo día laboral, la misma celda
+ * será inicio y final del segmento.
+ */
+.week-habitual-break-cell.segment-start.segment-end {
+  border: 1px solid #dce5f0;
+  border-radius: 8px;
+}
+
+
+.week-habitual-break-information {
+  flex: 1;
+
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  position: relative;
+  z-index: 1;
+}
+
+
+.week-habitual-break-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 8px;
+}
+
+
+.week-habitual-break-time {
+  color: #334155;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+
+.week-habitual-break-badge {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 3px 8px;
+
+  border-radius: 999px;
+
+  background: #dce6f2;
+  color: #52657a;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+
+.week-habitual-break-description {
+  color: #64748b;
+
+  font-size: 10px;
+  font-weight: 500;
+
+  white-space: nowrap;
+}
+
+
+.week-habitual-break-duration {
+  margin-left: auto;
+
+  color: #7c8998;
+
+  font-size: 10px;
+  font-weight: 500;
+
+  white-space: nowrap;
+}
+
+
+/*
+ * Días sin descanso dentro de esa misma fila.
+ * Mantienen la estructura normal de la cuadrícula.
+ */
+.week-habitual-break-empty {
+  background: #ffffff;
+}
+
+/* ============================================================
+   VISTA SEMANA - TARJETAS DE DISPONIBILIDAD
+   ============================================================ */
+
+.week-availability-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 8px 9px;
+  border: 1px solid #b7e9cf;
+  border-radius: 8px;
+  background: #ecfdf3;
+  color: #182230;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.week-availability-card:hover {
+  background: #e1faec;
+  border-color: #7dd3a8;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.08);
+}
+
+.week-availability-card:active {
+  transform: scale(0.99);
+}
+
+.week-availability-card-selected {
+  border-color: #168454;
+  box-shadow: 0 0 0 2px rgba(22, 132, 84, 0.12);
+}
+
+.week-availability-time {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #13724a;
+}
+
+.week-availability-dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #168454;
+}
+
+.week-availability-status {
+  font-size: 12px;
+  font-weight: 600;
+  color: #11663f;
+}
+
+.week-availability-duration {
+  font-size: 10px;
+  font-weight: 500;
+  color: #667085;
+}
+
+/* ============================================================
+   DETALLE DE FECHA SELECCIONADA
+   ============================================================ */
+
+.selected-date {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.selected-date h3 {
+  margin: 0 0 12px;
+  font-family: "Poppins", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.selected-date p {
+  margin: 0 0 14px;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.selected-date p strong {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* ============================================================
+   BADGES DE ESTADO
+   ============================================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
+.badge-success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.badge-warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.badge-danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.badge-info {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+/* ============================================================
+   LAYOUT PRINCIPAL Y SIDEBAR HU-03
+   ============================================================ */
+
+.calendar-layout {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  height: 100%;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.calendar-main-content {
+  flex: 1;
+  min-width: 0;
+  transition: all 0.3s ease;
+}
+
+.calendar-sidebar-wrapper {
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.calendar-sidebar-wrapper.open {
+  width: 400px;
+  opacity: 1;
+}
+
+/* ============================================================
+   ESTADO VACÍO DEL PANEL DE CITA
+   ============================================================ */
+
+.empty-appointment-state {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.empty-appointment-state .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.empty-appointment-state .title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.empty-appointment-state .icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 4px;
+}
+
+.empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+  padding: 32px;
+  background-color: #F8FAFC;
+  border-radius: 12px;
+  border: 1px dashed #CBD5E1;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+/* ============================================================
+   RESPONSIVE - TABLET GRANDE
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  .week-view {
+    grid-template-columns: repeat(7, minmax(140px, 1fr));
+  }
+
+  .calendar-sidebar-wrapper.open {
+    width: 320px;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE - TABLET Y MÓVIL
+   ============================================================ */
+
+@media (max-width: 768px) {
+  :host {
+    padding: 12px;
+  }
+
+  .calendar-header h2 {
+    font-size: 0.95rem;
+  }
+
+  .calendar-view-buttons button {
+    padding: 5px 12px;
+    font-size: 0.8rem;
+  }
+
+  .calendar-layout {
+    flex-direction: column;
+  }
+
+  .calendar-sidebar-wrapper.open {
+    width: 100%;
+    height: auto;
+  }
+
+  .calendar-grid button.month-day-cell {
+    min-height: 82px;
+    padding: 5px;
+  }
+
+  .month-day-header {
+    min-height: 20px;
+  }
+
+  .month-day-number {
+    font-size: 10px;
+  }
+
+  .month-today-badge {
+    padding: 2px 4px;
+    font-size: 9px;
+  }
+
+  .month-availability-summary {
+    padding: 3px 4px;
+    font-size: 9px;
+  }
+
+  .month-availability-dot {
+    width: 4px;
+    height: 4px;
+  }
+}
+
+/* ============================================================
+    RESPONSIVE - VISTA DÍA EN MÓVIL
+   ============================================================ */
+
+@media (max-width: 600px) {
+  .day-view {
+    padding: 12px;
+  }
+
+  .day-availability-card {
+    align-items: flex-start;
+    padding: 13px;
+  }
+
+  .day-availability-header {
+    align-items: flex-start;
+  }
+
+  .day-availability-duration {
+    width: 100%;
+  }
+}

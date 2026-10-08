@@ -1,0 +1,147 @@
+<section class="break-section">
+
+  <div class="break-section-header">
+
+    <span class="break-section-title">
+      Descanso habitual
+    </span>
+
+    @if (config.enabled) {
+      <span class="break-status break-status-active">
+        <span class="break-status-dot"></span>
+        Activo en días laborales
+      </span>
+    } @else {
+      <span class="break-status">
+        Desactivado
+      </span>
+    }
+
+  </div>
+
+
+  <div class="break-card">
+
+    <div class="break-main-row">
+
+      <div class="break-main-information">
+
+        <div class="break-icon">
+          ☕
+        </div>
+
+        <div class="break-text">
+
+          <span class="break-title">
+            Habilitar descanso habitual
+          </span>
+
+          <span class="break-description">
+            Pausa la agenda durante el periodo de descanso en los días laborales.
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <button
+        type="button"
+        class="break-toggle"
+        [class.break-toggle-active]="config.enabled"
+        [attr.aria-pressed]="config.enabled"
+        aria-label="Activar o desactivar descanso habitual"
+        (click)="toggleBreak()"
+      >
+        <span class="toggle-circle"></span>
+      </button>
+
+    </div>
+
+
+    @if (config.enabled) {
+
+      <div class="break-divider"></div>
+
+      <div class="break-settings-row">
+
+        <div class="break-time-settings">
+
+          <div class="break-time-field">
+
+            <span class="break-time-icon">
+              ◷
+            </span>
+
+            <label for="break-start">
+              Inicio
+            </label>
+
+            <input
+              id="break-start"
+              type="time"
+              [ngModel]="config.startTime"
+              (ngModelChange)="updateStartTime($event)"
+              [class.break-input-error]="error"
+            />
+
+          </div>
+
+
+          <span class="break-time-separator">
+            hasta
+          </span>
+
+
+          <div class="break-time-field">
+
+            <span class="break-time-icon">
+              ◷
+            </span>
+
+            <label for="break-end">
+              Fin
+            </label>
+
+            <input
+              id="break-end"
+              type="time"
+              [ngModel]="config.endTime"
+              (ngModelChange)="updateEndTime($event)"
+              [class.break-input-error]="error"
+            />
+
+          </div>
+
+
+          @if (getBreakDurationMinutes() !== null) {
+
+            <span class="break-duration-badge">
+              {{ getBreakDurationLabel() }}
+            </span>
+
+          }
+
+        </div>
+
+
+        <span class="break-application-info">
+          Se aplica a las jornadas compatibles
+        </span>
+
+      </div>
+
+
+      @if (error) {
+
+        <span class="validation-error">
+          {{ error }}
+        </span>
+
+      }
+
+    }
+
+  </div>
+
+</section>
