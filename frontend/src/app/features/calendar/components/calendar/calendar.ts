@@ -365,15 +365,24 @@ export class Calendar implements OnInit {
   // 7. Verificar si un bloque de hora específico (ej. "08:00") cae en una inhabilitación
   getDisabledForTimeCell(date: Date, timeRow: string): any[] {
     const disabledForDay = this.getDisabledSchedulesForDate(date);
+    const rowMin = this.timeToMinutes(timeRow);
+
     return disabledForDay.filter(ds => {
-      // Simplificación: si la hora de inicio de la fila entra en el rango inhabilitado
-      return timeRow >= ds.startTime && timeRow < ds.endTime;
+      const startMin = this.timeToMinutes(ds.startTime);
+      const endMin = this.timeToMinutes(ds.endTime);
+      return rowMin >= startMin && rowMin < endMin;
     });
   }
 
   getAvailabilitiesForTimeCell(date: Date, timeRow: string): Availability[] {
     const availForDay = this.getAvailabilitiesForDate(date);
-    return availForDay.filter(a => timeRow >= a.startTime && timeRow < a.endTime);
+    const rowMin = this.timeToMinutes(timeRow);
+
+    return availForDay.filter(a => {
+      const startMin = this.timeToMinutes(a.startTime);
+      const endMin = this.timeToMinutes(a.endTime);
+      return rowMin >= startMin && rowMin < endMin;
+    });
   }
 
   formatDate(date: Date): string {

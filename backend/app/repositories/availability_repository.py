@@ -2,6 +2,7 @@ import os
 
 import psycopg
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 
 
 load_dotenv()
@@ -136,16 +137,57 @@ def create_disabled_schedule_db(start_date, end_date, start_time, end_time, reas
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    def format_time_str(t):
+        """Asegura el formato HH:MM:SS para comparar cadenas de hora correctamente"""
+        t_str = str(t).strip()
+        parts = t_str.split(':')
+        if len(parts) == 2:
+            return f"{parts[0].zfill(2)}:{parts[1].zfill(2)}:00"
+        elif len(parts) == 3:
+            return f"{parts[0].zfill(2)}:{parts[1].zfill(2)}:{parts[2].zfill(2)}"
+        return t_str
+
     try:
-        # 1. Eliminar la disponibilidad activa que coincida o se traslape en fecha y rango horario
-        delete_query = """
-            DELETE FROM availabilities
+        # 1. Buscar todas las disponibilidades que se traslapen con la inhabilitación
+        select_query = """
+            SELECT id, date, start_time, end_time, duration, break_time
+            FROM availabilities
             WHERE date >= %s AND date <= %s
               AND start_time < %s AND end_time > %s;
         """
-        cursor.execute(delete_query, (start_date, end_date, end_time, start_time))
+        cursor.execute(select_query, (start_date, end_date, end_time, start_time))
+        overlapping_availabilities = cursor.fetchall()
 
-        # 2. Registrar el nuevo horario inhabilitado
+        d_start_str = format_time_str(start_time)
+        d_end_str = format_time_str(end_time)
+
+        # 2. Recortar o dividir cada bloque de disponibilidad afectado
+        for avail in overlapping_availabilities:
+            avail_id, avail_date, a_start, a_end, duration, break_time = avail
+            
+            a_start_str = format_time_str(a_start)
+            a_end_str = format_time_str(a_end)
+
+            # Borrar el bloque continuo original
+            cursor.execute("DELETE FROM availabilities WHERE id = %s;", (avail_id,))
+
+            # Tramo A: Si la disponibilidad empezaba antes del inicio del bloqueo
+            if a_start_str < d_start_str:
+                new_end = min(a_end_str, d_start_str)
+                cursor.execute("""
+                    INSERT INTO availabilities (date, start_time, end_time, duration, break_time, status)
+                    VALUES (%s, %s, %s, %s, %s, 'Disponible');
+                """, (avail_date, a_start_str, new_end, duration, break_time))
+
+            # Tramo B: Si la disponibilidad terminaba después del fin del bloqueo
+            if a_end_str > d_end_str:
+                new_start = max(a_start_str, d_end_str)
+                cursor.execute("""
+                    INSERT INTO availabilities (date, start_time, end_time, duration, break_time, status)
+                    VALUES (%s, %s, %s, %s, %s, 'Disponible');
+                """, (avail_date, new_start, a_end_str, duration, break_time))
+
+        # 3. Insertar el registro de inhabilitación
         insert_query = """
             INSERT INTO disabled_schedules 
                 (start_date, end_date, start_time, end_time, reason, observation, type, status)
@@ -166,6 +208,11 @@ def create_disabled_schedule_db(start_date, end_date, start_time, end_time, reas
         new_record = cursor.fetchone()
         conn.commit()
         return new_record
+
+    except Exception as e:
+        conn.rollback()
+        print("❌ Error al procesar inhabilitación y recortar disponibilidades:", e)
+        raise e
     finally:
         cursor.close()
         conn.close()
@@ -245,10 +292,42 @@ def delete_disabled_schedule_db(schedule_id):
     cursor = conn.cursor()
 
     try:
-        query = "DELETE FROM disabled_schedules WHERE id = %s;"
-        cursor.execute(query, (schedule_id,))
+        # 1. Consultar la información de la inhabilitación antes de borrarla
+        select_query = """
+            SELECT start_date, end_date, start_time, end_time
+            FROM disabled_schedules
+            WHERE id = %s;
+        """
+        cursor.execute(select_query, (schedule_id,))
+        record = cursor.fetchone()
+
+        if record:
+            start_date, end_date, start_time, end_time = record
+
+            # 2. Borrar el registro de inhabilitación
+            cursor.execute("DELETE FROM disabled_schedules WHERE id = %s;", (schedule_id,))
+
+            # 3. Restaurar la disponibilidad (status = 'Disponible')
+            # Convierte las fechas para iterar si la inhabilitación abarcó un rango de días
+            curr_date = datetime.strptime(str(start_date), "%Y-%m-%d").date()
+            final_date = datetime.strptime(str(end_date), "%Y-%m-%d").date()
+
+            while curr_date <= final_date:
+                # Opcional: Evitar duplicados si ya existía algún tramo parcial
+                cursor.execute("""
+                    INSERT INTO availabilities (date, start_time, end_time, duration, break_time, status)
+                    VALUES (%s, %s, %s, %s, %s, 'Disponible');
+                """, (curr_date, start_time, end_time, 60, 0))
+                
+                curr_date += timedelta(days=1)
+
         conn.commit()
         return True
+
+    except Exception as e:
+        conn.rollback()
+        print("❌ Error al rehabilitar horario y restaurar disponibilidad:", e)
+        raise e
     finally:
         cursor.close()
         conn.close()
