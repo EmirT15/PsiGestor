@@ -3,13 +3,17 @@ import psycopg
 import os
 from dotenv import load_dotenv
 from flask_cors import CORS
+from flasgger import Swagger
+from app.routes.availability import availability_bp
 
 
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+Swagger(app)
 
+app.register_blueprint(availability_bp)
 
 @app.route("/")
 def inicio():

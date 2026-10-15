@@ -1,0 +1,43 @@
+<div class="status-filter">
+
+  <button
+    type="button"
+    [class.selected]="selectedStatus === 'all'"
+    (click)="selectStatus('all')"
+  >
+    Todos
+  </button>
+
+  <button
+    type="button"
+    [class.selected]="selectedStatus === 'Disponible'"
+    (click)="selectStatus('Disponible')"
+  >
+    Disponibles
+  </button>
+
+  <button
+    type="button"
+    [class.selected]="selectedStatus === 'Reservado'"
+    (click)="selectStatus('Reservado')"
+  >
+    Reservados
+  </button>
+
+  <button
+    type="button"
+    [class.selected]="selectedStatus === 'Reprogramacion pendiente'"
+    (click)="selectStatus('Reprogramacion pendiente')"
+  >
+    Reprogramación pendiente
+  </button>
+
+  <button
+    type="button"
+    [class.selected]="selectedStatus === 'Inhabilitado'"
+    (click)="selectStatus('Inhabilitado')"
+  >
+    Inhabilitados
+  </button>
+
+</div>

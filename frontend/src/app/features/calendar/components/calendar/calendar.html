@@ -1,0 +1,199 @@
+<app-calendar-toolbar
+  [currentDate]="currentDate"
+  [currentView]="currentView"
+  [selectedStatus]="statusFilter"
+
+  (previous)="changeMonth(-1)"
+  (next)="changeMonth(1)"
+  (today)="goToToday()"
+
+  (viewChange)="currentView = $event"
+  (statusChange)="statusFilter = $event"
+
+  (manageSchedule)="openManageSchedule()"
+/>
+
+@if (isManageScheduleOpen) {
+
+  <app-manage-schedule-modal
+    [initialData]="initialModalData"
+    (closed)="closeManageSchedule()"
+  />
+
+}
+
+@if (currentView === 'month') {
+
+<div class="calendar-weekdays">
+    <span>Dom</span>
+    <span>Lun</span>
+    <span>Mar</span>
+    <span>Mié</span>
+    <span>Jue</span>
+    <span>Vie</span>
+    <span>Sáb</span>
+</div>
+
+<div class="calendar-grid">
+
+    @for (empty of [].constructor(getFirstDayOfMonth()); track $index) {
+    <span></span>
+    }
+
+    @for (day of getDaysInMonth(); track day.getTime()) {
+      <button type="button" 
+        (click)="selectDate(day)" 
+        [class.has-availability]="hasAvailability(day)"
+        [class.has-disabled]="hasDisabledSchedule(day)"
+        [class.selected]="isSelected(day)">
+        
+        <span class="day-number">{{ day.getDate() }}</span>
+
+        <!-- Indicadores (puntos de colores debajo del número) -->
+        <div class="dots-container">
+          @if (hasAvailability(day)) {
+            <span class="dot dot-available" title="Disponible"></span>
+          }
+          @if (hasDisabledSchedule(day)) {
+            <span class="dot dot-disabled" title="Inhabilitado"></span>
+          }
+        </div>
+
+      </button>
+    }
+
+</div>
+
+}
+
+@if (currentView === 'day') {
+
+<div class="day-view">
+
+    <h3>
+        {{ getCurrentViewDate().toLocaleDateString('es-MX', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+        }) }}
+    </h3>
+
+    <!-- Render de Inhabilitados (Nuevo) -->
+    @for (disabled of getDisabledSchedulesForDate(getCurrentViewDate()); track disabled.id) {
+      <div class="disabled-schedule-card" style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 10px; margin-bottom: 10px;">
+        <strong>Inhabilitado: {{ disabled.startTime }} - {{ disabled.endTime }}</strong>
+        <p>{{ disabled.reason }}</p>
+      </div>
+    }
+
+    @for (
+    availability of getAvailabilitiesForDate(
+    getCurrentViewDate()
+    );
+    track availability.id
+    ) {
+
+    <app-availability-card
+      [availability]="availability"
+      [slots]="generateSlots(availability)"
+      [selectedSlot]="selectedSlot"
+      [selectedAvailabilityId]="selectedAvailabilityId"
+      (slotSelected)="selectSlot($event, availability)"
+      (disableRequested)="handleDisableFromCard($event)"
+    />
+
+    }
+
+</div>
+
+}
+
+@if (currentView === 'week') {
+
+  <section class="week-calendar">
+
+    <div class="week-calendar-scroll">
+
+      <div class="week-schedule-grid">
+
+        <!-- Esquina superior izquierda -->
+        <div class="week-grid-corner"></div>
+
+
+        <!-- Encabezados de lunes a viernes -->
+        @for (
+          day of getDisplayedWeekDays();
+          track day.getTime()
+        ) {
+
+          <div
+            class="week-day-header"
+            [class.today]="isToday(day)"
+          >
+
+          <span
+              class="week-day-name notranslate"
+              translate="no"
+            >
+              {{ getWeekdayLabel(day) }}
+            </span>
+
+            <span class="week-day-number">
+              {{ day.getDate() }}
+            </span>
+
+          </div>
+
+        }
+
+
+       @for (
+          time of visualTimeRows;
+          track time
+        ) {
+
+          <div class="week-time-column">
+            <span>{{ time }}</span>
+          </div>
+
+
+          <!-- Celdas de lunes a viernes -->
+          @for (
+            day of getDisplayedWeekDays();
+            track day.getTime()
+          ) {
+
+            <div
+              class="week-calendar-cell"
+              [class.today-column]="isToday(day)"
+            >
+              @for (disabled of getDisabledForTimeCell(day, time); track disabled.id) {
+                <div class="disabled-block" style="background: #ef4444; color: white; padding: 4px; font-size: 12px; border-radius: 4px; margin: 2px;">
+                  Inhabilitado
+                </div>
+              }
+
+              <!-- Disponibilidad clickeable en la celda -->
+              @for (avail of getAvailabilitiesForTimeCell(day, time); track avail.id) {
+                <div 
+                  class="available-block" 
+                  (click)="handleDisableFromWeekCell(day, time)"
+                  style="background: #10b981; color: white; padding: 4px; font-size: 11px; border-radius: 4px; margin: 2px; cursor: pointer;"
+                  title="Clic para inhabilitar este horario">
+                  Disponible
+                </div>
+              }
+            </div>
+
+          }
+
+        }
+
+      </div>
+
+    </div>
+
+  </section>
+
+}
