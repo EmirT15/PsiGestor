@@ -4,6 +4,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, Subject, tap } from 'rxjs';
 import { Availability, DisabledSchedule } from '../models/availability.model';
 
+export interface Student {
+  id: number;
+  studentId: string;
+  name: string;
+  program: string;
+  semester: number;
+}
+
 export interface Appointment {
   id: number;
   student_id: number;
@@ -69,6 +77,17 @@ export class CalendarService {
       `${this.baseUrl}/availabilities`
     );
   }
+
+
+  searchStudents(search: string): Observable<Student[]> {
+    return this.http.get<Student[]>(
+      `${this.baseUrl}/students`,
+      {
+        params: { search: search.trim() }
+      }
+    );
+  }
+
 
   createAvailability(data: {
     date: string;
@@ -174,7 +193,7 @@ export class CalendarService {
 
     return this.http.get<{ appointments: Appointment[] }>(url);
   }
-  
+
   createAppointment(data: {
     student_id: number;
     student_name: string;

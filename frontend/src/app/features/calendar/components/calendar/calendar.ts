@@ -1,4 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
+import { CommonModule } from '@angular/common';
 
 import {
   afterNextRender,
@@ -19,7 +20,7 @@ import {
   Availability
 } from '../../models/availability.model';
 
-import { Appointment, CalendarService } from '../../services/calendar.service';
+import { Appointment, CalendarService, Student } from '../../services/calendar.service';
 
 import type {
   RegularScheduleResponse
@@ -74,6 +75,7 @@ interface CalendarSlot extends Availability {
   standalone: true,
 
   imports: [
+    CommonModule,
     AvailabilityCard,
     AppointmentDetails,
     RescheduleDetails,
@@ -109,6 +111,12 @@ export class Calendar {
   selectedAvailability: Availability | null = null;
   appointments: Appointment[] = [];
 
+  // buscador de alumnos
+  studentSearchText = '';
+
+  selectedStudent: Student | null = null;
+
+  studentSearchResults: Student[] = [];
 
   /*
    * Horarios inhabilitados de HU-02B.
@@ -912,6 +920,13 @@ export class Calendar {
       formData.get('studentName') ?? ''
     ).trim();
 
+    const selectedStudent = this.selectedStudent;
+
+    if (!selectedStudent) {
+      alert('Busca y selecciona un alumno de la lista.');
+      return;
+    }
+
     const modality = String(
       formData.get('modality') ?? ''
     );
@@ -926,8 +941,8 @@ export class Calendar {
 
     const availability = this.selectedAvailability;
 
-    if (!studentName || !reason) {
-      alert('Completa el nombre del alumno y el motivo de la cita.');
+    if (!reason) {
+      alert('Completa el motivo de la cita.');
       return;
     }
 
@@ -979,14 +994,12 @@ export class Calendar {
       return;
     }
 
-    // ID temporal para probar la integración.
-    // Carlos Hernández tiene el ID 3 en los datos actuales.
-    // No utilizar como solución definitiva.
-    const temporaryStudentId = 3;
+    const selectedStudentId = selectedStudent.id;
+    const selectedStudentName = selectedStudent.name;
 
     this.calendarService.createAppointment({
-      student_id: temporaryStudentId,
-      student_name: studentName,
+      student_id: selectedStudentId,
+      student_name: selectedStudentName,
       date: this.selectedSlotDate,
       start_time: startTime,
       end_time: endTime,
@@ -1016,7 +1029,38 @@ export class Calendar {
   }
 
 
+  onStudentSearchChange(value: string): void {
+    this.studentSearchText = value;
+    this.selectedStudent = null;
 
+    const search = value.trim();
+
+    if (!search) {
+      this.studentSearchResults = [];
+      return;
+    }
+
+    this.calendarService.searchStudents(search).subscribe({
+      next: (students) => {
+        if (this.studentSearchText.trim() !== search) {
+          return;
+        }
+        console.log('Respuesta de búsqueda:', students);
+        console.log('¿Es un arreglo?', Array.isArray(students));
+        this.studentSearchResults = students;
+      },
+      error: (error) => {
+        console.error('Error al buscar alumnos:', error);
+        this.studentSearchResults = [];
+      }
+    });
+  }
+
+  selectStudent(student: Student): void {
+    this.selectedStudent = student;
+    this.studentSearchText = student.name;
+    this.studentSearchResults = [];
+  }
 
 
   /* ============================================================

@@ -798,16 +798,41 @@
 
           <form class="booking-form" (submit)="onAppointmentSubmit($event)" >
             <div class="booking-field">
-              <label for="studentName">Buscar alumno <span>*</span></label>
+              <label for="studentName">
+                Buscar alumno <span>*</span>
+              </label>
+
               <input
                 id="studentName"
                 name="studentName"
                 type="text"
-                placeholder="Escribe el nombre del alumno"
+                placeholder="Escribe el nombre o matrícula"
                 autocomplete="off"
+                [value]="studentSearchText"
+                (input)="onStudentSearchChange($any($event.target).value)"
               />
-              <small>Selecciona al alumno que recibirá la atención.</small>
+
+              <small>
+                Escribe el nombre o matrícula y selecciona al alumno.
+              </small>
+
+              <div
+                class="student-search-results"
+                *ngIf="studentSearchResults.length > 0"
+              >
+                <button
+                  type="button"
+                  class="student-result"
+                  *ngFor="let student of studentSearchResults"
+                  (click)="selectStudent(student)"
+                >
+                  <strong>{{ student.name }}</strong>
+                  <span>{{ student.program }} · Semestre {{ student.semester }}</span>
+                  <small>Matrícula: {{ student.studentId }}</small>
+                </button>
+              </div>
             </div>
+
 
             <fieldset class="booking-field">
               <legend>Modalidad <span>*</span></legend>
