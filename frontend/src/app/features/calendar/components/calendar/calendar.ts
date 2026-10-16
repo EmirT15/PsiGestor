@@ -1,4 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
+import { CommonModule } from '@angular/common';
 
 import {
   afterNextRender,
@@ -19,9 +20,7 @@ import {
   Availability
 } from '../../models/availability.model';
 
-import {
-  CalendarService
-} from '../../services/calendar.service';
+import { Appointment, CalendarService, Student } from '../../services/calendar.service';
 
 import type {
   RegularScheduleResponse
@@ -65,12 +64,18 @@ import {
   RescheduleModal
 } from '../reschedule-modal/reschedule-modal';
 
+interface CalendarSlot extends Availability {
+  slotStartTime: string;
+  slotEndTime: string;
+  slotStatus: 'Disponible' | 'Reservado';
+}
 
 @Component({
   selector: 'app-calendar',
   standalone: true,
 
   imports: [
+    CommonModule,
     AvailabilityCard,
     AppointmentDetails,
     RescheduleDetails,
@@ -83,6 +88,9 @@ import {
   styleUrl: './calendar.css',
   templateUrl: './calendar.html',
 })
+
+
+
 export class Calendar {
 
   private isBrowser: boolean;
@@ -100,7 +108,15 @@ export class Calendar {
    * Disponibilidades / citas.
    */
   availabilities: Availability[] = [];
+  selectedAvailability: Availability | null = null;
+  appointments: Appointment[] = [];
 
+  // buscador de alumnos
+  studentSearchText = '';
+
+  selectedStudent: Student | null = null;
+
+  studentSearchResults: Student[] = [];
 
   /*
    * Horarios inhabilitados de HU-02B.
@@ -868,20 +884,182 @@ export class Calendar {
    * Selección visual de un bloque Disponible
    * en Día/Semana.
    */
+
+
+
   selectAvailableSlot(
-    availability: Availability
+    availability: Availability,
+    slot?: string
   ): void {
+    this.selectedAvailability = availability;
+    this.selectedAvailabilityId = availability.id;
+    this.selectedAvailabilityStatus = availability.status;
+    this.selectedSlotDate = availability.date;
 
-    this.selectedAvailabilityId =
-      availability.id;
+    const slots = this.generateSlots(availability);
 
-    this.selectedSlotDate =
-      availability.date;
+    if (slots.length === 0) {
+      alert('No hay horarios disponibles en este bloque.');
+      return;
+    }
 
-    this.selectedSlot =
-      this.getAvailabilityTimeRange(
-        availability
-      );
+    this.selectedSlot = slot ?? slots[0];
+
+    this.isSidebarOpen = true;
+  }
+
+
+
+  onAppointmentSubmit(event: Event): void {
+    event.preventDefault();
+
+    const form = event.target as HTMLFormElement;
+    const formData = new FormData(form);
+
+    const studentName = String(
+      formData.get('studentName') ?? ''
+    ).trim();
+
+    const selectedStudent = this.selectedStudent;
+
+    if (!selectedStudent) {
+      alert('Busca y selecciona un alumno de la lista.');
+      return;
+    }
+
+    const modality = String(
+      formData.get('modality') ?? ''
+    );
+
+    const location = String(
+      formData.get('location') ?? ''
+    ).trim();
+
+    const reason = String(
+      formData.get('reason') ?? ''
+    ).trim();
+
+    const availability = this.selectedAvailability;
+
+    if (!reason) {
+      alert('Completa el motivo de la cita.');
+      return;
+    }
+
+    if (
+      !availability ||
+      !this.selectedSlotDate ||
+      !this.selectedAvailabilityId ||
+      this.selectedAvailabilityStatus !== 'Disponible'
+    ) {
+      alert('Selecciona primero un horario disponible.');
+      return;
+    }
+
+    if (
+      modality !== 'In person' &&
+      modality !== 'Online'
+    ) {
+      alert('Selecciona una modalidad válida.');
+      return;
+    }
+
+    if (modality === 'In person' && !location) {
+      alert('Escribe la ubicación de la atención.');
+      return;
+    }
+
+    const selectedRange = this.selectedSlot.split(' - ');
+
+    if (selectedRange.length !== 2) {
+      alert('No se pudo interpretar el horario seleccionado.');
+      return;
+    }
+
+    const startTime = this.formatTime24Hour(
+      selectedRange[0].trim()
+    );
+
+    const endTime = this.formatTime24Hour(
+      selectedRange[1].trim()
+    );
+
+    const duration = availability.duration;
+
+    if (
+      !Number.isFinite(duration) ||
+      duration <= 0
+    ) {
+      alert('La duración del horario no es válida.');
+      return;
+    }
+
+    const selectedStudentId = selectedStudent.id;
+    const selectedStudentName = selectedStudent.name;
+
+    this.calendarService.createAppointment({
+      student_id: selectedStudentId,
+      student_name: selectedStudentName,
+      date: this.selectedSlotDate,
+      start_time: startTime,
+      end_time: endTime,
+      duration,
+      modality: modality as 'In person' | 'Online',
+      location: modality === 'In person' ? location : undefined,
+      reason
+    }).subscribe({
+      next: (response) => {
+        console.log('Cita registrada:', response);
+
+        alert('La cita se guardó correctamente.');
+
+        this.closeSidebar();
+        this.loadAvailabilities();
+      },
+      error: (error) => {
+        console.error('Error al guardar la cita:', error);
+
+        const message =
+          error?.error?.error ??
+          'No fue posible guardar la cita. Inténtalo nuevamente.';
+
+        alert(message);
+      }
+    });
+  }
+
+
+  onStudentSearchChange(value: string): void {
+    this.studentSearchText = value;
+    this.selectedStudent = null;
+
+    const search = value.trim();
+
+    if (!search) {
+      this.studentSearchResults = [];
+      return;
+    }
+
+    this.calendarService.searchStudents(search).subscribe({
+      next: (students) => {
+        if (this.studentSearchText.trim() !== search) {
+          return;
+        }
+        console.log('Respuesta de búsqueda:', students);
+        console.log('¿Es un arreglo?', Array.isArray(students));
+        this.studentSearchResults = students;
+      },
+      error: (error) => {
+        console.error('Error al buscar alumnos:', error);
+        this.studentSearchResults = [];
+      }
+    });
+  }
+
+  selectStudent(student: Student): void {
+    this.selectedStudent = student;
+    this.studentSearchText = student.name;
+    this.studentSearchResults = [];
   }
 
 
@@ -1234,86 +1412,89 @@ export class Calendar {
   }
 
 
-  getAvailableSlotsForHour(
-    date: Date,
-    hour: string
-  ): Availability[] {
 
+
+  getAvailableSlotsForHour( date: Date, hour: string ): Availability[] {
     if (
-      this.statusFilter !==
-        'all'
-      &&
-      this.statusFilter !==
-        'Disponible'
-    ) {
-
+      this.statusFilter !== 'all' &&
+      this.statusFilter !== 'Disponible' ) {
       return [];
     }
 
+    const dateString = this.formatDate(date);
+    const hourStart = this.timeToMinutes(hour);
+    const hourEnd = hourStart + 60;
 
-    const dateString =
-      this.formatDate(date);
-
-    const hourStart =
-      this.timeToMinutes(
-        hour
-      );
-
-    const hourEnd =
-      hourStart + 60;
-
+    const appointmentsForDate = this.appointments.filter(
+      (appointment) =>
+        appointment.date === dateString &&
+        appointment.status !== 'Cancelled'
+    );
 
     return this.availabilities
-      .filter(
-        (availability) => {
+      .filter((availability) => {
+        if (
+          availability.date !== dateString ||
+          availability.status !== 'Disponible'
+        ) {
+          return false;
+        }
 
-          if (
-            availability.date !==
-            dateString
-          ) {
+        const availabilityStart = this.timeToMinutes(
+          availability.startTime
+        );
+        const availabilityEnd = this.timeToMinutes(
+          availability.endTime
+        );
 
-            return false;
-          }
+        if (
+          availabilityStart >= hourEnd ||
+          availabilityEnd <= hourStart
+        ) {
+          return false;
+        }
 
+        return this.generateSlots(availability).some((slot) => {
+          const [startLabel, endLabel] = slot.split(' - ');
 
-          if (
-            availability.status !==
-            'Disponible'
-          ) {
+          const slotStart = this.timeToMinutes(
+            this.formatTime24Hour(startLabel.trim())
+          );
+          const slotEnd = this.timeToMinutes(
+            this.formatTime24Hour(endLabel.trim())
+          );
 
-            return false;
-          }
+          const overlapsAppointment = appointmentsForDate.some(
+            (appointment) => {
+              const appointmentStart = this.timeToMinutes(
+                appointment.start_time
+              );
+              const appointmentEnd = this.timeToMinutes(
+                appointment.end_time
+              );
 
-
-          const availabilityStart =
-            this.timeToMinutes(
-              availability.startTime
-            );
-
+              return (
+                slotStart < appointmentEnd &&
+                slotEnd > appointmentStart
+              );
+            }
+          );
 
           return (
-            availabilityStart >=
-              hourStart
-            &&
-            availabilityStart <
-              hourEnd
+            !overlapsAppointment &&
+            slotStart < hourEnd &&
+            slotEnd > hourStart
           );
-        }
-      )
+        });
+      })
       .sort(
         (first, second) =>
-
-          this.timeToMinutes(
-            first.startTime
-          )
-
-          -
-
-          this.timeToMinutes(
-            second.startTime
-          )
+          this.timeToMinutes(first.startTime) -
+          this.timeToMinutes(second.startTime)
       );
   }
+
+
 
 
   formatAvailabilityTime(
@@ -1473,65 +1654,107 @@ export class Calendar {
      ============================================================ */
 
 
-  generateSlots(
-    availability: Availability
-  ): string[] {
+  isSlotAvailable(
+    availability: Availability,
+    slot: string
+  ): boolean {
+    const [startLabel, endLabel] = slot.split(' - ');
 
+    if (!startLabel || !endLabel) {
+      return false;
+    }
+
+    const slotStart = this.timeToMinutes(
+      this.formatTime24Hour(startLabel.trim())
+    );
+
+    const slotEnd = this.timeToMinutes(
+      this.formatTime24Hour(endLabel.trim())
+    );
+
+    return !this.appointments.some((appointment) => {
+      if (
+        appointment.date !== availability.date ||
+        appointment.status === 'Cancelled'
+      ) {
+        return false;
+      }
+
+      const appointmentStart = this.timeToMinutes(
+        appointment.start_time
+      );
+
+      const appointmentEnd = this.timeToMinutes(
+        appointment.end_time
+      );
+
+      return (
+        slotStart < appointmentEnd &&
+        slotEnd > appointmentStart
+      );
+    });
+  }
+
+
+  generateSlots( availability: Availability ): string[] {
     const slots: string[] = [];
 
+    const dateAppointments = this.appointments.filter(
+      (appointment) =>
+        appointment.date === availability.date &&
+        appointment.status !== 'Cancelled'
+    );
 
-    let currentMinutes =
-      this.timeToMinutes(
-        availability.startTime
-      );
+    let currentMinutes = this.timeToMinutes(
+      availability.startTime
+    );
 
-
-    const endMinutes =
-      this.timeToMinutes(
-        availability.endTime
-      );
-
+    const endMinutes = this.timeToMinutes(
+      availability.endTime
+    );
 
     while (
-
-      currentMinutes +
-      availability.duration <=
-      endMinutes
-
+      currentMinutes + availability.duration <= endMinutes
     ) {
+      const slotEndMinutes =
+        currentMinutes + availability.duration;
 
-      const slotStart =
-        this.formatTime12Hour(
+      const overlapsAppointment = dateAppointments.some(
+        (appointment) => {
+          const appointmentStart = this.timeToMinutes(
+            appointment.start_time
+          );
+
+          const appointmentEnd = this.timeToMinutes(
+            appointment.end_time
+          );
+
+          return (
+            currentMinutes < appointmentEnd &&
+            slotEndMinutes > appointmentStart
+          );
+        }
+      );
+
+      if (!overlapsAppointment) {
+        const slotStart = this.formatTime12Hour(
           currentMinutes
         );
 
-
-      const slotEnd =
-        this.formatTime12Hour(
-
-          currentMinutes +
-          availability.duration
-
+        const slotEnd = this.formatTime12Hour(
+          slotEndMinutes
         );
 
-
-      slots.push(
-        `${slotStart} - ${slotEnd}`
-      );
-
+        slots.push(`${slotStart} - ${slotEnd}`);
+      }
 
       currentMinutes +=
-
-        availability.duration
-
-        +
-
-        availability.breakTime;
+        availability.duration + availability.breakTime;
     }
-
 
     return slots;
   }
+
 
 
   private timeToMinutes(
@@ -1620,6 +1843,23 @@ export class Calendar {
       period
     );
   }
+
+
+  formatTime24Hour(time: string): string {
+    const [timePart, period] = time.split(' ');
+    let [hours, minutes] = timePart.split(':').map(Number);
+
+    if (period === 'PM' && hours !== 12) {
+      hours += 12;
+    }
+
+    if (period === 'AM' && hours === 12) {
+      hours = 0;
+    }
+
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  }
+
 
 
   private convert12to24(
@@ -2376,30 +2616,31 @@ export class Calendar {
   }
 
 
+
   loadAvailabilities(): void {
+    this.calendarService.getAvailabilities().subscribe({
+      next: (data) => {
+        this.availabilities = data;
 
-    this.calendarService
-      .getAvailabilities()
-      .subscribe({
-
-        next: (data) => {
-
-          this.availabilities =
-            data;
-
-          this.notifyCalendarDataChanged();
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Error loading availabilities:',
-            error
-          );
-        }
-
-      });
+        this.calendarService.getAppointments().subscribe({
+          next: (response) => {
+            this.appointments = response.appointments;
+            console.log('Citas recibidas:', this.appointments);
+            this.notifyCalendarDataChanged();
+          },
+          error: (error) => {
+            console.error('Error loading appointments:', error);
+            this.appointments = [];
+            this.notifyCalendarDataChanged();
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error loading availabilities:', error);
+      }
+    });
   }
+
 
 
   loadDisabledSchedules(): void {
@@ -2461,54 +2702,45 @@ export class Calendar {
    * HU-02A -> regular schedule
    * HU-02B -> disabled schedules
    */
+
   refreshCalendarData(): void {
-
-    forkJoin({
-
-      availabilities:
-        this.calendarService
-          .getAvailabilities(),
+      forkJoin({
+        availabilities:
+        this.calendarService.getAvailabilities(),
 
       schedule:
-        this.regularScheduleService
-          .getRegularSchedule(),
+        this.regularScheduleService.getRegularSchedule(),
 
       disabledSchedules:
-        this.calendarService
-          .getDisabledSchedules()
+        this.calendarService.getDisabledSchedules(),
 
+      appointments:
+        this.calendarService.getAppointments()
     })
-      .subscribe({
-
+    .subscribe({
         next: ({
           availabilities,
           schedule,
-          disabledSchedules
+          disabledSchedules,
+          appointments
         }) => {
-
-          this.availabilities =
-            availabilities;
-
-          this.regularSchedule =
-            schedule;
-
-          this.disabledSchedules =
-            disabledSchedules;
-
+          this.availabilities = availabilities;
+          this.regularSchedule = schedule;
+          this.disabledSchedules = disabledSchedules;
+          this.appointments = appointments.appointments;
 
           this.notifyCalendarDataChanged();
         },
 
-        error: (error) => {
-
+      error: (error) => {
           console.error(
             'Error al actualizar los datos del calendario:',
             error
           );
         }
-
-      });
+    });
   }
+
 
 
   handleScheduleUpdated(

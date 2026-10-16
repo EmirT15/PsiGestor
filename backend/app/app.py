@@ -6,6 +6,8 @@ from flask_cors import CORS
 from flasgger import Swagger
 from app.routes.availability import availability_bp
 from app.routes.regular_schedule import regular_schedule_bp
+from app.routes.appointments import appointments_bp
+from app.routes.students import students_bp
 
 
 load_dotenv()
@@ -16,6 +18,8 @@ Swagger(app)
 
 app.register_blueprint(availability_bp)
 app.register_blueprint(regular_schedule_bp)
+app.register_blueprint(appointments_bp)
+app.register_blueprint(students_bp)
 
 @app.route("/")
 def inicio():

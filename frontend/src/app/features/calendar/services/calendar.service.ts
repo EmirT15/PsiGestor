@@ -4,6 +4,30 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, Subject, tap } from 'rxjs';
 import { Availability, DisabledSchedule } from '../models/availability.model';
 
+export interface Student {
+  id: number;
+  studentId: string;
+  name: string;
+  program: string;
+  semester: number;
+}
+
+export interface Appointment {
+  id: number;
+  student_id: number;
+  student_name: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  duration: number;
+  modality: 'In person' | 'Online';
+  location: string | null;
+  meeting_url: string | null;
+  reason: string;
+  status: string;
+  created_at: string;
+}
+
 export interface DisableSchedulePayload {
   availabilityId?: number;
   isRange?: boolean;
@@ -53,6 +77,17 @@ export class CalendarService {
       `${this.baseUrl}/availabilities`
     );
   }
+
+
+  searchStudents(search: string): Observable<Student[]> {
+    return this.http.get<Student[]>(
+      `${this.baseUrl}/students`,
+      {
+        params: { search: search.trim() }
+      }
+    );
+  }
+
 
   createAvailability(data: {
     date: string;
@@ -143,6 +178,37 @@ export class CalendarService {
         startTime,
         endTime
       }
+    );
+  }
+
+  getAppointments(date?: string): Observable<{ appointments: Appointment[] }> {
+    const url = `${this.baseUrl}/appointments`;
+
+    if (date) {
+      return this.http.get<{ appointments: Appointment[] }>(
+        url,
+        { params: { date } }
+      );
+    }
+
+    return this.http.get<{ appointments: Appointment[] }>(url);
+  }
+
+  createAppointment(data: {
+    student_id: number;
+    student_name: string;
+    date: string;
+    start_time: string;
+    end_time: string;
+    duration: number;
+    modality: 'In person' | 'Online';
+    location?: string;
+    meeting_url?: string;
+    reason: string;
+  }): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/appointments`,
+      data
     );
   }
 
