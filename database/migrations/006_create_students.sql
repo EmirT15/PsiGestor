@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS students (
+    id SERIAL PRIMARY KEY,
+    student_id VARCHAR(30) NOT NULL UNIQUE,
+    name VARCHAR(150) NOT NULL,
+    program VARCHAR(150) NOT NULL,
+    semester INTEGER NOT NULL CHECK (semester BETWEEN 1 AND 20)
+);
