@@ -24,6 +24,7 @@ services:
 
     volumes:
       - ./backend:/app
+      - ./database:/database
 
     depends_on:
       - postgres

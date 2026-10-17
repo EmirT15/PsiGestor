@@ -8,9 +8,16 @@ from app.routes.availability import availability_bp
 from app.routes.regular_schedule import regular_schedule_bp
 from app.routes.appointments import appointments_bp
 from app.routes.students import students_bp
+from app.init_db import init_database
 
 
 load_dotenv()
+
+if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+    try:
+        init_database(reset=False)
+    except Exception as init_error:
+        print(f"[app] Advertencia al inicializar BD: {init_error}")
 
 app = Flask(__name__)
 CORS(app)
