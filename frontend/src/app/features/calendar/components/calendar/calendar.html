@@ -1,0 +1,1384 @@
+<div
+  class="calendar-layout"
+  [class.sidebar-open]="isSidebarOpen"
+  [attr.data-render-version]="calendarRenderVersion()"
+>
+
+  <div class="calendar-main-content">
+
+    <app-calendar-toolbar
+      [currentDate]="getCurrentViewDate()"
+      [currentView]="currentView"
+      [selectedStatus]="statusFilter"
+
+      (previous)="changeMonth(-1)"
+      (next)="changeMonth(1)"
+      (today)="goToToday()"
+
+      (viewChange)="changeView($event)"
+      (statusChange)="statusFilter = $event"
+      (manageSchedule)="openManageSchedule()"
+    />
+
+
+    @if (isManageScheduleOpen) {
+
+      <app-manage-schedule-modal
+        [initialData]="initialModalData"
+        (closed)="closeManageSchedule()"
+        (scheduleUpdated)="handleScheduleUpdated($event)"
+      />
+
+    }
+
+
+    <!-- ========================================= -->
+    <!-- VISTA MES                                -->
+    <!-- ========================================= -->
+
+    @if (currentView === 'month') {
+
+      <div class="calendar-weekdays">
+        <span>Dom</span>
+        <span>Lun</span>
+        <span>Mar</span>
+        <span>Mié</span>
+        <span>Jue</span>
+        <span>Vie</span>
+        <span>Sáb</span>
+      </div>
+
+
+      <div class="calendar-grid">
+
+        @for (
+          empty of [].constructor(
+            getFirstDayOfMonth()
+          );
+          track $index
+        ) {
+
+          <span></span>
+
+        }
+
+
+        @for (
+          day of getDaysInMonth();
+          track day.getTime()
+        ) {
+
+          <button
+            type="button"
+            class="month-day-cell"
+
+            (click)="selectDate(day)"
+
+            [class.selected]="isSelected(day)"
+            [class.today]="isToday(day)"
+            [class.has-disabled]="
+              hasDisabledSchedule(day)
+            "
+          >
+
+            <div class="month-day-header">
+
+              @if (isToday(day)) {
+
+                <span class="month-today-badge">
+                  {{ day.getDate() }} HOY
+                </span>
+
+              } @else {
+
+                <span class="month-day-number">
+                  {{ day.getDate() }}
+                </span>
+
+              }
+
+            </div>
+
+
+            <div class="month-day-body">
+
+              @if (
+                getAvailableCountForDate(day) > 0
+              ) {
+
+                <span
+                  class="month-availability-summary"
+                >
+
+                  <span
+                    class="month-availability-dot"
+                  ></span>
+
+                  {{ getAvailableCountForDate(day) }}
+                  disp.
+
+                </span>
+
+              }
+
+              @if (
+                getReservedCountForDate(day) > 0
+              ) {
+
+                <span
+                  class="month-availability-summary month-reserved-summary"
+                >
+
+                  <span
+                    class="month-availability-dot month-reserved-dot"
+                  ></span>
+
+                  {{ getReservedCountForDate(day) }}
+                  res.
+
+                </span>
+
+              }
+
+              @if (
+                getRescheduleCountForDate(day) > 0
+              ) {
+
+                <span
+                  class="month-availability-summary month-reschedule-summary"
+                >
+
+                  <span
+                    class="month-availability-dot month-reschedule-dot"
+                  ></span>
+
+                  {{ getRescheduleCountForDate(day) }}
+                  repr.
+
+                </span>
+
+              }
+
+              @if (
+                getCancelledCountForDate(day) > 0
+              ) {
+
+                <span
+                  class="month-availability-summary month-cancelled-summary"
+                >
+
+                  <span
+                    class="month-availability-dot month-cancelled-dot"
+                  ></span>
+
+                  {{ getCancelledCountForDate(day) }}
+                  canc.
+
+                </span>
+
+              }
+
+              @if (
+                getDisabledSchedulesForDate(day).length > 0
+              ) {
+
+                <span
+                  class="month-availability-summary month-disabled-summary"
+                >
+
+                  <span
+                    class="month-availability-dot month-disabled-dot"
+                  ></span>
+
+                  {{ getDisabledSchedulesForDate(day).length }}
+                  inh.
+
+                </span>
+
+              }
+
+
+              @if (
+                getAvailableCountForDate(day) > 0 ||
+                getReservedCountForDate(day) > 0 ||
+                getRescheduleCountForDate(day) > 0 ||
+                getCancelledCountForDate(day) > 0 ||
+                hasDisabledSchedule(day)
+              ) {
+
+                <div class="dots-container">
+
+                  @if (
+                    getAvailableCountForDate(day) > 0
+                  ) {
+
+                    <span
+                      class="dot dot-available"
+                      title="Disponible"
+                    ></span>
+
+                  }
+
+                  @if (
+                    getReservedCountForDate(day) > 0
+                  ) {
+
+                    <span
+                      class="dot dot-reserved"
+                      title="Reservado"
+                    ></span>
+
+                  }
+
+                  @if (
+                    getRescheduleCountForDate(day) > 0
+                  ) {
+
+                    <span
+                      class="dot dot-reschedule"
+                      title="Reprogramación pendiente"
+                    ></span>
+
+                  }
+
+                  @if (
+                    getCancelledCountForDate(day) > 0
+                  ) {
+
+                    <span
+                      class="dot dot-cancelled"
+                      title="Cancelado"
+                    ></span>
+
+                  }
+
+
+                  @if (
+                    hasDisabledSchedule(day)
+                  ) {
+
+                    <span
+                      class="dot dot-disabled"
+                      title="Inhabilitado"
+                    ></span>
+
+                  }
+
+                </div>
+
+              }
+
+            </div>
+
+          </button>
+
+        }
+
+      </div>
+
+    }
+
+
+    <!-- ========================================= -->
+    <!-- VISTA DÍA                                -->
+    <!-- ========================================= -->
+
+    @if (currentView === 'day') {
+
+      <div class="day-view">
+
+        <h3>
+          {{
+            getCurrentViewDate().toLocaleDateString(
+              'es-MX',
+              {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+              }
+            )
+          }}
+        </h3>
+
+
+        <!-- ===================================== -->
+        <!-- HORARIOS INHABILITADOS DEL DÍA       -->
+        <!-- ===================================== -->
+
+        @for (
+          disabled of getDisabledSchedulesForDate(
+            getCurrentViewDate()
+          );
+          track disabled.id
+        ) {
+
+          <div class="day-availability-card day-disabled-card">
+
+            <div class="day-availability-icon day-disabled-icon">
+              🚫
+            </div>
+
+            <div class="day-availability-content">
+
+              <div class="day-availability-header">
+
+                <span class="day-availability-time">
+                  {{ formatAvailabilityTime(disabled.startTime) }}
+                  -
+                  {{ formatAvailabilityTime(disabled.endTime) }}
+                </span>
+
+                <span class="day-availability-badge day-disabled-badge">
+                  <span class="day-availability-dot"></span>
+                  Inhabilitado
+                </span>
+
+                <span class="day-availability-duration">
+                  Motivo: {{ disabled.reason }}{{ disabled.observation ? ' (' + disabled.observation + ')' : '' }}
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        }
+
+
+        <!-- ===================================== -->
+        <!-- LÍNEA DE TIEMPO DEL DÍA              -->
+        <!-- ===================================== -->
+
+        @for (
+          item of getDayTimelineItems(
+            getCurrentViewDate()
+          );
+          track
+            item.type === 'availability'
+              ? item.availability.id
+              : 'habitual-break'
+        ) {
+
+          @if (
+            item.type === 'habitualBreak'
+          ) {
+
+            <div class="day-habitual-break-card">
+
+              <div class="day-habitual-break-main">
+
+                <span
+                  class="day-habitual-break-time"
+                >
+                  {{ getHabitualBreakRange() }}
+                </span>
+
+                <span
+                  class="day-habitual-break-badge"
+                >
+                  Descanso habitual
+                </span>
+
+              </div>
+
+
+              <div
+                class="day-habitual-break-secondary"
+              >
+
+                <span>
+                  Pausa dentro del horario habitual
+                  de atención
+                </span>
+
+                <span
+                  class="day-habitual-break-duration"
+                >
+                  {{ getHabitualBreakDuration() }}
+                  min bloqueados
+                </span>
+
+              </div>
+
+            </div>
+
+          } @else {
+
+            @if (
+              item.availability.status ===
+              'Disponible'
+            ) {
+
+              <button
+                type="button"
+                class="day-availability-card"
+
+                [class.day-availability-card-selected]="
+                  selectedAvailabilityId ===
+                  item.availability.id
+                "
+
+                (click)="
+                  selectAvailableSlot(
+                    item.availability
+                  )
+                "
+              >
+
+                <div
+                  class="day-availability-icon"
+                >
+                  ✓
+                </div>
+
+
+                <div
+                  class="day-availability-content"
+                >
+
+                  <div
+                    class="day-availability-header"
+                  >
+
+                    <span
+                      class="day-availability-time"
+                    >
+                      {{
+                        getAvailabilityTimeRange(
+                          item.availability
+                        )
+                      }}
+                    </span>
+
+
+                    <span
+                      class="day-availability-badge"
+                    >
+
+                      <span
+                        class="day-availability-dot"
+                      ></span>
+
+                      Disponible
+
+                    </span>
+
+
+                    <span
+                      class="day-availability-duration"
+                    >
+                      Duración:
+                      {{
+                        item.availability.duration
+                      }}
+                      min
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </button>
+
+            } @else if (
+              item.availability.status === 'Reservado' ||
+              item.availability.status === 'Reprogramacion pendiente' ||
+              item.availability.status === 'Cancelado'
+            ) {
+
+              <button
+                type="button"
+                class="day-availability-card"
+                [class.day-reserved-card]="
+                  item.availability.status === 'Reservado'
+                "
+                [class.day-reschedule-card]="
+                  item.availability.status === 'Reprogramacion pendiente'
+                "
+                [class.day-cancelled-card]="
+                  item.availability.status === 'Cancelado'
+                "
+                [class.day-availability-card-selected]="
+                  selectedAvailabilityId ===
+                  item.availability.id
+                "
+                (click)="
+                  selectSlot(
+                    getFormattedRange12h(item.availability),
+                    item.availability
+                  )
+                "
+              >
+
+                <div
+                  class="day-availability-icon"
+                  [class.day-reserved-icon]="
+                    item.availability.status === 'Reservado'
+                  "
+                  [class.day-reschedule-icon]="
+                    item.availability.status === 'Reprogramacion pendiente'
+                  "
+                  [class.day-cancelled-icon]="
+                    item.availability.status === 'Cancelado'
+                  "
+                >
+                  {{ item.availability.studentInitials || 'AL' }}
+                </div>
+
+
+                <div
+                  class="day-availability-content"
+                >
+
+                  <div
+                    class="day-availability-header"
+                  >
+
+                    <span
+                      class="day-availability-time"
+                    >
+                      {{
+                        getAvailabilityTimeRange(
+                          item.availability
+                        )
+                      }}
+                    </span>
+
+
+                    <span
+                      class="day-availability-badge"
+                      [class.day-reserved-badge]="
+                        item.availability.status === 'Reservado'
+                      "
+                      [class.day-reschedule-badge]="
+                        item.availability.status === 'Reprogramacion pendiente'
+                      "
+                      [class.day-cancelled-badge]="
+                        item.availability.status === 'Cancelado'
+                      "
+                    >
+
+                      <span
+                        class="day-availability-dot"
+                      ></span>
+
+                      {{
+                        item.availability.status === 'Reprogramacion pendiente'
+                          ? 'Reprogramación pendiente'
+                          : item.availability.status
+                      }}
+
+                    </span>
+
+
+                    <span
+                      class="day-availability-duration"
+                    >
+                      {{ item.availability.studentName || 'Cita' }}
+                      •
+                      {{ item.availability.modality || 'Presencial' }}
+                      •
+                      Duración: {{ item.availability.duration }} min
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </button>
+
+            } @else {
+
+              <app-availability-card
+                [availability]="
+                  item.availability
+                "
+
+                [slots]="
+                  generateSlots(
+                    item.availability
+                  )
+                "
+
+                [selectedSlot]="selectedSlot"
+
+                [selectedAvailabilityId]="
+                  selectedAvailabilityId
+                "
+
+                (slotSelected)="
+                  selectSlot(
+                    $event,
+                    item.availability
+                  )
+                "
+              />
+
+            }
+
+          }
+
+        }
+
+        @if (
+          getDayTimelineItems(getCurrentViewDate()).length === 0 &&
+          getDisabledSchedulesForDate(getCurrentViewDate()).length === 0
+        ) {
+          <div class="day-empty-state">
+            No hay horarios ni citas para este filtro en el día seleccionado.
+          </div>
+        }
+
+      </div>
+
+    }
+
+
+    <!-- ========================================= -->
+    <!-- VISTA SEMANA                             -->
+    <!-- ========================================= -->
+
+    @if (currentView === 'week') {
+
+      <section class="week-calendar">
+
+        <div class="week-calendar-scroll">
+
+          <div class="week-schedule-grid">
+
+            <!-- ================================= -->
+            <!-- ESQUINA SUPERIOR IZQUIERDA       -->
+            <!-- ================================= -->
+
+            <div class="week-grid-corner"></div>
+
+
+            <!-- ================================= -->
+            <!-- ENCABEZADOS DE LOS DÍAS          -->
+            <!-- ================================= -->
+
+            @for (
+              day of getDisplayedWeekDays();
+              track day.getTime()
+            ) {
+
+              <div
+                class="week-day-header"
+                [class.today]="isToday(day)"
+                (click)="selectWeekDay(day)"
+                title="Ver horarios del día"
+                style="cursor: pointer;"
+              >
+
+                <span
+                  class="week-day-name notranslate"
+                  translate="no"
+                >
+                  {{ getWeekdayLabel(day) }}
+                </span>
+
+                <span
+                  class="week-day-number"
+                >
+                  {{ day.getDate() }}
+                </span>
+
+              </div>
+
+            }
+
+
+            <!-- ================================= -->
+            <!-- FILAS DE HORARIO                 -->
+            <!-- ================================= -->
+
+            @for (
+              time of getWeekTimeRows();
+              track time
+            ) {
+
+              <div class="week-time-column">
+                <span>{{ time }}</span>
+              </div>
+
+
+              <!-- =============================== -->
+              <!-- DESCANSO HABITUAL              -->
+              <!-- =============================== -->
+
+              @if (
+                isHabitualBreakRow(time)
+              ) {
+
+                @for (
+                  day of getDisplayedWeekDays();
+                  track day.getTime()
+                ) {
+
+                  @if (
+                    doesHabitualBreakApplyToDay(
+                      day
+                    )
+                  ) {
+
+                    <div
+                      class="week-habitual-break-cell"
+
+                      [class.segment-start]="
+                        isHabitualBreakSegmentStart(
+                          day
+                        )
+                      "
+
+                      [class.segment-end]="
+                        isHabitualBreakSegmentEnd(
+                          day
+                        )
+                      "
+                    >
+
+                      @if (
+                        isHabitualBreakSegmentStart(
+                          day
+                        )
+                      ) {
+
+                        <div
+                          class="
+                            week-habitual-break-information
+                          "
+                        >
+
+                          <div
+                            class="
+                              week-habitual-break-header
+                            "
+                          >
+
+                            <span
+                              class="
+                                week-habitual-break-time
+                              "
+                            >
+                              {{
+                                getHabitualBreakRange()
+                              }}
+                            </span>
+
+
+                            <span
+                              class="
+                                week-habitual-break-badge
+                              "
+                            >
+                              Descanso habitual
+                            </span>
+
+                          </div>
+
+
+                          <span
+                            class="
+                              week-habitual-break-description
+                            "
+                          >
+                            Pausa dentro del horario
+                            habitual de atención
+                          </span>
+
+                        </div>
+
+                      }
+
+
+                      @if (
+                        isHabitualBreakSegmentEnd(
+                          day
+                        )
+                      ) {
+
+                        <span
+                          class="
+                            week-habitual-break-duration
+                          "
+                        >
+                          {{
+                            getHabitualBreakDuration()
+                          }}
+                          min bloqueados
+                        </span>
+
+                      }
+
+                    </div>
+
+                  } @else {
+
+                    <div
+                      class="
+                        week-calendar-cell
+                        week-habitual-break-empty
+                      "
+                      [class.today-column]="
+                        isToday(day)
+                      "
+                    >
+                    </div>
+
+                  }
+
+                }
+
+              } @else {
+
+                <!-- ============================= -->
+                <!-- CELDAS NORMALES              -->
+                <!-- ============================= -->
+
+                @for (
+                  day of getDisplayedWeekDays();
+                  track day.getTime()
+                ) {
+
+                  <div
+                    class="week-calendar-cell"
+                    [class.today-column]="
+                      isToday(day)
+                    "
+                  >
+
+                    <!-- ========================= -->
+                    <!-- HORARIOS INHABILITADOS   -->
+                    <!-- ========================= -->
+
+                    @for (
+                      disabled of
+                        getDisabledForTimeCell(
+                          day,
+                          time
+                        );
+                      track disabled.id
+                    ) {
+
+                      <div
+                        class="week-availability-card week-disabled-card"
+                      >
+                        <span class="week-availability-time">
+                          <span class="week-availability-dot"></span>
+                          {{ formatAvailabilityTime(disabled.startTime) }} - {{ formatAvailabilityTime(disabled.endTime) }}
+                        </span>
+
+                        <span class="week-availability-status">
+                          Inhabilitado
+                        </span>
+
+                        <span class="week-availability-duration">
+                          {{ disabled.reason }}
+                        </span>
+                      </div>
+
+                    }
+
+
+                    <!-- ========================= -->
+                    <!-- DISPONIBILIDADES         -->
+                    <!-- ========================= -->
+
+                    @for (
+                      availability of
+                        getAvailableSlotsForHour(day, time);
+                      track availability.id
+                    ) {
+                      @for (
+                        slot of getSlotsForHour(availability, time);
+                        track slot
+                      ) {
+                        @if (isSlotAvailable(availability, slot)) {
+                          <button
+                            type="button"
+                            class="week-availability-card"
+                            [class.week-availability-card-selected]="
+                              selectedAvailabilityId === availability.id &&
+                              selectedSlot === slot
+                            "
+                            (click)="selectAvailableSlot(availability, slot)"
+                          >
+                            <span class="week-availability-time">
+                              <span class="week-availability-dot"></span>
+                              {{ slot }}
+                            </span>
+
+                            <span class="week-availability-status">
+                              Disponible
+                            </span>
+
+                            <span class="week-availability-duration">
+                              {{ availability.duration }} min
+                            </span>
+                          </button>
+                        }
+                      }
+                    }
+
+
+                    <!-- ========================= -->
+                    <!-- RESERVADOS Y REPROG.     -->
+                    <!-- ========================= -->
+
+                    @for (
+                      booked of
+                        getBookedAvailabilitiesForHour(day, time);
+                      track booked.id
+                    ) {
+                      <button
+                        type="button"
+                        class="week-availability-card"
+                        [class.week-reserved-card]="
+                          booked.status === 'Reservado'
+                        "
+                        [class.week-reschedule-card]="
+                          booked.status === 'Reprogramacion pendiente'
+                        "
+                        [class.week-cancelled-card]="
+                          booked.status === 'Cancelado'
+                        "
+                        [class.week-availability-card-selected]="
+                          selectedAvailabilityId === booked.id
+                        "
+                        (click)="selectSlot(getFormattedRange12h(booked), booked)"
+                      >
+                        <span class="week-availability-time">
+                          <span class="week-availability-dot"></span>
+                          {{ getFormattedRange12h(booked) }}
+                        </span>
+
+                        <span class="week-availability-status">
+                          {{
+                            booked.status === 'Reprogramacion pendiente'
+                              ? 'Reprogramación pendiente'
+                              : booked.status
+                          }}
+                        </span>
+
+                        <span class="week-availability-duration">
+                          {{ booked.studentName ? booked.studentName + ' • ' : '' }}{{ booked.duration }} min
+                        </span>
+                      </button>
+                    }
+
+
+                  </div>
+
+                }
+
+              }
+
+            }
+
+          </div>
+
+        </div>
+
+      </section>
+
+    }
+
+
+    <!-- ========================================= -->
+    <!-- FECHA SELECCIONADA                       -->
+    <!-- ========================================= -->
+
+    @if (selectedDate && currentView === 'month') {
+
+      <div class="selected-date">
+
+        <h3>
+          Detalle del
+          {{ selectedDate }}
+        </h3>
+
+
+        @if (selectedSlot) {
+
+          <p>
+            Horario seleccionado:
+            <strong>
+              {{ selectedSlot }}
+            </strong>
+          </p>
+
+        }
+
+        @for (
+          disabled of getDisabledSchedulesForDate(
+            getSelectedDate()
+          );
+          track disabled.id
+        ) {
+
+          <div class="day-availability-card day-disabled-card" style="margin-bottom: 10px;">
+
+            <div class="day-availability-icon day-disabled-icon">
+              🚫
+            </div>
+
+            <div class="day-availability-content">
+
+              <div class="day-availability-header">
+
+                <span class="day-availability-time">
+                  {{ formatAvailabilityTime(disabled.startTime) }}
+                  -
+                  {{ formatAvailabilityTime(disabled.endTime) }}
+                </span>
+
+                <span class="day-availability-badge day-disabled-badge">
+                  <span class="day-availability-dot"></span>
+                  Inhabilitado
+                </span>
+
+                <span class="day-availability-duration">
+                  Motivo: {{ disabled.reason }}{{ disabled.observation ? ' (' + disabled.observation + ')' : '' }}
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        }
+
+
+        @for (
+          availability of
+            getAvailabilitiesForDate(
+              getSelectedDate()
+            );
+          track availability.id
+        ) {
+
+          @if (availability.status === 'Disponible') {
+            <button
+              type="button"
+              class="day-availability-card"
+              style="margin-bottom: 10px;"
+              [class.day-availability-card-selected]="
+                selectedAvailabilityId === availability.id
+              "
+              (click)="selectAvailableSlot(availability)"
+            >
+              <div class="day-availability-icon">✓</div>
+              <div class="day-availability-content">
+                <div class="day-availability-header">
+                  <span class="day-availability-time">
+                    {{ getAvailabilityTimeRange(availability) }}
+                  </span>
+                  <span class="day-availability-badge">
+                    <span class="day-availability-dot"></span>
+                    Disponible
+                  </span>
+                  <span class="day-availability-duration">
+                    Duración: {{ availability.duration }} min
+                  </span>
+                </div>
+              </div>
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="day-availability-card"
+              style="margin-bottom: 10px;"
+              [class.day-reserved-card]="availability.status === 'Reservado'"
+              [class.day-reschedule-card]="availability.status === 'Reprogramacion pendiente'"
+              [class.day-cancelled-card]="availability.status === 'Cancelado'"
+              [class.day-availability-card-selected]="
+                selectedAvailabilityId === availability.id
+              "
+              (click)="selectSlot(getFormattedRange12h(availability), availability)"
+            >
+              <div
+                class="day-availability-icon"
+                [class.day-reserved-icon]="availability.status === 'Reservado'"
+                [class.day-reschedule-icon]="availability.status === 'Reprogramacion pendiente'"
+                [class.day-cancelled-icon]="availability.status === 'Cancelado'"
+              >
+                {{ availability.studentInitials || 'AL' }}
+              </div>
+              <div class="day-availability-content">
+                <div class="day-availability-header">
+                  <span class="day-availability-time">
+                    {{ getAvailabilityTimeRange(availability) }}
+                  </span>
+                  <span
+                    class="day-availability-badge"
+                    [class.day-reserved-badge]="availability.status === 'Reservado'"
+                    [class.day-reschedule-badge]="availability.status === 'Reprogramacion pendiente'"
+                    [class.day-cancelled-badge]="availability.status === 'Cancelado'"
+                  >
+                    <span class="day-availability-dot"></span>
+                    {{
+                      availability.status === 'Reprogramacion pendiente'
+                        ? 'Reprogramación pendiente'
+                        : availability.status
+                    }}
+                  </span>
+                  <span class="day-availability-duration">
+                    {{ availability.studentName || 'Cita' }}
+                    •
+                    {{ availability.modality || 'Presencial' }}
+                    •
+                    Duración: {{ availability.duration }} min
+                  </span>
+                </div>
+              </div>
+            </button>
+          }
+
+        }
+
+      </div>
+
+    }
+
+  </div>
+
+
+  <!-- ========================================= -->
+  <!-- SIDEBAR DE HU-03                         -->
+  <!-- ========================================= -->
+
+  <div
+    class="calendar-sidebar-wrapper"
+    [class.open]="isSidebarOpen"
+  >
+
+    @if (isSidebarOpen) {
+
+      @if (
+        selectedAvailabilityStatus ===
+        'Reprogramacion pendiente'
+      ) {
+
+        <app-reschedule-details
+          [data]="selectedRescheduleDetails"
+
+          (close)="closeSidebar()"
+
+          (modify)="
+            openRescheduleModal()
+          "
+        />
+
+      } @else if (
+        selectedAvailabilityStatus ===
+        'Disponible'
+      ) {
+
+        <div class="appointment-booking-panel">
+
+          <div class="booking-header">
+            <div>
+              <span class="booking-eyebrow">Registro de cita • HU-04</span>
+              <h2>Agendar cita</h2>
+            </div>
+
+            <button
+              type="button"
+              class="icon-btn"
+              aria-label="Cerrar formulario"
+              (click)="closeSidebar()"
+            >
+              &times;
+            </button>
+          </div>
+
+          <div class="booking-schedule-summary">
+            <div class="booking-summary-icon">▦</div>
+
+            <div class="booking-summary-info">
+              <strong>{{ selectedSlotDate }}</strong>
+              <span>{{ selectedSlot }}</span>
+              <small>Duración: 45 minutos</small>
+            </div>
+
+            <span class="booking-status">Disponible</span>
+          </div>
+
+          <form class="booking-form" (submit)="onAppointmentSubmit($event)" >
+            <div class="booking-field">
+              <label for="studentName">
+                Buscar alumno <span>*</span>
+              </label>
+
+              <input
+                id="studentName"
+                name="studentName"
+                type="text"
+                placeholder="Escribe el nombre o matrícula"
+                autocomplete="off"
+                [value]="studentSearchText"
+                (input)="onStudentSearchChange($any($event.target).value)"
+              />
+
+              <small>
+                Escribe el nombre o matrícula y selecciona al alumno.
+              </small>
+
+              <div
+                class="student-search-results"
+                *ngIf="studentSearchResults.length > 0"
+              >
+                <button
+                  type="button"
+                  class="student-result"
+                  *ngFor="let student of studentSearchResults"
+                  (click)="selectStudent(student)"
+                >
+                  <strong>{{ student.name }}</strong>
+                  <span>{{ student.program }} · Semestre {{ student.semester }}</span>
+                  <small>Matrícula: {{ student.studentId }}</small>
+                </button>
+              </div>
+            </div>
+
+
+            <fieldset class="booking-field">
+              <legend>Modalidad <span>*</span></legend>
+
+              <div class="booking-modality-options">
+                <label class="booking-modality-option">
+                  <input
+                    type="radio"
+                    name="modality"
+                    value="In person"
+                    checked
+                  />
+                  <span>♙ Presencial</span>
+                </label>
+
+                <label class="booking-modality-option">
+                  <input
+                    type="radio"
+                    name="modality"
+                    value="Online"
+                  />
+                  <span>▣ En línea</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="booking-field">
+              <label for="appointmentLocation">Ubicación de atención <span>*</span></label>
+              <input
+                id="appointmentLocation"
+                name="location"
+                type="text"
+                placeholder="Escribe el lugar de atención"
+              />
+              <small>Solo para modalidad presencial.</small>
+            </div>
+
+            <div class="booking-field">
+              <label for="appointmentReason">Motivo de la cita <span>*</span></label>
+              <textarea
+                id="appointmentReason"
+                name="reason"
+                rows="4"
+                placeholder="Describe brevemente el motivo de la atención..."
+              ></textarea>
+            </div>
+
+            <div class="booking-actions">
+              <button
+                type="button"
+                class="booking-cancel-button"
+                (click)="closeSidebar()"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                class="booking-submit-button"
+              >
+                Agendar cita
+              </button>
+            </div>
+
+          </form>
+        </div>
+
+      } @else {
+
+        <app-appointment-details
+          [appointment]="
+            selectedAppointmentData
+          "
+
+          (close)="closeSidebar()"
+
+          (reschedule)="
+            openRescheduleModal()
+          "
+
+          (cancel)="
+            openCancelModal()
+          "
+        />
+
+      }
+
+    }
+
+  </div>
+
+</div>
+
+
+<!-- ========================================= -->
+<!-- MODAL DE REPROGRAMACIÓN                   -->
+<!-- ========================================= -->
+
+@if (isRescheduleModalOpen) {
+
+  <app-reschedule-modal
+    [data]="rescheduleData"
+
+    [availableSlots]="
+      getAvailableSlots()
+    "
+
+    (close)="
+      closeRescheduleModal()
+    "
+
+    (confirm)="
+      onRescheduleConfirm($event)
+    "
+  />
+
+}
+
+
+<!-- ========================================= -->
+<!-- MODAL DE CANCELACIÓN                      -->
+<!-- ========================================= -->
+
+@if (isCancelModalOpen) {
+
+  <app-cancel-modal
+    [data]="cancelData"
+
+    (close)="
+      closeCancelModal()
+    "
+
+    (confirm)="
+      onCancelConfirm($event)
+    "
+  />
+
+}
