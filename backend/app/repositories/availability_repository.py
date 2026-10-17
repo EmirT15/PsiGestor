@@ -186,7 +186,7 @@ def cancel_availability_repo(
                 cancellation_reason = %s,
                 cancellation_observation = %s
             WHERE id = %s
-            RETURNING id;
+            RETURNING id, date, start_time, end_time;
             """,
             (
                 reason,
@@ -196,6 +196,19 @@ def cancel_availability_repo(
         )
 
         result = cursor.fetchone()
+
+        if result:
+            cursor.execute(
+                """
+                UPDATE appointments
+                SET status = 'Cancelled'
+                WHERE date = %s
+                  AND start_time = %s
+                  AND end_time = %s
+                  AND status <> 'Cancelled';
+                """,
+                (result[1], result[2], result[3])
+            )
 
         connection.commit()
 

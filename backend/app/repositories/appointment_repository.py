@@ -62,7 +62,7 @@ def create_appointment(
 
             cursor.execute(
                 """
-                SELECT start_time, end_time, duration, break_time
+                SELECT id, start_time, end_time, duration, break_time
                 FROM availabilities
                 WHERE date = %s
                   AND status = 'Disponible'
@@ -76,8 +76,10 @@ def create_appointment(
             availabilities = cursor.fetchall()
 
             valid_slot = False
+            matched_availability_id = None
+            matched_exact_range = False
 
-            for availability_start, availability_end, slot_duration, break_time in availabilities:
+            for availability_id, availability_start, availability_end, slot_duration, break_time in availabilities:
                 if slot_duration != duration:
                     continue
 
@@ -111,6 +113,11 @@ def create_appointment(
                         == requested_end
                     ):
                         valid_slot = True
+                        matched_availability_id = availability_id
+                        matched_exact_range = (
+                            requested_start == (availability_start.hour * 60 + availability_start.minute)
+                            and requested_end == availability_end_minutes
+                        )
                         break
 
                     current_minutes += slot_duration + break_time
@@ -124,6 +131,34 @@ def create_appointment(
                     "franja válida de la disponibilidad."
                 )
 
+            cursor.execute(
+                """
+                SELECT program, semester
+                FROM students
+                WHERE id = %s;
+                """,
+                (student_id,)
+            )
+            student_row = cursor.fetchone()
+            student_program = student_row[0] if student_row else ""
+            student_semester = (
+                f"{student_row[1]}° Semestre"
+                if student_row and student_row[1] is not None
+                else ""
+            )
+            initials = "".join(
+                part[0].upper()
+                for part in student_name.split()
+                if part
+            )[:2] or "AL"
+            modality_label = (
+                "Presencial" if modality == "In person" else "En línea"
+            )
+            location_label = (
+                location
+                if modality == "In person" and location
+                else (meeting_url or "Sesión en línea")
+            )
 
             cursor.execute(
                 """
@@ -174,6 +209,77 @@ def create_appointment(
             )
 
             appointment = cursor.fetchone()
+            folio = f"PSI-{date.year}-{appointment[0]:04d}"
+
+            if matched_availability_id is not None and matched_exact_range:
+                cursor.execute(
+                    """
+                    UPDATE availabilities
+                    SET status = 'Reservado',
+                        student_name = %s,
+                        student_initials = %s,
+                        student_age = COALESCE(student_age, 20),
+                        student_semester = %s,
+                        student_program = %s,
+                        consultation_reason = %s,
+                        modality = %s,
+                        location = %s,
+                        folio = %s
+                    WHERE id = %s;
+                    """,
+                    (
+                        student_name,
+                        initials,
+                        student_semester,
+                        student_program,
+                        reason,
+                        modality_label,
+                        location_label,
+                        folio,
+                        matched_availability_id,
+                    ),
+                )
+            else:
+                cursor.execute(
+                    """
+                    INSERT INTO availabilities (
+                        date,
+                        start_time,
+                        end_time,
+                        duration,
+                        break_time,
+                        status,
+                        student_name,
+                        student_initials,
+                        student_age,
+                        student_semester,
+                        student_program,
+                        consultation_reason,
+                        modality,
+                        location,
+                        folio,
+                        source
+                    )
+                    VALUES (
+                        %s, %s, %s, %s, 0, 'Reservado',
+                        %s, %s, 20, %s, %s, %s, %s, %s, %s, 'manual'
+                    );
+                    """,
+                    (
+                        date,
+                        start_time,
+                        end_time,
+                        duration,
+                        student_name,
+                        initials,
+                        student_semester,
+                        student_program,
+                        reason,
+                        modality_label,
+                        location_label,
+                        folio,
+                    ),
+                )
 
         connection.commit()
         return appointment

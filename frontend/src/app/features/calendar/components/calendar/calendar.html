@@ -7,7 +7,7 @@
   <div class="calendar-main-content">
 
     <app-calendar-toolbar
-      [currentDate]="currentDate"
+      [currentDate]="getCurrentViewDate()"
       [currentView]="currentView"
       [selectedStatus]="statusFilter"
 
@@ -15,7 +15,7 @@
       (next)="changeMonth(1)"
       (today)="goToToday()"
 
-      (viewChange)="currentView = $event"
+      (viewChange)="changeView($event)"
       (statusChange)="statusFilter = $event"
       (manageSchedule)="openManageSchedule()"
     />
@@ -121,9 +121,49 @@
 
               }
 
+              @if (
+                getReservedCountForDate(day) > 0
+              ) {
+
+                <span
+                  class="month-availability-summary month-reserved-summary"
+                >
+
+                  <span
+                    class="month-availability-dot month-reserved-dot"
+                  ></span>
+
+                  {{ getReservedCountForDate(day) }}
+                  res.
+
+                </span>
+
+              }
+
+              @if (
+                getRescheduleCountForDate(day) > 0
+              ) {
+
+                <span
+                  class="month-availability-summary month-reschedule-summary"
+                >
+
+                  <span
+                    class="month-availability-dot month-reschedule-dot"
+                  ></span>
+
+                  {{ getRescheduleCountForDate(day) }}
+                  repr.
+
+                </span>
+
+              }
+
 
               @if (
                 getAvailableCountForDate(day) > 0 ||
+                getReservedCountForDate(day) > 0 ||
+                getRescheduleCountForDate(day) > 0 ||
                 hasDisabledSchedule(day)
               ) {
 
@@ -136,6 +176,28 @@
                     <span
                       class="dot dot-available"
                       title="Disponible"
+                    ></span>
+
+                  }
+
+                  @if (
+                    getReservedCountForDate(day) > 0
+                  ) {
+
+                    <span
+                      class="dot dot-reserved"
+                      title="Reservado"
+                    ></span>
+
+                  }
+
+                  @if (
+                    getRescheduleCountForDate(day) > 0
+                  ) {
+
+                    <span
+                      class="dot dot-reschedule"
+                      title="Reprogramación pendiente"
                     ></span>
 
                   }
@@ -362,6 +424,103 @@
 
               </button>
 
+            } @else if (
+              item.availability.status === 'Reservado' ||
+              item.availability.status === 'Reprogramacion pendiente'
+            ) {
+
+              <button
+                type="button"
+                class="day-availability-card"
+                [class.day-reserved-card]="
+                  item.availability.status === 'Reservado'
+                "
+                [class.day-reschedule-card]="
+                  item.availability.status === 'Reprogramacion pendiente'
+                "
+                [class.day-availability-card-selected]="
+                  selectedAvailabilityId ===
+                  item.availability.id
+                "
+                (click)="
+                  selectSlot(
+                    getFormattedRange12h(item.availability),
+                    item.availability
+                  )
+                "
+              >
+
+                <div
+                  class="day-availability-icon"
+                  [class.day-reserved-icon]="
+                    item.availability.status === 'Reservado'
+                  "
+                  [class.day-reschedule-icon]="
+                    item.availability.status === 'Reprogramacion pendiente'
+                  "
+                >
+                  {{ item.availability.studentInitials || 'AL' }}
+                </div>
+
+
+                <div
+                  class="day-availability-content"
+                >
+
+                  <div
+                    class="day-availability-header"
+                  >
+
+                    <span
+                      class="day-availability-time"
+                    >
+                      {{
+                        getAvailabilityTimeRange(
+                          item.availability
+                        )
+                      }}
+                    </span>
+
+
+                    <span
+                      class="day-availability-badge"
+                      [class.day-reserved-badge]="
+                        item.availability.status === 'Reservado'
+                      "
+                      [class.day-reschedule-badge]="
+                        item.availability.status === 'Reprogramacion pendiente'
+                      "
+                    >
+
+                      <span
+                        class="day-availability-dot"
+                      ></span>
+
+                      {{
+                        item.availability.status === 'Reprogramacion pendiente'
+                          ? 'Reprogramación pendiente'
+                          : 'Reservado'
+                      }}
+
+                    </span>
+
+
+                    <span
+                      class="day-availability-duration"
+                    >
+                      {{ item.availability.studentName || 'Cita reservada' }}
+                      •
+                      {{ item.availability.modality || 'Presencial' }}
+                      •
+                      Duración: {{ item.availability.duration }} min
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </button>
+
             } @else {
 
               <app-availability-card
@@ -393,6 +552,15 @@
 
           }
 
+        }
+
+        @if (
+          getDayTimelineItems(getCurrentViewDate()).length === 0 &&
+          getDisabledSchedulesForDate(getCurrentViewDate()).length === 0
+        ) {
+          <div class="day-empty-state">
+            No hay horarios ni citas para este filtro en el día seleccionado.
+          </div>
         }
 
       </div>
@@ -431,6 +599,9 @@
               <div
                 class="week-day-header"
                 [class.today]="isToday(day)"
+                (click)="selectWeekDay(day)"
+                title="Ver horarios del día"
+                style="cursor: pointer;"
               >
 
                 <span
@@ -456,7 +627,7 @@
             <!-- ================================= -->
 
             @for (
-              time of visualTimeRows;
+              time of getWeekTimeRows();
               track time
             ) {
 
@@ -614,6 +785,38 @@
                     <!-- HORARIOS INHABILITADOS   -->
                     <!-- ========================= -->
 
+                    @for (
+                      disabled of
+                        getDisabledForTimeCell(
+                          day,
+                          time
+                        );
+                      track disabled.id
+                    ) {
+
+                      <div
+                        class="week-availability-card week-disabled-card"
+                      >
+                        <span class="week-availability-time">
+                          <span class="week-availability-dot"></span>
+                          {{ formatAvailabilityTime(disabled.startTime) }} - {{ formatAvailabilityTime(disabled.endTime) }}
+                        </span>
+
+                        <span class="week-availability-status">
+                          Inhabilitado
+                        </span>
+
+                        <span class="week-availability-duration">
+                          {{ disabled.reason }}
+                        </span>
+                      </div>
+
+                    }
+
+
+                    <!-- ========================= -->
+                    <!-- DISPONIBILIDADES         -->
+                    <!-- ========================= -->
 
                     @for (
                       availability of
@@ -621,7 +824,7 @@
                       track availability.id
                     ) {
                       @for (
-                        slot of generateSlots(availability);
+                        slot of getSlotsForHour(availability, time);
                         track slot
                       ) {
                         @if (isSlotAvailable(availability, slot)) {
@@ -649,6 +852,49 @@
                           </button>
                         }
                       }
+                    }
+
+
+                    <!-- ========================= -->
+                    <!-- RESERVADOS Y REPROG.     -->
+                    <!-- ========================= -->
+
+                    @for (
+                      booked of
+                        getBookedAvailabilitiesForHour(day, time);
+                      track booked.id
+                    ) {
+                      <button
+                        type="button"
+                        class="week-availability-card"
+                        [class.week-reserved-card]="
+                          booked.status === 'Reservado'
+                        "
+                        [class.week-reschedule-card]="
+                          booked.status === 'Reprogramacion pendiente'
+                        "
+                        [class.week-availability-card-selected]="
+                          selectedAvailabilityId === booked.id
+                        "
+                        (click)="selectSlot(getFormattedRange12h(booked), booked)"
+                      >
+                        <span class="week-availability-time">
+                          <span class="week-availability-dot"></span>
+                          {{ getFormattedRange12h(booked) }}
+                        </span>
+
+                        <span class="week-availability-status">
+                          {{
+                            booked.status === 'Reprogramacion pendiente'
+                              ? 'Reprogramación pendiente'
+                              : booked.status
+                          }}
+                        </span>
+
+                        <span class="week-availability-duration">
+                          {{ booked.studentName ? booked.studentName + ' • ' : '' }}{{ booked.duration }} min
+                        </span>
+                      </button>
                     }
 
 
