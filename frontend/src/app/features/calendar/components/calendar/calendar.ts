@@ -10,7 +10,7 @@ import {
   signal
 } from '@angular/core';
 
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 
 import type {
   StatusFilter
@@ -287,7 +287,7 @@ export class Calendar {
 
     const newDate =
       new Date(
-        this.currentDate
+        this.getCurrentViewDate()
       );
 
 
@@ -309,6 +309,13 @@ export class Calendar {
         + (offset * 7)
       );
 
+      const dayOfWeek = newDate.getDay();
+      if (dayOfWeek === 0) {
+        newDate.setDate(newDate.getDate() + 1);
+      } else {
+        newDate.setDate(newDate.getDate() - (dayOfWeek - 1));
+      }
+
     } else {
 
       newDate.setMonth(
@@ -323,9 +330,43 @@ export class Calendar {
     this.currentDate =
       newDate;
 
-    this.selectedDate = '';
+    this.selectedDate =
+      this.currentView === 'day'
+        ? this.formatDate(newDate)
+        : '';
 
     this.selectedSlot = '';
+  }
+
+
+  changeView(
+    view: 'day' | 'week' | 'month'
+  ): void {
+    if (view === 'day' && this.currentView === 'week') {
+      if (this.selectedSlotDate) {
+        this.selectedDate = this.selectedSlotDate;
+        this.currentDate = new Date(this.selectedSlotDate + 'T00:00:00');
+      } else if (!this.selectedDate) {
+        const weekDays = this.getWeekDays();
+        const firstDayWithData = weekDays.find(
+          (day) =>
+            this.getMergedAvailabilitiesForDateString(this.formatDate(day)).length > 0
+        );
+        const targetDay = firstDayWithData ?? weekDays[0];
+        this.currentDate = new Date(targetDay);
+        this.selectedDate = this.formatDate(targetDay);
+      }
+    }
+
+    this.currentView = view;
+  }
+
+
+  selectWeekDay(date: Date): void {
+    this.currentDate = new Date(date);
+    this.selectedDate = this.formatDate(date);
+    this.currentView = 'day';
+    this.changeDetectorRef.detectChanges();
   }
 
 
@@ -629,6 +670,87 @@ export class Calendar {
      ============================================================ */
 
 
+  private mapAppointmentToAvailability(
+    appointment: Appointment
+  ): Availability {
+    const initials = (appointment.student_name || 'AL')
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0].toUpperCase())
+      .join('');
+
+    return {
+      id: -appointment.id,
+      date: appointment.date,
+      startTime: appointment.start_time,
+      endTime: appointment.end_time,
+      duration: appointment.duration,
+      breakTime: 0,
+      status: 'Reservado',
+      studentName: appointment.student_name,
+      studentInitials: initials || 'AL',
+      studentAge: 20,
+      studentSemester: '',
+      studentProgram: '',
+      consultationReason: appointment.reason,
+      modality:
+        appointment.modality === 'In person'
+          ? 'Presencial'
+          : 'En línea',
+      location:
+        appointment.location ||
+        appointment.meeting_url ||
+        'Cubículo',
+      folio: `PSI-${appointment.date.slice(0, 4)}-${String(
+        appointment.id
+      ).padStart(4, '0')}`
+    };
+  }
+
+
+  private getMergedAvailabilitiesForDateString(
+    dateString: string
+  ): Availability[] {
+    const dateAvailabilities = this.availabilities.filter(
+      (availability) => availability.date === dateString
+    );
+
+    const activeAppointments = this.appointments.filter(
+      (appointment) =>
+        appointment.date === dateString &&
+        appointment.status !== 'Cancelled'
+    );
+
+    const fallbackBooked: Availability[] = [];
+
+    for (const appointment of activeAppointments) {
+      const appStart = this.timeToMinutes(appointment.start_time);
+      const appEnd = this.timeToMinutes(appointment.end_time);
+
+      const alreadyInAvailabilities = dateAvailabilities.some(
+        (avail) =>
+          (avail.status === 'Reservado' ||
+            avail.status === 'Reprogramacion pendiente') &&
+          this.timeToMinutes(avail.startTime) === appStart &&
+          this.timeToMinutes(avail.endTime) === appEnd
+      );
+
+      if (!alreadyInAvailabilities) {
+        fallbackBooked.push(
+          this.mapAppointmentToAvailability(appointment)
+        );
+      }
+    }
+
+    return [...dateAvailabilities, ...fallbackBooked].sort(
+      (first, second) =>
+        this.timeToMinutes(first.startTime) -
+        this.timeToMinutes(second.startTime)
+    );
+  }
+
+
   getAvailabilitiesForDate(
     date: Date
   ): Availability[] {
@@ -637,14 +759,16 @@ export class Calendar {
       this.formatDate(date);
 
 
-    return this.availabilities
+    return this.getMergedAvailabilitiesForDateString(dateString)
       .filter(
         (availability) => {
 
-          const sameDate =
-            availability.date ===
-            dateString;
-
+          if (
+            availability.status === 'Disponible' &&
+            this.generateSlots(availability).length === 0
+          ) {
+            return false;
+          }
 
           const sameStatus =
             this.statusFilter ===
@@ -654,10 +778,7 @@ export class Calendar {
               this.statusFilter;
 
 
-          return (
-            sameDate &&
-            sameStatus
-          );
+          return sameStatus;
         }
       );
   }
@@ -666,6 +787,9 @@ export class Calendar {
   selectDate(
     date: Date
   ): void {
+
+    this.currentDate =
+      new Date(date);
 
     this.selectedDate =
       this.formatDate(date);
@@ -691,6 +815,12 @@ export class Calendar {
 
     this.selectedSlotDate =
       availability.date;
+
+    this.selectedDate =
+      availability.date;
+
+    this.currentDate =
+      new Date(availability.date + 'T00:00:00');
 
     this.selectedAvailabilityId =
       availability.id;
@@ -895,6 +1025,8 @@ export class Calendar {
     this.selectedAvailabilityId = availability.id;
     this.selectedAvailabilityStatus = availability.status;
     this.selectedSlotDate = availability.date;
+    this.selectedDate = availability.date;
+    this.currentDate = new Date(availability.date + 'T00:00:00');
 
     const slots = this.generateSlots(availability);
 
@@ -1328,108 +1460,75 @@ export class Calendar {
    * de las disponibilidades existentes.
    */
   getWeekTimeRows(): string[] {
+    const displayedDays = this.getDisplayedWeekDays();
 
-    const displayedDates =
-      new Set(
-        this.getDisplayedWeekDays()
-          .map(
-            (day) =>
-              this.formatDate(day)
-          )
+    const startHours: number[] = [8, 15];
+
+    for (const day of displayedDays) {
+      const dateString = this.formatDate(day);
+      const merged = this.getMergedAvailabilitiesForDateString(
+        dateString
       );
 
-
-    const weekAvailabilities =
-      this.availabilities.filter(
-        (availability) =>
-
-          displayedDates.has(
-            availability.date
+      for (const availability of merged) {
+        if (availability.status === 'Cancelado') {
+          continue;
+        }
+        startHours.push(
+          Math.floor(
+            this.timeToMinutes(availability.startTime) / 60
           )
-
-          &&
-
-          availability.status ===
-            'Disponible'
-      );
-
-
-    if (
-      weekAvailabilities.length ===
-      0
-    ) {
-
-      return this.visualTimeRows;
+        );
+      }
     }
 
-
-    const startHours =
-      weekAvailabilities.map(
-        (availability) =>
-
-          Math.floor(
-
-            this.timeToMinutes(
-              availability.startTime
-            ) / 60
-
-          )
-      );
-
-
-    const firstHour =
-      Math.min(
-        ...startHours
-      );
-
-    const lastHour =
-      Math.max(
-        ...startHours
-      );
-
+    const firstHour = Math.min(...startHours);
+    const lastHour = Math.max(...startHours);
 
     const rows: string[] = [];
 
-
-    for (
-      let hour = firstHour;
-      hour <= lastHour;
-      hour++
-    ) {
-
-      rows.push(
-        `${hour
-          .toString()
-          .padStart(
-            2,
-            '0'
-          )}:00`
-      );
+    for (let hour = firstHour; hour <= lastHour; hour++) {
+      rows.push(`${hour.toString().padStart(2, '0')}:00`);
     }
-
 
     return rows;
   }
 
 
+  getSlotsForHour(
+    availability: Availability,
+    hour: string
+  ): string[] {
+    const hourStart = this.timeToMinutes(hour);
+    const hourEnd = hourStart + 60;
+
+    return this.generateSlots(availability).filter((slot) => {
+      const [startLabel] = slot.split(' - ');
+      if (!startLabel) {
+        return false;
+      }
+
+      const slotStart = this.timeToMinutes(
+        this.formatTime24Hour(startLabel.trim())
+      );
+
+      return slotStart >= hourStart && slotStart < hourEnd;
+    });
+  }
 
 
-  getAvailableSlotsForHour( date: Date, hour: string ): Availability[] {
+  getAvailableSlotsForHour(
+    date: Date,
+    hour: string
+  ): Availability[] {
     if (
       this.statusFilter !== 'all' &&
-      this.statusFilter !== 'Disponible' ) {
+      this.statusFilter !== 'Disponible'
+    ) {
       return [];
     }
 
     const dateString = this.formatDate(date);
-    const hourStart = this.timeToMinutes(hour);
-    const hourEnd = hourStart + 60;
-
-    const appointmentsForDate = this.appointments.filter(
-      (appointment) =>
-        appointment.date === dateString &&
-        appointment.status !== 'Cancelled'
-    );
 
     return this.availabilities
       .filter((availability) => {
@@ -1440,52 +1539,7 @@ export class Calendar {
           return false;
         }
 
-        const availabilityStart = this.timeToMinutes(
-          availability.startTime
-        );
-        const availabilityEnd = this.timeToMinutes(
-          availability.endTime
-        );
-
-        if (
-          availabilityStart >= hourEnd ||
-          availabilityEnd <= hourStart
-        ) {
-          return false;
-        }
-
-        return this.generateSlots(availability).some((slot) => {
-          const [startLabel, endLabel] = slot.split(' - ');
-
-          const slotStart = this.timeToMinutes(
-            this.formatTime24Hour(startLabel.trim())
-          );
-          const slotEnd = this.timeToMinutes(
-            this.formatTime24Hour(endLabel.trim())
-          );
-
-          const overlapsAppointment = appointmentsForDate.some(
-            (appointment) => {
-              const appointmentStart = this.timeToMinutes(
-                appointment.start_time
-              );
-              const appointmentEnd = this.timeToMinutes(
-                appointment.end_time
-              );
-
-              return (
-                slotStart < appointmentEnd &&
-                slotEnd > appointmentStart
-              );
-            }
-          );
-
-          return (
-            !overlapsAppointment &&
-            slotStart < hourEnd &&
-            slotEnd > hourStart
-          );
-        });
+        return this.getSlotsForHour(availability, hour).length > 0;
       })
       .sort(
         (first, second) =>
@@ -1495,6 +1549,60 @@ export class Calendar {
   }
 
 
+  getBookedAvailabilitiesForHour(
+    date: Date,
+    hour: string
+  ): Availability[] {
+    if (
+      this.statusFilter !== 'all' &&
+      this.statusFilter !== 'Reservado' &&
+      this.statusFilter !== 'Reprogramacion pendiente'
+    ) {
+      return [];
+    }
+
+    const dateString = this.formatDate(date);
+    const hourStart = this.timeToMinutes(hour);
+    const hourEnd = hourStart + 60;
+
+    return this.getMergedAvailabilitiesForDateString(dateString)
+      .filter((availability) => {
+        if (
+          availability.status !== 'Reservado' &&
+          availability.status !== 'Reprogramacion pendiente'
+        ) {
+          return false;
+        }
+
+        if (
+          this.statusFilter !== 'all' &&
+          availability.status !== this.statusFilter
+        ) {
+          return false;
+        }
+
+        const startMinutes = this.timeToMinutes(
+          availability.startTime
+        );
+
+        return startMinutes >= hourStart && startMinutes < hourEnd;
+      })
+      .sort(
+        (first, second) =>
+          this.timeToMinutes(first.startTime) -
+          this.timeToMinutes(second.startTime)
+      );
+  }
+
+
+  getFormattedRange12h(
+    availability: Availability
+  ): string {
+    return (
+      `${this.formatTimeString(availability.startTime)} - ` +
+      `${this.formatTimeString(availability.endTime)}`
+    );
+  }
 
 
   formatAvailabilityTime(
@@ -1621,6 +1729,49 @@ export class Calendar {
 
           availability.status ===
             'Disponible'
+
+          &&
+
+          this.generateSlots(availability).length > 0
+      )
+      .length;
+  }
+
+
+  getReservedCountForDate(
+    date: Date
+  ): number {
+    if (
+      this.statusFilter !== 'all' &&
+      this.statusFilter !== 'Reservado'
+    ) {
+      return 0;
+    }
+
+    const dateString = this.formatDate(date);
+
+    return this.getMergedAvailabilitiesForDateString(dateString)
+      .filter((availability) => availability.status === 'Reservado')
+      .length;
+  }
+
+
+  getRescheduleCountForDate(
+    date: Date
+  ): number {
+    if (
+      this.statusFilter !== 'all' &&
+      this.statusFilter !== 'Reprogramacion pendiente'
+    ) {
+      return 0;
+    }
+
+    const dateString = this.formatDate(date);
+
+    return this.getMergedAvailabilitiesForDateString(dateString)
+      .filter(
+        (availability) =>
+          availability.status === 'Reprogramacion pendiente'
       )
       .length;
   }
@@ -1633,7 +1784,8 @@ export class Calendar {
       .filter(
         (availability) =>
           availability.status ===
-          'Disponible'
+            'Disponible' &&
+          this.generateSlots(availability).length > 0
       );
   }
 
@@ -1699,11 +1851,25 @@ export class Calendar {
   generateSlots( availability: Availability ): string[] {
     const slots: string[] = [];
 
-    const dateAppointments = this.appointments.filter(
-      (appointment) =>
-        appointment.date === availability.date &&
-        appointment.status !== 'Cancelled'
-    );
+    const dateAppointments =
+      availability.status === 'Disponible'
+        ? this.appointments.filter(
+            (appointment) =>
+              appointment.date === availability.date &&
+              appointment.status !== 'Cancelled'
+          )
+        : [];
+
+    const dateBookedAvailabilities =
+      availability.status === 'Disponible'
+        ? this.availabilities.filter(
+            (item) =>
+              item.date === availability.date &&
+              item.id !== availability.id &&
+              (item.status === 'Reservado' ||
+                item.status === 'Reprogramacion pendiente')
+          )
+        : [];
 
     let currentMinutes = this.timeToMinutes(
       availability.startTime
@@ -1736,7 +1902,20 @@ export class Calendar {
         }
       );
 
-      if (!overlapsAppointment) {
+      const overlapsBookedAvailability =
+        dateBookedAvailabilities.some((booked) => {
+          const bookedStart = this.timeToMinutes(
+            booked.startTime
+          );
+          const bookedEnd = this.timeToMinutes(booked.endTime);
+
+          return (
+            currentMinutes < bookedEnd &&
+            slotEndMinutes > bookedStart
+          );
+        });
+
+      if (!overlapsAppointment && !overlapsBookedAvailability) {
         const slotStart = this.formatTime12Hour(
           currentMinutes
         );
@@ -2006,9 +2185,12 @@ export class Calendar {
 
     /*
      * Agregar descanso habitual únicamente
-     * cuando corresponde a esa jornada.
+     * cuando corresponde a esa jornada y
+     * el filtro no es exclusivo de reservados/reprogramación/inhabilitados.
      */
     if (
+      (this.statusFilter === 'all' ||
+        this.statusFilter === 'Disponible') &&
       this.doesHabitualBreakApplyToDay(
         date
       )
@@ -2568,7 +2750,9 @@ export class Calendar {
   ): boolean {
 
     if (
-      !this.hasHabitualBreak()
+      !this.hasHabitualBreak() ||
+      (this.statusFilter !== 'all' &&
+        this.statusFilter !== 'Disponible')
     ) {
 
       return false;
@@ -2613,6 +2797,8 @@ export class Calendar {
         (version) =>
           version + 1
       );
+
+    this.changeDetectorRef.detectChanges();
   }
 
 
@@ -2706,18 +2892,38 @@ export class Calendar {
   refreshCalendarData(): void {
       forkJoin({
         availabilities:
-        this.calendarService.getAvailabilities(),
+          this.calendarService.getAvailabilities().pipe(
+            catchError((err) => {
+              console.error('Error loading availabilities:', err);
+              return of([]);
+            })
+          ),
 
-      schedule:
-        this.regularScheduleService.getRegularSchedule(),
+        schedule:
+          this.regularScheduleService.getRegularSchedule().pipe(
+            catchError((err) => {
+              console.error('Error loading regular schedule:', err);
+              return of(null);
+            })
+          ),
 
-      disabledSchedules:
-        this.calendarService.getDisabledSchedules(),
+        disabledSchedules:
+          this.calendarService.getDisabledSchedules().pipe(
+            catchError((err) => {
+              console.error('Error loading disabled schedules:', err);
+              return of([]);
+            })
+          ),
 
-      appointments:
-        this.calendarService.getAppointments()
-    })
-    .subscribe({
+        appointments:
+          this.calendarService.getAppointments().pipe(
+            catchError((err) => {
+              console.error('Error loading appointments:', err);
+              return of({ appointments: [] });
+            })
+          )
+      })
+      .subscribe({
         next: ({
           availabilities,
           schedule,
