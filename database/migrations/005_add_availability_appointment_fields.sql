@@ -13,3 +13,19 @@ ALTER TABLE availabilities
     ADD COLUMN IF NOT EXISTS proposed_end_time TIME,
     ADD COLUMN IF NOT EXISTS cancellation_reason VARCHAR(150),
     ADD COLUMN IF NOT EXISTS cancellation_observation TEXT;
+
+ALTER TABLE availabilities
+    DROP CONSTRAINT IF EXISTS availabilities_status_check;
+
+ALTER TABLE availabilities
+    ADD CONSTRAINT availabilities_status_check
+    CHECK (
+        status IN (
+            'Disponible',
+            'Reservado',
+            'Reprogramacion pendiente',
+            'Inhabilitado',
+            'Cancelado'
+        )
+    );
+
