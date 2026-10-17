@@ -159,11 +159,50 @@
 
               }
 
+              @if (
+                getCancelledCountForDate(day) > 0
+              ) {
+
+                <span
+                  class="month-availability-summary month-cancelled-summary"
+                >
+
+                  <span
+                    class="month-availability-dot month-cancelled-dot"
+                  ></span>
+
+                  {{ getCancelledCountForDate(day) }}
+                  canc.
+
+                </span>
+
+              }
+
+              @if (
+                getDisabledSchedulesForDate(day).length > 0
+              ) {
+
+                <span
+                  class="month-availability-summary month-disabled-summary"
+                >
+
+                  <span
+                    class="month-availability-dot month-disabled-dot"
+                  ></span>
+
+                  {{ getDisabledSchedulesForDate(day).length }}
+                  inh.
+
+                </span>
+
+              }
+
 
               @if (
                 getAvailableCountForDate(day) > 0 ||
                 getReservedCountForDate(day) > 0 ||
                 getRescheduleCountForDate(day) > 0 ||
+                getCancelledCountForDate(day) > 0 ||
                 hasDisabledSchedule(day)
               ) {
 
@@ -198,6 +237,17 @@
                     <span
                       class="dot dot-reschedule"
                       title="Reprogramación pendiente"
+                    ></span>
+
+                  }
+
+                  @if (
+                    getCancelledCountForDate(day) > 0
+                  ) {
+
+                    <span
+                      class="dot dot-cancelled"
+                      title="Cancelado"
                     ></span>
 
                   }
@@ -263,26 +313,34 @@
           track disabled.id
         ) {
 
-          <div
-            class="disabled-schedule-card"
-            style="
-              background: #fee2e2;
-              border-left: 4px solid #ef4444;
-              padding: 10px;
-              margin-bottom: 10px;
-            "
-          >
+          <div class="day-availability-card day-disabled-card">
 
-            <strong>
-              Inhabilitado:
-              {{ disabled.startTime }}
-              -
-              {{ disabled.endTime }}
-            </strong>
+            <div class="day-availability-icon day-disabled-icon">
+              🚫
+            </div>
 
-            <p>
-              {{ disabled.reason }}
-            </p>
+            <div class="day-availability-content">
+
+              <div class="day-availability-header">
+
+                <span class="day-availability-time">
+                  {{ formatAvailabilityTime(disabled.startTime) }}
+                  -
+                  {{ formatAvailabilityTime(disabled.endTime) }}
+                </span>
+
+                <span class="day-availability-badge day-disabled-badge">
+                  <span class="day-availability-dot"></span>
+                  Inhabilitado
+                </span>
+
+                <span class="day-availability-duration">
+                  Motivo: {{ disabled.reason }}{{ disabled.observation ? ' (' + disabled.observation + ')' : '' }}
+                </span>
+
+              </div>
+
+            </div>
 
           </div>
 
@@ -426,7 +484,8 @@
 
             } @else if (
               item.availability.status === 'Reservado' ||
-              item.availability.status === 'Reprogramacion pendiente'
+              item.availability.status === 'Reprogramacion pendiente' ||
+              item.availability.status === 'Cancelado'
             ) {
 
               <button
@@ -437,6 +496,9 @@
                 "
                 [class.day-reschedule-card]="
                   item.availability.status === 'Reprogramacion pendiente'
+                "
+                [class.day-cancelled-card]="
+                  item.availability.status === 'Cancelado'
                 "
                 [class.day-availability-card-selected]="
                   selectedAvailabilityId ===
@@ -457,6 +519,9 @@
                   "
                   [class.day-reschedule-icon]="
                     item.availability.status === 'Reprogramacion pendiente'
+                  "
+                  [class.day-cancelled-icon]="
+                    item.availability.status === 'Cancelado'
                   "
                 >
                   {{ item.availability.studentInitials || 'AL' }}
@@ -490,6 +555,9 @@
                       [class.day-reschedule-badge]="
                         item.availability.status === 'Reprogramacion pendiente'
                       "
+                      [class.day-cancelled-badge]="
+                        item.availability.status === 'Cancelado'
+                      "
                     >
 
                       <span
@@ -499,7 +567,7 @@
                       {{
                         item.availability.status === 'Reprogramacion pendiente'
                           ? 'Reprogramación pendiente'
-                          : 'Reservado'
+                          : item.availability.status
                       }}
 
                     </span>
@@ -508,7 +576,7 @@
                     <span
                       class="day-availability-duration"
                     >
-                      {{ item.availability.studentName || 'Cita reservada' }}
+                      {{ item.availability.studentName || 'Cita' }}
                       •
                       {{ item.availability.modality || 'Presencial' }}
                       •
@@ -873,6 +941,9 @@
                         [class.week-reschedule-card]="
                           booked.status === 'Reprogramacion pendiente'
                         "
+                        [class.week-cancelled-card]="
+                          booked.status === 'Cancelado'
+                        "
                         [class.week-availability-card-selected]="
                           selectedAvailabilityId === booked.id
                         "
@@ -919,12 +990,12 @@
     <!-- FECHA SELECCIONADA                       -->
     <!-- ========================================= -->
 
-    @if (selectedDate) {
+    @if (selectedDate && currentView === 'month') {
 
       <div class="selected-date">
 
         <h3>
-          Disponibilidad del
+          Detalle del
           {{ selectedDate }}
         </h3>
 
@@ -940,6 +1011,46 @@
 
         }
 
+        @for (
+          disabled of getDisabledSchedulesForDate(
+            getSelectedDate()
+          );
+          track disabled.id
+        ) {
+
+          <div class="day-availability-card day-disabled-card" style="margin-bottom: 10px;">
+
+            <div class="day-availability-icon day-disabled-icon">
+              🚫
+            </div>
+
+            <div class="day-availability-content">
+
+              <div class="day-availability-header">
+
+                <span class="day-availability-time">
+                  {{ formatAvailabilityTime(disabled.startTime) }}
+                  -
+                  {{ formatAvailabilityTime(disabled.endTime) }}
+                </span>
+
+                <span class="day-availability-badge day-disabled-badge">
+                  <span class="day-availability-dot"></span>
+                  Inhabilitado
+                </span>
+
+                <span class="day-availability-duration">
+                  Motivo: {{ disabled.reason }}{{ disabled.observation ? ' (' + disabled.observation + ')' : '' }}
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        }
+
 
         @for (
           availability of
@@ -949,28 +1060,82 @@
           track availability.id
         ) {
 
-          <app-availability-card
-            [availability]="availability"
-
-            [slots]="
-              generateSlots(
-                availability
-              )
-            "
-
-            [selectedSlot]="selectedSlot"
-
-            [selectedAvailabilityId]="
-              selectedAvailabilityId
-            "
-
-            (slotSelected)="
-              selectSlot(
-                $event,
-                availability
-              )
-            "
-          />
+          @if (availability.status === 'Disponible') {
+            <button
+              type="button"
+              class="day-availability-card"
+              style="margin-bottom: 10px;"
+              [class.day-availability-card-selected]="
+                selectedAvailabilityId === availability.id
+              "
+              (click)="selectAvailableSlot(availability)"
+            >
+              <div class="day-availability-icon">✓</div>
+              <div class="day-availability-content">
+                <div class="day-availability-header">
+                  <span class="day-availability-time">
+                    {{ getAvailabilityTimeRange(availability) }}
+                  </span>
+                  <span class="day-availability-badge">
+                    <span class="day-availability-dot"></span>
+                    Disponible
+                  </span>
+                  <span class="day-availability-duration">
+                    Duración: {{ availability.duration }} min
+                  </span>
+                </div>
+              </div>
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="day-availability-card"
+              style="margin-bottom: 10px;"
+              [class.day-reserved-card]="availability.status === 'Reservado'"
+              [class.day-reschedule-card]="availability.status === 'Reprogramacion pendiente'"
+              [class.day-cancelled-card]="availability.status === 'Cancelado'"
+              [class.day-availability-card-selected]="
+                selectedAvailabilityId === availability.id
+              "
+              (click)="selectSlot(getFormattedRange12h(availability), availability)"
+            >
+              <div
+                class="day-availability-icon"
+                [class.day-reserved-icon]="availability.status === 'Reservado'"
+                [class.day-reschedule-icon]="availability.status === 'Reprogramacion pendiente'"
+                [class.day-cancelled-icon]="availability.status === 'Cancelado'"
+              >
+                {{ availability.studentInitials || 'AL' }}
+              </div>
+              <div class="day-availability-content">
+                <div class="day-availability-header">
+                  <span class="day-availability-time">
+                    {{ getAvailabilityTimeRange(availability) }}
+                  </span>
+                  <span
+                    class="day-availability-badge"
+                    [class.day-reserved-badge]="availability.status === 'Reservado'"
+                    [class.day-reschedule-badge]="availability.status === 'Reprogramacion pendiente'"
+                    [class.day-cancelled-badge]="availability.status === 'Cancelado'"
+                  >
+                    <span class="day-availability-dot"></span>
+                    {{
+                      availability.status === 'Reprogramacion pendiente'
+                        ? 'Reprogramación pendiente'
+                        : availability.status
+                    }}
+                  </span>
+                  <span class="day-availability-duration">
+                    {{ availability.studentName || 'Cita' }}
+                    •
+                    {{ availability.modality || 'Presencial' }}
+                    •
+                    Duración: {{ availability.duration }} min
+                  </span>
+                </div>
+              </div>
+            </button>
+          }
 
         }
 

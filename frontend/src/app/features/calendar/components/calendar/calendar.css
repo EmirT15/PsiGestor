@@ -326,9 +326,27 @@
   background: #0d9488;
 }
 
+.month-cancelled-summary {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.month-cancelled-dot {
+  background: #ea580c;
+}
+
+.month-disabled-summary {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.month-disabled-dot {
+  background: #64748b;
+}
+
 .calendar-grid button.has-disabled {
-  background-color: #fef2f2;
-  border: 1px solid #fca5a5;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
 }
 
 /* ============================================================
@@ -568,6 +586,57 @@
 
 .day-reschedule-badge {
   background: #0d9488;
+  color: #ffffff;
+}
+
+.day-cancelled-card {
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+
+.day-cancelled-card:hover {
+  background: #ffedd5;
+  border-color: #fdba74;
+  box-shadow: 0 3px 10px rgba(234, 88, 12, 0.08);
+}
+
+.day-cancelled-card.day-availability-card-selected {
+  background: #ffedd5;
+  border-color: #ea580c;
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.14);
+}
+
+.day-cancelled-icon {
+  background: #fed7aa;
+  color: #c2410c;
+  font-size: 13px;
+}
+
+.day-cancelled-badge {
+  background: #ea580c;
+  color: #ffffff;
+}
+
+.day-disabled-card {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  cursor: default;
+}
+
+.day-disabled-card:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  box-shadow: none;
+}
+
+.day-disabled-icon {
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 15px;
+}
+
+.day-disabled-badge {
+  background: #64748b;
   color: #ffffff;
 }
 
@@ -958,6 +1027,25 @@
 
 .week-reschedule-card .week-availability-dot {
   background: #14b8a6;
+}
+
+.week-cancelled-card {
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+
+.week-cancelled-card:hover {
+  background: #ffedd5;
+  border-color: #fdba74;
+}
+
+.week-cancelled-card .week-availability-time,
+.week-cancelled-card .week-availability-status {
+  color: #c2410c;
+}
+
+.week-cancelled-card .week-availability-dot {
+  background: #ea580c;
 }
 
 .week-disabled-card {

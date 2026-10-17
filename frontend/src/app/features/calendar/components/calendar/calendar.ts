@@ -687,7 +687,7 @@ export class Calendar {
       endTime: appointment.end_time,
       duration: appointment.duration,
       breakTime: 0,
-      status: 'Reservado',
+      status: appointment.status === 'Cancelled' ? 'Cancelado' : 'Reservado',
       studentName: appointment.student_name,
       studentInitials: initials || 'AL',
       studentAge: 20,
@@ -716,22 +716,21 @@ export class Calendar {
       (availability) => availability.date === dateString
     );
 
-    const activeAppointments = this.appointments.filter(
-      (appointment) =>
-        appointment.date === dateString &&
-        appointment.status !== 'Cancelled'
+    const dateAppointments = this.appointments.filter(
+      (appointment) => appointment.date === dateString
     );
 
     const fallbackBooked: Availability[] = [];
 
-    for (const appointment of activeAppointments) {
+    for (const appointment of dateAppointments) {
       const appStart = this.timeToMinutes(appointment.start_time);
       const appEnd = this.timeToMinutes(appointment.end_time);
 
       const alreadyInAvailabilities = dateAvailabilities.some(
         (avail) =>
           (avail.status === 'Reservado' ||
-            avail.status === 'Reprogramacion pendiente') &&
+            avail.status === 'Reprogramacion pendiente' ||
+            avail.status === 'Cancelado') &&
           this.timeToMinutes(avail.startTime) === appStart &&
           this.timeToMinutes(avail.endTime) === appEnd
       );
@@ -1471,14 +1470,21 @@ export class Calendar {
       );
 
       for (const availability of merged) {
-        if (availability.status === 'Cancelado') {
-          continue;
-        }
         startHours.push(
           Math.floor(
             this.timeToMinutes(availability.startTime) / 60
           )
         );
+      }
+
+      for (const disabled of this.getDisabledSchedulesForDate(day)) {
+        if (disabled.startTime) {
+          startHours.push(
+            Math.floor(
+              this.timeToMinutes(disabled.startTime) / 60
+            )
+          );
+        }
       }
     }
 
@@ -1556,7 +1562,8 @@ export class Calendar {
     if (
       this.statusFilter !== 'all' &&
       this.statusFilter !== 'Reservado' &&
-      this.statusFilter !== 'Reprogramacion pendiente'
+      this.statusFilter !== 'Reprogramacion pendiente' &&
+      this.statusFilter !== 'Cancelado'
     ) {
       return [];
     }
@@ -1569,7 +1576,8 @@ export class Calendar {
       .filter((availability) => {
         if (
           availability.status !== 'Reservado' &&
-          availability.status !== 'Reprogramacion pendiente'
+          availability.status !== 'Reprogramacion pendiente' &&
+          availability.status !== 'Cancelado'
         ) {
           return false;
         }
@@ -1777,6 +1785,27 @@ export class Calendar {
   }
 
 
+  getCancelledCountForDate(
+    date: Date
+  ): number {
+    if (
+      this.statusFilter !== 'all' &&
+      this.statusFilter !== 'Cancelado'
+    ) {
+      return 0;
+    }
+
+    const dateString = this.formatDate(date);
+
+    return this.getMergedAvailabilitiesForDateString(dateString)
+      .filter(
+        (availability) =>
+          availability.status === 'Cancelado'
+      )
+      .length;
+  }
+
+
   getAvailableSlots():
     Availability[] {
 
@@ -1871,6 +1900,25 @@ export class Calendar {
           )
         : [];
 
+    const dateDisabledSchedules =
+      availability.status === 'Disponible'
+        ? this.disabledSchedules.filter((disabledSchedule) => {
+            const startDate =
+              disabledSchedule.startDate || disabledSchedule.date;
+            const rawEndDate =
+              disabledSchedule.endDate || disabledSchedule.date || startDate;
+            const endDate =
+              disabledSchedule.type === 'Puntual' || rawEndDate < startDate
+                ? startDate
+                : rawEndDate;
+            return (
+              Boolean(startDate && endDate) &&
+              availability.date >= startDate &&
+              availability.date <= endDate
+            );
+          })
+        : [];
+
     let currentMinutes = this.timeToMinutes(
       availability.startTime
     );
@@ -1915,7 +1963,28 @@ export class Calendar {
           );
         });
 
-      if (!overlapsAppointment && !overlapsBookedAvailability) {
+      const overlapsDisabledSchedule =
+        dateDisabledSchedules.some((disabled) => {
+          if (!disabled.startTime || !disabled.endTime) {
+            return false;
+          }
+          const disabledStart = this.timeToMinutes(
+            disabled.startTime
+          );
+          const disabledEnd = this.timeToMinutes(
+            disabled.endTime
+          );
+          return (
+            currentMinutes < disabledEnd &&
+            slotEndMinutes > disabledStart
+          );
+        });
+
+      if (
+        !overlapsAppointment &&
+        !overlapsBookedAvailability &&
+        !overlapsDisabledSchedule
+      ) {
         const slotStart = this.formatTime12Hour(
           currentMinutes
         );
@@ -2310,9 +2379,16 @@ export class Calendar {
             disabledSchedule.startDate ||
             disabledSchedule.date;
 
-          const endDate =
+          const rawEndDate =
             disabledSchedule.endDate ||
-            disabledSchedule.date;
+            disabledSchedule.date ||
+            startDate;
+
+          const endDate =
+            disabledSchedule.type === 'Puntual' ||
+            rawEndDate < startDate
+              ? startDate
+              : rawEndDate;
 
 
           if (
@@ -2387,18 +2463,13 @@ export class Calendar {
               disabledSchedule.startTime
             );
 
-          const disabledEnd =
-            this.timeToMinutes(
-              disabledSchedule.endTime
-            );
-
 
           return (
+            disabledStart >=
+              rowStart
+            &&
             disabledStart <
               rowEnd
-            &&
-            disabledEnd >
-              rowStart
           );
         }
       );

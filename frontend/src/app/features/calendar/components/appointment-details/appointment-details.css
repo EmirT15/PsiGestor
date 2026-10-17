@@ -35,6 +35,15 @@
   margin-right: 8px;
 }
 
+.status-badge.status-cancelled {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
+.status-badge.status-cancelled .dot {
+  background-color: #ea580c;
+}
+
 .icon-btn {
   background: none;
   border: none;

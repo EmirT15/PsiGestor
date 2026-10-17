@@ -1,4 +1,4 @@
-CREATE TABLE availabilities (
+CREATE TABLE IF NOT EXISTS availabilities (
     id SERIAL PRIMARY KEY,
     date DATE NOT NULL,
     start_time TIME NOT NULL,
