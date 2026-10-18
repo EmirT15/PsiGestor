@@ -1040,6 +1040,43 @@ export class Calendar {
   }
 
 
+  /**
+   * Selecciona un horario inhabilitado desde el calendario para mostrar sus detalles en el panel lateral.
+   */
+  selectDisabledSchedule(disabled: any): void {
+    const dateStr =
+      disabled.startDate ||
+      disabled.date ||
+      this.formatDate(this.getCurrentViewDate());
+
+    this.selectedSlotDate = dateStr;
+    this.selectedDate = dateStr;
+    this.selectedAvailabilityId = disabled.id;
+    this.selectedAvailabilityStatus = 'Inhabilitado';
+
+    const startTimeFormatted = disabled.startTime
+      ? this.formatAvailabilityTime(disabled.startTime)
+      : '';
+    const endTimeFormatted = disabled.endTime
+      ? this.formatAvailabilityTime(disabled.endTime)
+      : '';
+
+    this.selectedAppointmentData = {
+      id: disabled.id,
+      status: 'Inhabilitado',
+      studentName: 'Horario Inhabilitado',
+      dateStr: `${dateStr}, ${startTimeFormatted} - ${endTimeFormatted}`,
+      startTime: disabled.startTime,
+      endTime: disabled.endTime,
+      date: dateStr,
+      reason: disabled.reason || 'Sin motivo especificado',
+      observation: disabled.observation || '',
+      type: disabled.type || 'Puntual'
+    };
+
+    this.isSidebarOpen = true;
+  }
+
 
   onAppointmentSubmit(event: Event): void {
     event.preventDefault();
@@ -1205,6 +1242,89 @@ export class Calendar {
       false;
   }
 
+  /**
+   * Se dispara al hacer clic en "Inhabilitar horario" desde el panel lateral (AppointmentDetails)
+   */
+  openDisableModalFromPanel(appointment: any): void {
+    // 1. Ocultamos el panel lateral de detalle
+    this.closeSidebar();
+
+    // 2. Extraemos la fecha formateada (YYYY-MM-DD)
+    const dateStr =
+      appointment.date ||
+      this.selectedSlotDate ||
+      this.formatDate(this.getCurrentViewDate());
+
+    // 3. Preparamos los datos iniciales para el modal de inhabilitación (ManageScheduleModal)
+    this.initialModalData = {
+      startDate: dateStr,
+      endDate: dateStr,
+      startTime: appointment.startTime || '08:00',
+      endTime: appointment.endTime || '09:00',
+      activeTab: 'disabled'
+    };
+
+    // 4. Abrimos el modal de gestionar horario
+    this.isManageScheduleOpen = true;
+  }
+
+  /**
+   * Se dispara al hacer clic en "Rehabilitar horario" desde el panel lateral (AppointmentDetails)
+   */
+/**
+   * Se dispara al hacer clic en "Rehabilitar horario" desde el panel lateral
+   */
+  rehabilitateFromPanel(appointment: any): void {
+    const targetId = Math.abs(appointment?.id || this.selectedAvailabilityId || 0);
+
+    if (!targetId) {
+      alert('No se pudo identificar el horario a rehabilitar.');
+      return;
+    }
+
+    if (confirm('¿Está seguro de que desea rehabilitar este horario? Volverá a estar disponible para agendar citas.')) {
+      // 1. Eliminar el registro de inhabilitación
+      this.calendarService.enableSchedule(targetId).subscribe({
+        next: () => {
+          const date = appointment.date || this.selectedSlotDate;
+          const startTime = appointment.startTime;
+          const endTime = appointment.endTime;
+
+          // 2. Si tenemos la fecha y franja horaria, generamos la disponibilidad como 'Disponible'
+          if (date && startTime && endTime) {
+            const availabilityPayload = {
+              date: date,
+              startTime: startTime,
+              endTime: endTime,
+              duration: appointment.duration || 45,
+              breakTime: 0,
+              status: 'Disponible'
+            };
+
+            this.calendarService.createAvailability(availabilityPayload).subscribe({
+              next: () => {
+                alert('El horario ha sido rehabilitado y ya está disponible.');
+                this.closeSidebar();
+                this.refreshCalendarData();
+              },
+              error: (err) => {
+                console.warn('Inhabilitación removida, actualizando calendario...', err);
+                this.closeSidebar();
+                this.refreshCalendarData();
+              }
+            });
+          } else {
+            this.closeSidebar();
+            this.refreshCalendarData();
+          }
+        },
+        error: (err) => {
+          console.error('Error al rehabilitar:', err);
+          alert('Ocurrió un error al intentar rehabilitar el horario.');
+        }
+      });
+    }
+  }
 
   openRescheduleModal(): void {
 
