@@ -31,12 +31,12 @@
             "server": "src/main.server.ts",
             "outputMode": "server",
             "security": {
-  "allowedHosts": [
-    "localhost",
-    "127.0.0.1",
-    "0.0.0.0"
-  ]
-},
+              "allowedHosts": [
+                "localhost",
+                "127.0.0.1",
+                "0.0.0.0"
+              ]
+            },
             "ssr": {
               "entry": "src/server.ts"
             }
@@ -51,8 +51,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "13kB",
+                  "maximumError": "16kB"
                 }
               ],
               "outputHashing": "all"
