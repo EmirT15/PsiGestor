@@ -100,6 +100,12 @@ private loadRegularSchedule(): void {
           appointmentGapMinutes:
             schedule.appointmentGapMinutes,
 
+          availabilityRangeValue:
+            schedule.availabilityRangeValue,
+
+          availabilityRangeUnit:
+            schedule.availabilityRangeUnit,
+
           workDays:
             schedule.workDays.map(
               (day) => {
@@ -201,6 +207,12 @@ private loadRegularSchedule(): void {
 
       appointmentGapMinutes:
         config.appointmentGapMinutes,
+
+      availabilityRangeValue:
+        config.availabilityRangeValue,
+
+      availabilityRangeUnit:
+        config.availabilityRangeUnit,
 
       workDays:
         config.workDays.map(

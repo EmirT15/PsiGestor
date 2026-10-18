@@ -550,5 +550,177 @@
     </div>
 
   </div>
+     
+
+  <!-- =====================================================
+     GENERACIÓN DE DISPONIBILIDAD
+     ===================================================== -->
+
+<div
+  class="
+    duration-setting
+    duration-setting-redesigned
+    availability-range-setting
+  "
+>
+
+  <div class="duration-heading">
+
+    <div>
+
+      <h4>
+        Generación de disponibilidad
+      </h4>
+
+      <p>
+        Define durante cuánto tiempo se generarán
+        los horarios disponibles a partir de hoy.
+      </p>
+
+    </div>
+
+
+    @if (
+      isAvailabilityRangeValid()
+    ) {
+
+      <span class="selected-duration">
+        {{ availabilityRangeValue }}
+        {{ getAvailabilityRangeUnitLabel() }}
+      </span>
+
+    }
+
+  </div>
+
+
+  <div class="availability-range-content">
+
+    <div class="availability-range-fields">
+
+
+      <div class="availability-range-field">
+
+        <label for="availability-range-value">
+          Cantidad
+        </label>
+
+        <input
+          id="availability-range-value"
+          type="number"
+          min="1"
+          [max]="getAvailabilityRangeMax()"
+          step="1"
+          placeholder="Ej. 3"
+          [(ngModel)]="availabilityRangeValue"
+          [class.input-error]="
+            availabilityRangeValue !== null &&
+            !isAvailabilityRangeValid()
+          "
+        />
+
+      </div>
+
+
+      <div class="availability-range-field">
+
+        <label for="availability-range-unit">
+          Periodo
+        </label>
+
+        <select
+          id="availability-range-unit"
+          [(ngModel)]="availabilityRangeUnit"
+        >
+
+          <option value="days">
+            Días
+          </option>
+
+          <option value="weeks">
+            Semanas
+          </option>
+
+          <option value="months">
+            Meses
+          </option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+
+    @if (
+      getAvailabilityRangeError();
+      as rangeError
+    ) {
+
+      <span class="validation-error">
+        {{ rangeError }}
+      </span>
+
+    }
+
+
+    @if (
+      availabilityRangeValue === null
+    ) {
+
+      <span class="availability-range-help">
+        Indica una cantidad y selecciona
+        el periodo de generación.
+      </span>
+
+    }
+
+
+    @if (
+      getGenerationEndDate();
+      as generationEndDate
+    ) {
+
+      <div class="availability-range-preview">
+
+        <span class="availability-range-preview-icon">
+          ◷
+        </span>
+
+        <div>
+
+          <span class="availability-range-preview-title">
+            Rango que se generará
+          </span>
+
+          <span class="availability-range-preview-text">
+
+            Del
+            {{
+              formatGenerationDate(
+                getGenerationStartDate()
+              )
+            }}
+
+            al
+
+            {{
+              formatGenerationDate(
+                generationEndDate
+              )
+            }}
+
+          </span>
+
+        </div>
+
+      </div>
+
+    }
+
+  </div>
+
+</div>
+
 
 </section>

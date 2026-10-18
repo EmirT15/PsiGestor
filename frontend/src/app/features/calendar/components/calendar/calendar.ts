@@ -179,12 +179,33 @@ closeManageSchedule(): void {
     });
   }
 
-  selectDate(date: Date): void {
-    this.selectedDate = this.formatDate(date);
-    this.selectedSlot = '';
+ selectDate(
+  date: Date): void {
 
-    this.changeDetectorRef.detectChanges();
-  }
+  this.currentDate =
+    new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+
+
+  this.selectedDate =
+    this.formatDate(
+      this.currentDate
+    );
+
+  this.selectedSlot = '';
+
+  this.selectedSlotDate = '';
+
+  this.selectedAvailabilityId = null;
+
+
+  this.changeDetectorRef
+    .detectChanges();
+
+}
 
   selectSlot(slot: string, availability: Availability): void {
     this.selectedSlot = slot;
@@ -431,66 +452,166 @@ closeManageSchedule(): void {
   ];
 }
 
-  getWeekTimeRows(): string[] {
+ getWeekTimeRows(): string[] {
 
-  const displayedDates = new Set(
-    this.getDisplayedWeekDays().map(
-      (day) => this.formatDate(day)
-    )
-  );
+  const displayedDays =
+    this.getDisplayedWeekDays();
 
 
-  const weekAvailabilities =
-    this.availabilities.filter(
-      (availability) =>
-        displayedDates.has(
-          availability.date
-        ) &&
-        availability.status ===
-          'Disponible'
+  const displayedDates =
+    new Set(
+      displayedDays.map(
+        (day) =>
+          this.formatDate(day)
+      )
     );
 
 
-  if (weekAvailabilities.length === 0) {
-    return this.visualTimeRows;
-  }
+  const rows =
+    new Set<string>();
 
 
-  const startHours =
-    weekAvailabilities.map(
-      (availability) =>
-        Math.floor(
-          this.timeToMinutes(
-            availability.startTime
-          ) / 60
-        )
-    );
-
-
-  const firstHour =
-    Math.min(...startHours);
-
-  const lastHour =
-    Math.max(...startHours);
-
-
-  const rows: string[] = [];
-
-
+  /*
+   * Agregar únicamente horas que realmente
+   * contienen disponibilidades.
+   */
   for (
-    let hour = firstHour;
-    hour <= lastHour;
-    hour++
+    const availability of
+    this.availabilities
   ) {
-    rows.push(
-      `${hour
-        .toString()
-        .padStart(2, '0')}:00`
+
+    if (
+      !displayedDates.has(
+        availability.date
+      )
+    ) {
+      continue;
+    }
+
+
+    if (
+      availability.status !==
+      'Disponible'
+    ) {
+      continue;
+    }
+
+
+    const startMinutes =
+      this.timeToMinutes(
+        availability.startTime
+      );
+
+
+    const hour =
+      Math.floor(
+        startMinutes / 60
+      );
+
+
+    rows.add(
+      `${String(hour).padStart(
+        2,
+        '0'
+      )}:00`
     );
+
   }
 
 
-  return rows;
+  /*
+   * Agregar también la fila donde existe
+   * descanso habitual, pero únicamente si
+   * corresponde a una fecha válida.
+   */
+  for (
+    const day of displayedDays
+  ) {
+
+    if (
+      !this.doesHabitualBreakApplyToDay(
+        day
+      )
+    ) {
+      continue;
+    }
+
+
+    const breakStart =
+      this.timeToMinutes(
+        this.getHabitualBreakStartTime()
+      );
+
+
+    const hour =
+      Math.floor(
+        breakStart / 60
+      );
+
+
+    rows.add(
+      `${String(hour).padStart(
+        2,
+        '0'
+      )}:00`
+    );
+
+  }
+
+
+  return Array
+    .from(rows)
+    .sort(
+      (first, second) =>
+        this.timeToMinutes(first) -
+        this.timeToMinutes(second)
+    );
+
+}
+getWeekBlockTopPercent(
+  startTime: string
+): number {
+
+  const startMinutes =
+    this.timeToMinutes(
+      startTime
+    );
+
+  const minutesInsideHour =
+    startMinutes % 60;
+
+  return (
+    minutesInsideHour / 60
+  ) * 100;
+
+}
+
+
+getWeekBlockHeightPercent(
+  startTime: string,
+  endTime: string
+): number {
+
+  const startMinutes =
+    this.timeToMinutes(
+      startTime
+    );
+
+  const endMinutes =
+    this.timeToMinutes(
+      endTime
+    );
+
+  const duration =
+    Math.max(
+      1,
+      endMinutes - startMinutes
+    );
+
+  return (
+    duration / 60
+  ) * 100;
+
 }
 
 getAvailableSlotsForHour(
@@ -560,6 +681,10 @@ getAvailableSlotsForHour(
         )
     );
 }
+
+
+
+
 
 formatAvailabilityTime(
   time: string
@@ -893,12 +1018,15 @@ isRegularWorkDay(date: Date): boolean {
   date: Date
 ): boolean {
 
+  
+
   if (
     !this.hasHabitualBreak() ||
-    !this.regularSchedule
-  ) {
-    return false;
-  }
+    !this.regularSchedule ||
+    !this.isInsideAvailabilityRange(date)
+    ) {
+      return false;
+      }
 
 
   const javascriptDay =
@@ -941,6 +1069,242 @@ isRegularWorkDay(date: Date): boolean {
     breakStart >= workStart &&
     breakEnd <= workEnd
   );
+}
+
+private getAvailabilityRangeStartDate():
+  Date | null {
+
+  if (
+    !this.regularSchedule?.updatedAt
+  ) {
+    return null;
+  }
+
+
+  const updatedAt =
+    new Date(
+      this.regularSchedule.updatedAt
+    );
+
+
+  if (
+    Number.isNaN(
+      updatedAt.getTime()
+    )
+  ) {
+    return null;
+  }
+
+
+  /*
+   * El backend genera el horario usando
+   * America/Merida, por lo que recuperamos
+   * la fecha del último guardado usando
+   * la misma zona horaria.
+   */
+  const parts =
+    new Intl.DateTimeFormat(
+      'en-US',
+      {
+        timeZone: 'America/Merida',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }
+    ).formatToParts(
+      updatedAt
+    );
+
+
+  const year =
+    Number(
+      parts.find(
+        part =>
+          part.type === 'year'
+      )?.value
+    );
+
+
+  const month =
+    Number(
+      parts.find(
+        part =>
+          part.type === 'month'
+      )?.value
+    );
+
+
+  const day =
+    Number(
+      parts.find(
+        part =>
+          part.type === 'day'
+      )?.value
+    );
+
+
+  if (
+    !year ||
+    !month ||
+    !day
+  ) {
+    return null;
+  }
+
+
+  return new Date(
+    year,
+    month - 1,
+    day
+  );
+
+}
+
+
+private getAvailabilityRangeEndDate():
+  Date | null {
+
+  if (
+    !this.regularSchedule
+  ) {
+    return null;
+  }
+
+
+  const startDate =
+    this.getAvailabilityRangeStartDate();
+
+
+  if (!startDate) {
+    return null;
+  }
+
+
+  const value =
+    this.regularSchedule
+      .availabilityRangeValue;
+
+
+  const unit =
+    this.regularSchedule
+      .availabilityRangeUnit;
+
+
+  if (
+    !Number.isInteger(value) ||
+    value <= 0
+  ) {
+    return null;
+  }
+
+
+  if (unit === 'days') {
+
+    const endDate =
+      new Date(startDate);
+
+
+    endDate.setDate(
+      endDate.getDate() +
+      value - 1
+    );
+
+
+    return endDate;
+
+  }
+
+
+  if (unit === 'weeks') {
+
+    const endDate =
+      new Date(startDate);
+
+
+    endDate.setDate(
+      endDate.getDate() +
+      (value * 7) - 1
+    );
+
+
+    return endDate;
+
+  }
+
+
+  if (unit === 'months') {
+
+    const sourceDay =
+      startDate.getDate();
+
+
+    const endDate =
+      new Date(
+        startDate.getFullYear(),
+        startDate.getMonth() + value,
+        1
+      );
+
+
+    const lastDay =
+      new Date(
+        endDate.getFullYear(),
+        endDate.getMonth() + 1,
+        0
+      ).getDate();
+
+
+    endDate.setDate(
+      Math.min(
+        sourceDay,
+        lastDay
+      )
+    );
+
+
+    return endDate;
+
+  }
+
+
+  return null;
+
+}
+
+
+private isInsideAvailabilityRange(
+  date: Date
+): boolean {
+
+  const startDate =
+    this.getAvailabilityRangeStartDate();
+
+
+  const endDate =
+    this.getAvailabilityRangeEndDate();
+
+
+  if (
+    !startDate ||
+    !endDate
+  ) {
+    return false;
+  }
+
+
+  const targetDate =
+    new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+
+
+  return (
+    targetDate >= startDate &&
+    targetDate <= endDate
+  );
+
 }
 
   isHabitualBreakSegmentStart(

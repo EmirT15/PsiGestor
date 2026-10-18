@@ -272,7 +272,7 @@
 
   </div>
 }
-      @if (currentView === 'week') {
+     @if (currentView === 'week') {
 
   <section class="week-calendar">
 
@@ -288,7 +288,7 @@
 
 
         <!-- ========================================= -->
-        <!-- ENCABEZADOS DE LUNES A VIERNES           -->
+        <!-- ENCABEZADOS DE LOS DÍAS                  -->
         <!-- ========================================= -->
 
         @for (
@@ -336,169 +336,144 @@
 
 
           <!-- ======================================= -->
-          <!-- DESCANSO HABITUAL                      -->
+          <!-- CELDAS DE CADA DÍA                     -->
           <!-- ======================================= -->
-          @if (isHabitualBreakRow(time)) {
 
-  <!-- ======================================= -->
-  <!-- DESCANSO HABITUAL POR DÍA              -->
-  <!-- ======================================= -->
-
-  @for (
-    day of getDisplayedWeekDays();
-    track day.getTime()
-  ) {
-
-    @if (
-  doesHabitualBreakApplyToDay(day)
-) {
-
-      <div
-        class="week-habitual-break-cell"
-        [class.segment-start]="
-          isHabitualBreakSegmentStart(day)
-        "
-        [class.segment-end]="
-          isHabitualBreakSegmentEnd(day)
-        "
-      >
-
-        @if (
-          isHabitualBreakSegmentStart(day)
-        ) {
-
-          <div
-            class="week-habitual-break-information"
-          >
+          @for (
+            day of getDisplayedWeekDays();
+            track day.getTime()
+          ) {
 
             <div
-              class="week-habitual-break-header"
+              class="
+                week-calendar-cell
+                week-calendar-time-cell
+              "
+              [class.today-column]="isToday(day)"
             >
 
-              <span
-                class="week-habitual-break-time"
-              >
-                {{ getHabitualBreakRange() }}
-              </span>
+              <!-- =================================== -->
+              <!-- DESCANSO HABITUAL                  -->
+              <!-- =================================== -->
 
-              <span
-                class="week-habitual-break-badge"
-              >
-                Descanso habitual
-              </span>
+              @if (
+                isHabitualBreakRow(time) &&
+                doesHabitualBreakApplyToDay(day)
+              ) {
+
+                <div
+                  class="
+                    week-habitual-break-inline
+                    week-positioned-block
+                  "
+                  [style.top.%]="
+                    getWeekBlockTopPercent(
+                      getHabitualBreakStartTime()
+                    )
+                  "
+                  [style.height.%]="
+                    getWeekBlockHeightPercent(
+                      getHabitualBreakStartTime(),
+                      getHabitualBreakEndTime()
+                    )
+                  "
+                >
+
+                  <div
+                    class="
+                      week-habitual-break-inline-header
+                    "
+                  >
+
+                    <span
+                      class="week-habitual-break-time"
+                    >
+                      {{ getHabitualBreakRange() }}
+                    </span>
+
+                    <span
+                      class="week-habitual-break-badge"
+                    >
+                      Descanso habitual
+                    </span>
+
+                  </div>
+
+                </div>
+
+              }
+
+
+              <!-- =================================== -->
+              <!-- DISPONIBILIDADES                   -->
+              <!-- =================================== -->
+
+              @for (
+                availability of getAvailableSlotsForHour(
+                  day,
+                  time
+                );
+                track availability.id
+              ) {
+
+                <button
+                  type="button"
+                  class="
+                    week-availability-card
+                    week-positioned-block
+                  "
+                  [class.week-availability-card-selected]="
+                    selectedAvailabilityId ===
+                    availability.id
+                  "
+                  [style.top.%]="
+                    getWeekBlockTopPercent(
+                      availability.startTime
+                    )
+                  "
+                  [style.height.%]="
+                    getWeekBlockHeightPercent(
+                      availability.startTime,
+                      availability.endTime
+                    )
+                  "
+                  (click)="
+                    selectAvailableSlot(
+                      availability
+                    )
+                  "
+                >
+
+                  <span class="week-availability-time">
+
+                    <span
+                      class="week-availability-dot"
+                    ></span>
+
+                    {{
+                      getAvailabilityTimeRange(
+                        availability
+                      )
+                    }}
+
+                  </span>
+
+                  <span class="week-availability-status">
+                    Disponible
+                  </span>
+
+                  <span class="week-availability-duration">
+                    {{ availability.duration }} min
+                  </span>
+
+                </button>
+
+              }
 
             </div>
 
+          }
 
-            <span
-              class="week-habitual-break-description"
-            >
-              Pausa dentro del horario habitual de atención
-            </span>
-
-          </div>
-
-        }
-
-
-        @if (
-          isHabitualBreakSegmentEnd(day)
-        ) {
-
-          <span
-            class="week-habitual-break-duration"
-          >
-            {{ getHabitualBreakDuration() }}
-            min bloqueados
-          </span>
-
-        }
-
-      </div>
-
-    } @else {
-
-      <div
-        class="week-calendar-cell week-habitual-break-empty"
-        [class.today-column]="isToday(day)"
-      >
-      </div>
-
-    }
-
-  }
-
-} @else {
-
-  <!-- ===================================== -->
-  <!-- CELDAS NORMALES DE LA SEMANA         -->
-  <!-- ===================================== -->
-
-  @for (
-    day of getDisplayedWeekDays();
-    track day.getTime()
-  ) {
-
-    <div
-      class="week-calendar-cell"
-      [class.today-column]="isToday(day)"
-    >
-
-      @for (
-        availability of getAvailableSlotsForHour(
-          day,
-          time
-        );
-        track availability.id
-      ) {
-
-        <button
-          type="button"
-          class="week-availability-card"
-          [class.week-availability-card-selected]="
-            selectedAvailabilityId ===
-            availability.id
-          "
-          (click)="
-            selectAvailableSlot(
-              availability
-            )
-          "
-        >
-
-          <span class="week-availability-time">
-
-            <span
-              class="week-availability-dot"
-            ></span>
-
-            {{
-              getAvailabilityTimeRange(
-                availability
-              )
-            }}
-
-          </span>
-
-
-          <span class="week-availability-status">
-            Disponible
-          </span>
-
-
-          <span class="week-availability-duration">
-            {{ availability.duration }} min
-          </span>
-
-        </button>
-
-      }
-
-    </div>
-
-  }
-
-}
         }
 
       </div>
