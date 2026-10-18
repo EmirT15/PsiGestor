@@ -367,14 +367,14 @@ export class Calendar {
     this.refreshCalendarData();
   }
 
-
-  /*
+    /*
    * Inhabilitación rápida desde
    * una disponibilidad concreta.
    */
   handleDisableFromCard(
     availability: Availability
   ): void {
+
 
     const dateStr =
       availability.date ||
@@ -651,10 +651,27 @@ export class Calendar {
     date: Date
   ): void {
 
+    this.currentDate =
+      new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+      );
+
+
     this.selectedDate =
-      this.formatDate(date);
+      this.formatDate(
+        this.currentDate
+      );
+
 
     this.selectedSlot = '';
+
+    this.selectedSlotDate = '';
+
+    this.selectedAvailabilityId =
+      null;
+
 
     this.changeDetectorRef
       .detectChanges();
@@ -1061,23 +1078,14 @@ export class Calendar {
       new Date(date);
 
 
-    if (
-      dayOfWeek === 0
-    ) {
+    if (dayOfWeek === 0) {
 
-      /*
-       * Si la referencia es domingo,
-       * comenzar el lunes siguiente.
-       */
       startOfWeek.setDate(
         date.getDate() + 1
       );
 
     } else {
 
-      /*
-       * Obtener lunes de la semana.
-       */
       const daysFromMonday =
         dayOfWeek - 1;
 
@@ -1098,16 +1106,12 @@ export class Calendar {
     ) {
 
       const day =
-        new Date(
-          startOfWeek
-        );
-
+        new Date(startOfWeek);
 
       day.setDate(
         startOfWeek.getDate() +
         index
       );
-
 
       days.push(day);
     }
@@ -1118,20 +1122,18 @@ export class Calendar {
 
 
   /*
-   * Visualmente mostrar
-   * domingo-sábado.
+   * Mostrar visualmente la semana
+   * completa de domingo a sábado.
    */
   getDisplayedWeekDays(): Date[] {
 
     const weekDays =
       this.getWeekDays();
 
-
     const sunday =
       new Date(
         weekDays[0]
       );
-
 
     sunday.setDate(
       sunday.getDate() - 1
@@ -1146,91 +1148,60 @@ export class Calendar {
 
 
   /*
-   * Generar filas horarias a partir
-   * de las disponibilidades existentes.
+   * La cuadrícula semanal permanece
+   * visible aunque no existan disponibilidades.
    */
   getWeekTimeRows(): string[] {
 
-    const displayedDates =
-      new Set(
-        this.getDisplayedWeekDays()
-          .map(
-            (day) =>
-              this.formatDate(day)
-          )
+    return this.visualTimeRows;
+  }
+
+
+  getWeekBlockTopPercent(
+    startTime: string
+  ): number {
+
+    const startMinutes =
+      this.timeToMinutes(
+        startTime
       );
 
+    const minutesInsideHour =
+      startMinutes % 60;
 
-    const weekAvailabilities =
-      this.availabilities.filter(
-        (availability) =>
 
-          displayedDates.has(
-            availability.date
-          )
+    return (
+      minutesInsideHour / 60
+    ) * 100;
+  }
 
-          &&
 
-          availability.status ===
-            'Disponible'
+  getWeekBlockHeightPercent(
+    startTime: string,
+    endTime: string
+  ): number {
+
+    const startMinutes =
+      this.timeToMinutes(
+        startTime
       );
 
-
-    if (
-      weekAvailabilities.length ===
-      0
-    ) {
-
-      return this.visualTimeRows;
-    }
-
-
-    const startHours =
-      weekAvailabilities.map(
-        (availability) =>
-
-          Math.floor(
-
-            this.timeToMinutes(
-              availability.startTime
-            ) / 60
-
-          )
+    const endMinutes =
+      this.timeToMinutes(
+        endTime
       );
 
-
-    const firstHour =
-      Math.min(
-        ...startHours
-      );
-
-    const lastHour =
+    const duration =
       Math.max(
-        ...startHours
+        1,
+        endMinutes -
+        startMinutes
       );
 
 
-    const rows: string[] = [];
-
-
-    for (
-      let hour = firstHour;
-      hour <= lastHour;
-      hour++
-    ) {
-
-      rows.push(
-        `${hour
-          .toString()
-          .padStart(
-            2,
-            '0'
-          )}:00`
-      );
-    }
-
-
-    return rows;
+    return (
+      duration / 60
+    ) * 100;
   }
 
 
@@ -1240,11 +1211,9 @@ export class Calendar {
   ): Availability[] {
 
     if (
-      this.statusFilter !==
-        'all'
+      this.statusFilter !== 'all'
       &&
-      this.statusFilter !==
-        'Disponible'
+      this.statusFilter !== 'Disponible'
     ) {
 
       return [];
@@ -1306,9 +1275,7 @@ export class Calendar {
           this.timeToMinutes(
             first.startTime
           )
-
           -
-
           this.timeToMinutes(
             second.startTime
           )
@@ -1325,6 +1292,7 @@ export class Calendar {
       5
     );
   }
+
 
 
   getAvailabilityTimeRange(
@@ -2057,7 +2025,7 @@ export class Calendar {
   }
 
 
-  isRegularWorkDay(
+   isRegularWorkDay(
     date: Date
   ): boolean {
 
@@ -2098,6 +2066,10 @@ export class Calendar {
       !this.hasHabitualBreak()
       ||
       !this.regularSchedule
+      ||
+      !this.isInsideAvailabilityRange(
+        date
+      )
     ) {
 
       return false;
@@ -2158,6 +2130,242 @@ export class Calendar {
   }
 
 
+  private getAvailabilityRangeStartDate():
+    Date | null {
+
+    if (
+      !this.regularSchedule?.updatedAt
+    ) {
+
+      return null;
+    }
+
+
+    const updatedAt =
+      new Date(
+        this.regularSchedule.updatedAt
+      );
+
+
+    if (
+      Number.isNaN(
+        updatedAt.getTime()
+      )
+    ) {
+
+      return null;
+    }
+
+
+    /*
+     * El backend genera el horario
+     * usando America/Merida.
+     */
+    const parts =
+      new Intl.DateTimeFormat(
+        'en-US',
+        {
+          timeZone: 'America/Merida',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }
+      )
+        .formatToParts(
+          updatedAt
+        );
+
+
+    const year =
+      Number(
+        parts.find(
+          (part) =>
+            part.type === 'year'
+        )?.value
+      );
+
+    const month =
+      Number(
+        parts.find(
+          (part) =>
+            part.type === 'month'
+        )?.value
+      );
+
+    const day =
+      Number(
+        parts.find(
+          (part) =>
+            part.type === 'day'
+        )?.value
+      );
+
+
+    if (
+      !year ||
+      !month ||
+      !day
+    ) {
+
+      return null;
+    }
+
+
+    return new Date(
+      year,
+      month - 1,
+      day
+    );
+  }
+
+
+  private getAvailabilityRangeEndDate():
+    Date | null {
+
+    if (
+      !this.regularSchedule
+    ) {
+
+      return null;
+    }
+
+
+    const startDate =
+      this.getAvailabilityRangeStartDate();
+
+
+    if (
+      !startDate
+    ) {
+
+      return null;
+    }
+
+
+    const value =
+      this.regularSchedule
+        .availabilityRangeValue;
+
+    const unit =
+      this.regularSchedule
+        .availabilityRangeUnit;
+
+
+    if (
+      !Number.isInteger(value)
+      ||
+      value <= 0
+    ) {
+
+      return null;
+    }
+
+
+    if (
+      unit === 'days'
+    ) {
+
+      const endDate =
+        new Date(startDate);
+
+      endDate.setDate(
+        endDate.getDate() +
+        value - 1
+      );
+
+      return endDate;
+    }
+
+
+    if (
+      unit === 'weeks'
+    ) {
+
+      const endDate =
+        new Date(startDate);
+
+      endDate.setDate(
+        endDate.getDate() +
+        (value * 7) - 1
+      );
+
+      return endDate;
+    }
+
+
+    if (
+      unit === 'months'
+    ) {
+
+      const sourceDay =
+        startDate.getDate();
+
+      const endDate =
+        new Date(
+          startDate.getFullYear(),
+          startDate.getMonth() +
+            value,
+          1
+        );
+
+      const lastDay =
+        new Date(
+          endDate.getFullYear(),
+          endDate.getMonth() + 1,
+          0
+        ).getDate();
+
+      endDate.setDate(
+        Math.min(
+          sourceDay,
+          lastDay
+        )
+      );
+
+      return endDate;
+    }
+
+
+    return null;
+  }
+
+
+  private isInsideAvailabilityRange(
+    date: Date
+  ): boolean {
+
+    const startDate =
+      this.getAvailabilityRangeStartDate();
+
+    const endDate =
+      this.getAvailabilityRangeEndDate();
+
+
+    if (
+      !startDate ||
+      !endDate
+    ) {
+
+      return false;
+    }
+
+
+    const targetDate =
+      new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+      );
+
+
+    return (
+      targetDate >=
+        startDate
+      &&
+      targetDate <=
+        endDate
+    );
+  }
   isHabitualBreakSegmentStart(
     date: Date
   ): boolean {

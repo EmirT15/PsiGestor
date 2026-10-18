@@ -20,10 +20,22 @@ export interface WorkDay {
   startTime: string;
   endTime: string;
 }
+export type AvailabilityRangeUnit =
+  | 'days'
+  | 'weeks'
+  | 'months';
 export interface RegularScheduleConfig {
   workDays: WorkDay[];
+
   appointmentDuration: number;
+
   appointmentGapMinutes: number;
+
+  availabilityRangeValue: number;
+
+  availabilityRangeUnit:
+    AvailabilityRangeUnit;
+
   break: BreakScheduleConfig;
 }
 
@@ -67,6 +79,24 @@ export class RegularSchedule {
   appointmentGapMinutes: number | null = 0;
 
   customAppointmentGapEnabled = false;
+
+  availabilityRangeValue:
+  number | null = null;
+
+availabilityRangeUnit:
+  AvailabilityRangeUnit = 'months';
+
+
+readonly availabilityRangeLimits:
+  Record<
+    AvailabilityRangeUnit,
+    number
+  > = {
+
+  days: 365,
+  weeks: 52,
+  months: 12
+};
 
 
 breakConfig: BreakScheduleConfig = {
@@ -453,6 +483,262 @@ getBreakError(): string | null {
   return null;
 }
 
+isAvailabilityRangeValid(): boolean {
+
+  if (
+    this.availabilityRangeValue === null
+  ) {
+    return false;
+  }
+
+
+  if (
+    !Number.isInteger(
+      this.availabilityRangeValue
+    )
+  ) {
+    return false;
+  }
+
+
+  if (
+    this.availabilityRangeValue <= 0
+  ) {
+    return false;
+  }
+
+
+  const maximum =
+    this.availabilityRangeLimits[
+      this.availabilityRangeUnit
+    ];
+
+
+  return (
+    this.availabilityRangeValue <=
+    maximum
+  );
+
+}
+
+getAvailabilityRangeMax(): number {
+
+  return this.availabilityRangeLimits[
+    this.availabilityRangeUnit
+  ];
+
+}
+
+
+getAvailabilityRangeError():
+  string | null {
+
+  if (
+    this.availabilityRangeValue === null
+  ) {
+    return null;
+  }
+
+
+  if (
+    !Number.isInteger(
+      this.availabilityRangeValue
+    ) ||
+    this.availabilityRangeValue <= 0
+  ) {
+
+    return (
+      'La cantidad debe ser un número ' +
+      'entero mayor que 0.'
+    );
+
+  }
+
+
+  const maximum =
+    this.getAvailabilityRangeMax();
+
+
+  if (
+    this.availabilityRangeValue >
+    maximum
+  ) {
+
+    const labels = {
+      days: 'días',
+      weeks: 'semanas',
+      months: 'meses'
+    };
+
+
+    return (
+      `El máximo permitido para ` +
+      `${labels[this.availabilityRangeUnit]} ` +
+      `es ${maximum}.`
+    );
+
+  }
+
+
+  return null;
+
+}
+
+
+getAvailabilityRangeUnitLabel(): string {
+
+  const value =
+    this.availabilityRangeValue ?? 0;
+
+
+  const singular = {
+    days: 'día',
+    weeks: 'semana',
+    months: 'mes'
+  };
+
+
+  const plural = {
+    days: 'días',
+    weeks: 'semanas',
+    months: 'meses'
+  };
+
+
+  return value === 1
+    ? singular[this.availabilityRangeUnit]
+    : plural[this.availabilityRangeUnit];
+
+}
+
+
+getGenerationStartDate(): Date {
+
+  const now =
+    new Date();
+
+
+  return new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  );
+
+}
+
+
+getGenerationEndDate(): Date | null {
+
+  if (
+    !this.isAvailabilityRangeValid() ||
+    this.availabilityRangeValue === null
+  ) {
+    return null;
+  }
+
+
+  const startDate =
+    this.getGenerationStartDate();
+
+  const value =
+    this.availabilityRangeValue;
+
+
+  if (
+    this.availabilityRangeUnit === 'days'
+  ) {
+
+    const endDate =
+      new Date(startDate);
+
+    endDate.setDate(
+      endDate.getDate() +
+      value - 1
+    );
+
+    return endDate;
+
+  }
+
+
+  if (
+    this.availabilityRangeUnit === 'weeks'
+  ) {
+
+    const endDate =
+      new Date(startDate);
+
+    endDate.setDate(
+      endDate.getDate() +
+      (value * 7) - 1
+    );
+
+    return endDate;
+
+  }
+
+
+  return this.addMonthsToDate(
+    startDate,
+    value
+  );
+
+}
+
+
+private addMonthsToDate(
+  sourceDate: Date,
+  months: number
+): Date {
+
+  const sourceDay =
+    sourceDate.getDate();
+
+
+  const target =
+    new Date(
+      sourceDate.getFullYear(),
+      sourceDate.getMonth() + months,
+      1
+    );
+
+
+  const lastDayOfMonth =
+    new Date(
+      target.getFullYear(),
+      target.getMonth() + 1,
+      0
+    ).getDate();
+
+
+  target.setDate(
+    Math.min(
+      sourceDay,
+      lastDayOfMonth
+    )
+  );
+
+
+  return target;
+
+}
+
+
+formatGenerationDate(
+  date: Date
+): string {
+
+  return date.toLocaleDateString(
+    'es-MX',
+    {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    }
+  );
+
+}
+
 isScheduleValid(): boolean {
   const enabledDays = this.workDays.filter(
     (day) => day.enabled
@@ -475,6 +761,11 @@ isScheduleValid(): boolean {
   }
 
   if (!this.isAppointmentGapValid()) {
+  return false;
+  }
+
+  if (
+  !this.isAvailabilityRangeValid()) {
   return false;
   }
 
@@ -519,6 +810,12 @@ saveSchedule(): void {
 
     appointmentGapMinutes:
       this.appointmentGapMinutes as number,
+
+    availabilityRangeValue:
+      this.availabilityRangeValue as number,
+
+    availabilityRangeUnit:
+      this.availabilityRangeUnit,
 
     break: {
       ...this.breakConfig,
@@ -699,6 +996,11 @@ private applyInitialConfig(
   this.appointmentGapMinutes =
     config.appointmentGapMinutes;
 
+  this.availabilityRangeValue =
+  config.availabilityRangeValue;
+
+  this.availabilityRangeUnit =
+    config.availabilityRangeUnit;
 
   this.customAppointmentGapEnabled =
     !this.appointmentGapOptions.includes(

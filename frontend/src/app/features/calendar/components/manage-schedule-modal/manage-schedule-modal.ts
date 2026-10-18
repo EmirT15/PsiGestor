@@ -282,8 +282,14 @@ export class ManageScheduleModal
             appointmentGapMinutes:
               schedule.appointmentGapMinutes,
 
-            workDays:
-              schedule.workDays.map(
+            availabilityRangeValue:
+              schedule.availabilityRangeValue,
+
+            availabilityRangeUnit:
+              schedule.availabilityRangeUnit,
+
+        workDays:
+          schedule.workDays.map(
                 (day) => {
 
                   const metadata =
@@ -352,8 +358,8 @@ export class ManageScheduleModal
             false;
         }
 
-      });
-  }
+    });
+}
 
 
   /* ============================================================
@@ -397,6 +403,12 @@ export class ManageScheduleModal
 
       appointmentGapMinutes:
         config.appointmentGapMinutes,
+
+      availabilityRangeValue:
+        config.availabilityRangeValue,
+
+      availabilityRangeUnit:
+        config.availabilityRangeUnit,
 
       workDays:
         config.workDays.map(
