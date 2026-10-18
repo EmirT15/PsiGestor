@@ -507,61 +507,16 @@
       (configChange)="updateBreakConfig($event)"
     />
 
-  </div>
-
-
-  <div class="schedule-actions">
-
-    <button
-      type="button"
-      class="cancel-button"
-      (click)="cancel()"
-    >
-      Cancelar
-    </button>
-
-
-    <div class="schedule-save-section">
-
-      @if (saveError) {
-
-        <span class="save-error">
-          {{ saveError }}
-        </span>
-
-      }
-
-
-      <button
-        type="button"
-        class="save-button"
-        [disabled]="!isScheduleValid()"
-        (click)="saveSchedule()"
-      >
-
-        <span class="save-icon">
-          ✓
-        </span>
-
-        Guardar horario habitual
-
-      </button>
-
-    </div>
-
-  </div>
-     
 
   <!-- =====================================================
      GENERACIÓN DE DISPONIBILIDAD
      ===================================================== -->
 
-<div
-  class="
+<div class="
     duration-setting
     duration-setting-redesigned
     availability-range-setting
-  "
+    "
 >
 
   <div class="duration-heading">
@@ -717,6 +672,49 @@
       </div>
 
     }
+
+  </div>
+
+</div>
+
+      </div>
+
+<!-- =====================================================
+     ACCIONES
+     ===================================================== -->
+
+<div class="schedule-actions">
+
+  <button
+    type="button"
+    class="cancel-button"
+    (click)="cancel()"
+  >
+    Cancelar
+  </button>
+
+
+  <div class="schedule-save-section">
+
+    @if (saveError) {
+
+      <span class="save-error">
+        {{ saveError }}
+      </span>
+
+    }
+
+
+    <button
+      type="button"
+      class="save-button"
+      [disabled]="!isScheduleValid()"
+      (click)="saveSchedule()"
+    >
+
+      Guardar horario habitual
+
+    </button>
 
   </div>
 
