@@ -1,4 +1,4 @@
-import { isPlatformBrowser } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 
 import {
   afterNextRender,
@@ -9,7 +9,7 @@ import {
   signal
 } from '@angular/core';
 
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 
 import type {
   StatusFilter
@@ -19,9 +19,7 @@ import {
   Availability
 } from '../../models/availability.model';
 
-import {
-  CalendarService
-} from '../../services/calendar.service';
+import { Appointment, CalendarService, Student } from '../../services/calendar.service';
 
 import type {
   RegularScheduleResponse
@@ -65,12 +63,18 @@ import {
   RescheduleModal
 } from '../reschedule-modal/reschedule-modal';
 
+interface CalendarSlot extends Availability {
+  slotStartTime: string;
+  slotEndTime: string;
+  slotStatus: 'Disponible' | 'Reservado';
+}
 
 @Component({
   selector: 'app-calendar',
   standalone: true,
 
   imports: [
+    CommonModule,
     AvailabilityCard,
     AppointmentDetails,
     RescheduleDetails,
@@ -83,6 +87,9 @@ import {
   styleUrl: './calendar.css',
   templateUrl: './calendar.html',
 })
+
+
+
 export class Calendar {
 
   private isBrowser: boolean;
@@ -100,7 +107,29 @@ export class Calendar {
    * Disponibilidades / citas.
    */
   availabilities: Availability[] = [];
+  selectedAvailability: Availability | null = null;
+  appointments: Appointment[] = [];
 
+  // buscador de alumnos
+  studentSearchText = '';
+
+  selectedStudent: Student | null = null;
+
+  studentSearchResults: Student[] = [];
+
+/*Notificación visual del calendario. */
+toastMessage = '';
+
+toastType:
+  'success'
+  | 'error'
+  | 'warning' = 'success';
+
+toastVisible = false;
+
+private toastTimeout:
+  ReturnType<typeof setTimeout>
+  | null = null;
 
   /*
    * Horarios inhabilitados de HU-02B.
@@ -271,7 +300,7 @@ export class Calendar {
 
     const newDate =
       new Date(
-        this.currentDate
+        this.getCurrentViewDate()
       );
 
 
@@ -293,6 +322,13 @@ export class Calendar {
         + (offset * 7)
       );
 
+      const dayOfWeek = newDate.getDay();
+      if (dayOfWeek === 0) {
+        newDate.setDate(newDate.getDate() + 1);
+      } else {
+        newDate.setDate(newDate.getDate() - (dayOfWeek - 1));
+      }
+
     } else {
 
       newDate.setMonth(
@@ -307,9 +343,43 @@ export class Calendar {
     this.currentDate =
       newDate;
 
-    this.selectedDate = '';
+    this.selectedDate =
+      this.currentView === 'day'
+        ? this.formatDate(newDate)
+        : '';
 
     this.selectedSlot = '';
+  }
+
+
+  changeView(
+    view: 'day' | 'week' | 'month'
+  ): void {
+    if (view === 'day' && this.currentView === 'week') {
+      if (this.selectedSlotDate) {
+        this.selectedDate = this.selectedSlotDate;
+        this.currentDate = new Date(this.selectedSlotDate + 'T00:00:00');
+      } else if (!this.selectedDate) {
+        const weekDays = this.getWeekDays();
+        const firstDayWithData = weekDays.find(
+          (day) =>
+            this.getMergedAvailabilitiesForDateString(this.formatDate(day)).length > 0
+        );
+        const targetDay = firstDayWithData ?? weekDays[0];
+        this.currentDate = new Date(targetDay);
+        this.selectedDate = this.formatDate(targetDay);
+      }
+    }
+
+    this.currentView = view;
+  }
+
+
+  selectWeekDay(date: Date): void {
+    this.currentDate = new Date(date);
+    this.selectedDate = this.formatDate(date);
+    this.currentView = 'day';
+    this.changeDetectorRef.detectChanges();
   }
 
 
@@ -613,6 +683,86 @@ export class Calendar {
      ============================================================ */
 
 
+  private mapAppointmentToAvailability(
+    appointment: Appointment
+  ): Availability {
+    const initials = (appointment.student_name || 'AL')
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0].toUpperCase())
+      .join('');
+
+    return {
+      id: -appointment.id,
+      date: appointment.date,
+      startTime: appointment.start_time,
+      endTime: appointment.end_time,
+      duration: appointment.duration,
+      breakTime: 0,
+      status: appointment.status === 'Cancelled' ? 'Cancelado' : 'Reservado',
+      studentName: appointment.student_name,
+      studentInitials: initials || 'AL',
+      studentAge: 20,
+      studentSemester: '',
+      studentProgram: '',
+      consultationReason: appointment.reason,
+      modality:
+        appointment.modality === 'In person'
+          ? 'Presencial'
+          : 'En línea',
+      location:
+        appointment.location ||
+        appointment.meeting_url ||
+        'Cubículo',
+      folio: `PSI-${appointment.date.slice(0, 4)}-${String(
+        appointment.id
+      ).padStart(4, '0')}`
+    };
+  }
+
+
+  private getMergedAvailabilitiesForDateString(
+    dateString: string
+  ): Availability[] {
+    const dateAvailabilities = this.availabilities.filter(
+      (availability) => availability.date === dateString
+    );
+
+    const dateAppointments = this.appointments.filter(
+      (appointment) => appointment.date === dateString
+    );
+
+    const fallbackBooked: Availability[] = [];
+
+    for (const appointment of dateAppointments) {
+      const appStart = this.timeToMinutes(appointment.start_time);
+      const appEnd = this.timeToMinutes(appointment.end_time);
+
+      const alreadyInAvailabilities = dateAvailabilities.some(
+        (avail) =>
+          (avail.status === 'Reservado' ||
+            avail.status === 'Reprogramacion pendiente' ||
+            avail.status === 'Cancelado') &&
+          this.timeToMinutes(avail.startTime) === appStart &&
+          this.timeToMinutes(avail.endTime) === appEnd
+      );
+
+      if (!alreadyInAvailabilities) {
+        fallbackBooked.push(
+          this.mapAppointmentToAvailability(appointment)
+        );
+      }
+    }
+
+    return [...dateAvailabilities, ...fallbackBooked].sort(
+      (first, second) =>
+        this.timeToMinutes(first.startTime) -
+        this.timeToMinutes(second.startTime)
+    );
+  }
+
+
   getAvailabilitiesForDate(
     date: Date
   ): Availability[] {
@@ -621,14 +771,16 @@ export class Calendar {
       this.formatDate(date);
 
 
-    return this.availabilities
+    return this.getMergedAvailabilitiesForDateString(dateString)
       .filter(
         (availability) => {
 
-          const sameDate =
-            availability.date ===
-            dateString;
-
+          if (
+            availability.status === 'Disponible' &&
+            this.generateSlots(availability).length === 0
+          ) {
+            return false;
+          }
 
           const sameStatus =
             this.statusFilter ===
@@ -638,10 +790,7 @@ export class Calendar {
               this.statusFilter;
 
 
-          return (
-            sameDate &&
-            sameStatus
-          );
+          return sameStatus;
         }
       );
   }
@@ -652,12 +801,12 @@ export class Calendar {
   ): void {
 
     this.currentDate =
+
       new Date(
         date.getFullYear(),
         date.getMonth(),
         date.getDate()
       );
-
 
     this.selectedDate =
       this.formatDate(
@@ -692,6 +841,12 @@ export class Calendar {
 
     this.selectedSlotDate =
       availability.date;
+
+    this.selectedDate =
+      availability.date;
+
+    this.currentDate =
+      new Date(availability.date + 'T00:00:00');
 
     this.selectedAvailabilityId =
       availability.id;
@@ -885,20 +1040,253 @@ export class Calendar {
    * Selección visual de un bloque Disponible
    * en Día/Semana.
    */
+
+
+
   selectAvailableSlot(
-    availability: Availability
+    availability: Availability,
+    slot?: string
   ): void {
+    this.selectedAvailability = availability;
+    this.selectedAvailabilityId = availability.id;
+    this.selectedAvailabilityStatus = availability.status;
+    this.selectedSlotDate = availability.date;
+    this.selectedDate = availability.date;
+    this.currentDate = new Date(availability.date + 'T00:00:00');
 
-    this.selectedAvailabilityId =
-      availability.id;
+    const slots = this.generateSlots(availability);
 
-    this.selectedSlotDate =
-      availability.date;
+  if (slots.length === 0) {
+    this.showToast(
+      'No hay horarios disponibles en este bloque.',
+      'warning'
+  );
 
-    this.selectedSlot =
-      this.getAvailabilityTimeRange(
-        availability
+  return;
+}
+
+    this.selectedSlot = slot ?? slots[0];
+
+    this.isSidebarOpen = true;
+  }
+
+  showToast(
+  message: string,
+  type:
+    'success'
+    | 'error'
+    | 'warning' = 'success'
+): void {
+
+  if (this.toastTimeout) {
+    clearTimeout(
+      this.toastTimeout
+    );
+  }
+
+  this.toastMessage =
+    message;
+
+  this.toastType =
+    type;
+
+  this.toastVisible =
+    true;
+
+  this.toastTimeout =
+    setTimeout(
+      () => {
+
+        this.toastVisible =
+          false;
+
+        this.toastTimeout =
+          null;
+
+        this.changeDetectorRef
+          .detectChanges();
+
+      },
+      3500
+    );
+}
+
+  onAppointmentSubmit(event: Event): void {
+    event.preventDefault();
+
+    const form = event.target as HTMLFormElement;
+    const formData = new FormData(form);
+
+    const studentName = String(
+      formData.get('studentName') ?? ''
+    ).trim();
+
+    const selectedStudent = this.selectedStudent;
+
+    if (!selectedStudent) {
+
+      this.showToast(
+          'Busca y selecciona un alumno de la lista.',
+          'warning'
+  );      return;
+    }
+
+    const modality = String(
+      formData.get('modality') ?? ''
+    );
+
+    const location = String(
+      formData.get('location') ?? ''
+    ).trim();
+
+    const reason = String(
+      formData.get('reason') ?? ''
+    ).trim();
+
+    const availability = this.selectedAvailability;
+
+    if (!reason) {
+      this.showToast(
+        'Completa el motivo de la cita.',
+        'warning'
       );
+    }
+
+    if (
+      !availability ||
+      !this.selectedSlotDate ||
+      !this.selectedAvailabilityId ||
+      this.selectedAvailabilityStatus !== 'Disponible'
+    ) {
+      this.showToast(
+        'Selecciona primero un horario disponible.',
+        'warning'
+      );
+      return;
+    }
+
+    if (
+      modality !== 'In person' &&
+      modality !== 'Online'
+    ) {
+      this.showToast(
+        'Selecciona una modalidad válida.',
+        'warning'
+      );
+      return;
+    }
+
+    if (modality === 'In person' && !location) {
+      this.showToast(
+        'Escribe la ubicación de la atención.',
+        'warning'
+      );
+      return;
+    }
+
+    const selectedRange = this.selectedSlot.split(' - ');
+
+    if (selectedRange.length !== 2) {
+      this.showToast(
+        'No se pudo interpretar el horario seleccionado.',
+        'warning'
+      );
+      return;
+    }
+
+    const startTime = this.formatTime24Hour(
+      selectedRange[0].trim()
+    );
+
+    const endTime = this.formatTime24Hour(
+      selectedRange[1].trim()
+    );
+
+    const duration = availability.duration;
+
+    if (
+      !Number.isFinite(duration) ||
+      duration <= 0
+    ) {
+      this.showToast(
+        'La duración del horario no es válida.',
+        'warning'
+      );
+      return;
+    }
+
+    const selectedStudentId = selectedStudent.id;
+    const selectedStudentName = selectedStudent.name;
+
+    this.calendarService.createAppointment({
+      student_id: selectedStudentId,
+      student_name: selectedStudentName,
+      date: this.selectedSlotDate,
+      start_time: startTime,
+      end_time: endTime,
+      duration,
+      modality: modality as 'In person' | 'Online',
+      location: modality === 'In person' ? location : undefined,
+      reason
+    }).subscribe({
+     next: (response) => {
+        console.log(
+          'Cita registrada:',
+          response
+        );
+
+        this.closeSidebar();
+        this.showToast(
+          'La cita se agendó correctamente.',
+          'success'
+        );
+
+        this.refreshCalendarData();
+      },
+      error: (error) => {
+        console.error('Error al guardar la cita:', error);
+
+        const message =
+          error?.error?.error ??
+          'No fue posible guardar la cita. Inténtalo nuevamente.';
+
+        this.showToast(message, 'error');
+      }
+    });
+  }
+
+
+  onStudentSearchChange(value: string): void {
+    this.studentSearchText = value;
+    this.selectedStudent = null;
+
+    const search = value.trim();
+
+    if (!search) {
+      this.studentSearchResults = [];
+      return;
+    }
+
+    this.calendarService.searchStudents(search).subscribe({
+      next: (students) => {
+        if (this.studentSearchText.trim() !== search) {
+          return;
+        }
+        console.log('Respuesta de búsqueda:', students);
+        console.log('¿Es un arreglo?', Array.isArray(students));
+        this.studentSearchResults = students;
+      },
+      error: (error) => {
+        console.error('Error al buscar alumnos:', error);
+        this.studentSearchResults = [];
+      }
+    });
+  }
+
+  selectStudent(student: Student): void {
+    this.selectedStudent = student;
+    this.studentSearchText = student.name;
+    this.studentSearchResults = [];
   }
 
 
@@ -1152,11 +1540,107 @@ export class Calendar {
    * visible aunque no existan disponibilidades.
    */
   getWeekTimeRows(): string[] {
+    const displayedDays = this.getDisplayedWeekDays();
 
-    return this.visualTimeRows;
+    /*
+     * Mantener siempre visible el rango base definido
+     * en visualTimeRows, pero ampliar la cuadrícula
+     * cuando existan citas, disponibilidades o
+     * inhabilitaciones fuera de dicho rango.
+     */
+    const startHours: number[] =
+      this.visualTimeRows.map(
+        (time) =>
+          Math.floor(
+            this.timeToMinutes(time) / 60
+          )
+      );
+
+
+    for (const day of displayedDays) {
+
+      const dateString =
+        this.formatDate(day);
+
+
+      const merged =
+        this.getMergedAvailabilitiesForDateString(
+          dateString
+        );
+
+
+      for (
+        const availability of merged
+      ) {
+
+        startHours.push(
+          Math.floor(
+            this.timeToMinutes(
+              availability.startTime
+            ) / 60
+          )
+        );
+      }
+
+
+      for (
+        const disabled of
+          this.getDisabledSchedulesForDate(
+            day
+          )
+      ) {
+
+        if (
+          disabled.startTime
+        ) {
+
+          startHours.push(
+            Math.floor(
+              this.timeToMinutes(
+                disabled.startTime
+              ) / 60
+            )
+          );
+        }
+      }
+    }
+
+
+    const firstHour =
+      Math.min(...startHours);
+
+    const lastHour =
+      Math.max(...startHours);
+
+
+    const rows: string[] = [];
+
+
+    for (
+      let hour = firstHour;
+      hour <= lastHour;
+      hour++
+    ) {
+
+      rows.push(
+        `${hour
+          .toString()
+          .padStart(2, '0')}:00`
+      );
+    }
+
+
+    return rows;
   }
 
 
+  /*
+   * Posición vertical de un bloque dentro
+   * de su fila horaria.
+   *
+   * Ejemplo:
+   * 10:30 -> 50 % de la fila 10:00.
+   */
   getWeekBlockTopPercent(
     startTime: string
   ): number {
@@ -1176,6 +1660,10 @@ export class Calendar {
   }
 
 
+  /*
+   * Altura proporcional según la duración
+   * real del bloque.
+   */
   getWeekBlockHeightPercent(
     startTime: string,
     endTime: string
@@ -1191,6 +1679,7 @@ export class Calendar {
         endTime
       );
 
+
     const duration =
       Math.max(
         1,
@@ -1203,83 +1692,233 @@ export class Calendar {
       duration / 60
     ) * 100;
   }
+  
+  /*
+   * Posición vertical de un slot generado
+   * dentro de su fila horaria.
+   */
+  getWeekSlotTopPercent(
+    slot: string
+  ): number {
+
+    const [
+      startLabel
+    ] = slot.split(' - ');
+
+
+    if (!startLabel) {
+      return 0;
+    }
+
+
+    return this.getWeekBlockTopPercent(
+      this.formatTime24Hour(
+        startLabel.trim()
+      )
+    );
+  }
+
+
+  /*
+   * Altura proporcional de un slot
+   * generado.
+   */
+  getWeekSlotHeightPercent(
+    slot: string
+  ): number {
+
+    const [
+      startLabel,
+      endLabel
+    ] = slot.split(' - ');
+
+
+    if (
+      !startLabel ||
+      !endLabel
+    ) {
+      return 0;
+    }
+
+
+    return this.getWeekBlockHeightPercent(
+
+      this.formatTime24Hour(
+        startLabel.trim()
+      ),
+
+      this.formatTime24Hour(
+        endLabel.trim()
+      )
+    );
+  }
+
+
+  /*
+   * Para la vista Semana, devuelve únicamente
+   * las inhabilitaciones que COMIENZAN en
+   * esta fila.
+   *
+   * getDisabledForTimeCell() conserva la lógica
+   * de traslape real para otras comprobaciones.
+   */
+  getDisabledStartingInTimeCell(
+    date: Date,
+    timeRow: string
+  ): any[] {
+
+    const rowStart =
+      this.timeToMinutes(
+        timeRow
+      );
+
+    const rowEnd =
+      rowStart + 60;
+
+
+    return this
+      .getDisabledSchedulesForDate(
+        date
+      )
+      .filter(
+        (disabledSchedule) => {
+
+          if (
+            !disabledSchedule.startTime ||
+            !disabledSchedule.endTime
+          ) {
+            return false;
+          }
+
+
+          const disabledStart =
+            this.timeToMinutes(
+              disabledSchedule.startTime
+            );
+
+          return (
+            disabledStart >= rowStart &&
+            disabledStart < rowEnd
+          );
+        }
+      );
+  }
+  getSlotsForHour(
+    availability: Availability,
+    hour: string
+  ): string[] {
+    const hourStart = this.timeToMinutes(hour);
+    const hourEnd = hourStart + 60;
+
+    return this.generateSlots(availability).filter((slot) => {
+      const [startLabel] = slot.split(' - ');
+      if (!startLabel) {
+        return false;
+      }
+
+      const slotStart = this.timeToMinutes(
+        this.formatTime24Hour(startLabel.trim())
+      );
+
+      return slotStart >= hourStart && slotStart < hourEnd;
+    });
+  }
 
 
   getAvailableSlotsForHour(
     date: Date,
     hour: string
   ): Availability[] {
-
     if (
-      this.statusFilter !== 'all'
-      &&
-      this.statusFilter !== 'Disponible'
-    ) {
 
+    this.statusFilter !== 'all' &&
+    this.statusFilter !== 'Disponible'
+
+    ) {
       return [];
     }
 
-
-    const dateString =
-      this.formatDate(date);
-
-    const hourStart =
-      this.timeToMinutes(
-        hour
-      );
-
-    const hourEnd =
-      hourStart + 60;
-
+    const dateString = this.formatDate(date);
 
     return this.availabilities
-      .filter(
-        (availability) => {
-
-          if (
-            availability.date !==
-            dateString
-          ) {
-
-            return false;
-          }
-
-
-          if (
-            availability.status !==
-            'Disponible'
-          ) {
-
-            return false;
-          }
-
-
-          const availabilityStart =
-            this.timeToMinutes(
-              availability.startTime
-            );
-
-
-          return (
-            availabilityStart >=
-              hourStart
-            &&
-            availabilityStart <
-              hourEnd
-          );
+      .filter((availability) => {
+        if (
+          availability.date !== dateString ||
+          availability.status !== 'Disponible'
+        ) {
+          return false;
         }
-      )
+
+        return this.getSlotsForHour(availability, hour).length > 0;
+      })
       .sort(
         (first, second) =>
 
           this.timeToMinutes(
             first.startTime
-          )
-          -
+          ) -
           this.timeToMinutes(
             second.startTime
           )
       );
+  }
+
+
+  getBookedAvailabilitiesForHour(
+    date: Date,
+    hour: string
+  ): Availability[] {
+    if (
+      this.statusFilter !== 'all' &&
+      this.statusFilter !== 'Reservado' &&
+      this.statusFilter !== 'Reprogramacion pendiente' &&
+      this.statusFilter !== 'Cancelado'
+    ) {
+      return [];
+    }
+
+    const dateString = this.formatDate(date);
+    const hourStart = this.timeToMinutes(hour);
+    const hourEnd = hourStart + 60;
+
+    return this.getMergedAvailabilitiesForDateString(dateString)
+      .filter((availability) => {
+        if (
+          availability.status !== 'Reservado' &&
+          availability.status !== 'Reprogramacion pendiente' &&
+          availability.status !== 'Cancelado'
+        ) {
+          return false;
+        }
+
+        if (
+          this.statusFilter !== 'all' &&
+          availability.status !== this.statusFilter
+        ) {
+          return false;
+        }
+
+        const startMinutes = this.timeToMinutes(
+          availability.startTime
+        );
+
+        return startMinutes >= hourStart && startMinutes < hourEnd;
+      })
+      .sort(
+        (first, second) =>
+          this.timeToMinutes(first.startTime) -
+          this.timeToMinutes(second.startTime)
+      );
+  }
+
+
+  getFormattedRange12h(
+    availability: Availability
+  ): string {
+    return (
+      `${this.formatTimeString(availability.startTime)} - ` +
+      `${this.formatTimeString(availability.endTime)}`
+    );
   }
 
 
@@ -1408,6 +2047,70 @@ export class Calendar {
 
           availability.status ===
             'Disponible'
+
+          &&
+
+          this.generateSlots(availability).length > 0
+      )
+      .length;
+  }
+
+
+  getReservedCountForDate(
+    date: Date
+  ): number {
+    if (
+      this.statusFilter !== 'all' &&
+      this.statusFilter !== 'Reservado'
+    ) {
+      return 0;
+    }
+
+    const dateString = this.formatDate(date);
+
+    return this.getMergedAvailabilitiesForDateString(dateString)
+      .filter((availability) => availability.status === 'Reservado')
+      .length;
+  }
+
+
+  getRescheduleCountForDate(
+    date: Date
+  ): number {
+    if (
+      this.statusFilter !== 'all' &&
+      this.statusFilter !== 'Reprogramacion pendiente'
+    ) {
+      return 0;
+    }
+
+    const dateString = this.formatDate(date);
+
+    return this.getMergedAvailabilitiesForDateString(dateString)
+      .filter(
+        (availability) =>
+          availability.status === 'Reprogramacion pendiente'
+      )
+      .length;
+  }
+
+
+  getCancelledCountForDate(
+    date: Date
+  ): number {
+    if (
+      this.statusFilter !== 'all' &&
+      this.statusFilter !== 'Cancelado'
+    ) {
+      return 0;
+    }
+
+    const dateString = this.formatDate(date);
+
+    return this.getMergedAvailabilitiesForDateString(dateString)
+      .filter(
+        (availability) =>
+          availability.status === 'Cancelado'
       )
       .length;
   }
@@ -1420,7 +2123,8 @@ export class Calendar {
       .filter(
         (availability) =>
           availability.status ===
-          'Disponible'
+            'Disponible' &&
+          this.generateSlots(availability).length > 0
       );
   }
 
@@ -1441,65 +2145,174 @@ export class Calendar {
      ============================================================ */
 
 
-  generateSlots(
-    availability: Availability
-  ): string[] {
+  isSlotAvailable(
+    availability: Availability,
+    slot: string
+  ): boolean {
+    const [startLabel, endLabel] = slot.split(' - ');
 
+    if (!startLabel || !endLabel) {
+      return false;
+    }
+
+    const slotStart = this.timeToMinutes(
+      this.formatTime24Hour(startLabel.trim())
+    );
+
+    const slotEnd = this.timeToMinutes(
+      this.formatTime24Hour(endLabel.trim())
+    );
+
+    return !this.appointments.some((appointment) => {
+      if (
+        appointment.date !== availability.date ||
+        appointment.status === 'Cancelled'
+      ) {
+        return false;
+      }
+
+      const appointmentStart = this.timeToMinutes(
+        appointment.start_time
+      );
+
+      const appointmentEnd = this.timeToMinutes(
+        appointment.end_time
+      );
+
+      return (
+        slotStart < appointmentEnd &&
+        slotEnd > appointmentStart
+      );
+    });
+  }
+
+
+  generateSlots( availability: Availability ): string[] {
     const slots: string[] = [];
 
+    const dateAppointments =
+      availability.status === 'Disponible'
+        ? this.appointments.filter(
+            (appointment) =>
+              appointment.date === availability.date &&
+              appointment.status !== 'Cancelled'
+          )
+        : [];
 
-    let currentMinutes =
-      this.timeToMinutes(
-        availability.startTime
-      );
+    const dateBookedAvailabilities =
+      availability.status === 'Disponible'
+        ? this.availabilities.filter(
+            (item) =>
+              item.date === availability.date &&
+              item.id !== availability.id &&
+              (item.status === 'Reservado' ||
+                item.status === 'Reprogramacion pendiente')
+          )
+        : [];
 
+    const dateDisabledSchedules =
+      availability.status === 'Disponible'
+        ? this.disabledSchedules.filter((disabledSchedule) => {
+            const startDate =
+              disabledSchedule.startDate || disabledSchedule.date;
+            const rawEndDate =
+              disabledSchedule.endDate || disabledSchedule.date || startDate;
+            const endDate =
+              disabledSchedule.type === 'Puntual' || rawEndDate < startDate
+                ? startDate
+                : rawEndDate;
+            return (
+              Boolean(startDate && endDate) &&
+              availability.date >= startDate &&
+              availability.date <= endDate
+            );
+          })
+        : [];
 
-    const endMinutes =
-      this.timeToMinutes(
-        availability.endTime
-      );
+    let currentMinutes = this.timeToMinutes(
+      availability.startTime
+    );
 
+    const endMinutes = this.timeToMinutes(
+      availability.endTime
+    );
 
     while (
-
-      currentMinutes +
-      availability.duration <=
-      endMinutes
-
+      currentMinutes + availability.duration <= endMinutes
     ) {
+      const slotEndMinutes =
+        currentMinutes + availability.duration;
 
-      const slotStart =
-        this.formatTime12Hour(
+      const overlapsAppointment = dateAppointments.some(
+        (appointment) => {
+          const appointmentStart = this.timeToMinutes(
+            appointment.start_time
+          );
+
+          const appointmentEnd = this.timeToMinutes(
+            appointment.end_time
+          );
+
+          return (
+            currentMinutes < appointmentEnd &&
+            slotEndMinutes > appointmentStart
+          );
+        }
+      );
+
+      const overlapsBookedAvailability =
+        dateBookedAvailabilities.some((booked) => {
+          const bookedStart = this.timeToMinutes(
+            booked.startTime
+          );
+          const bookedEnd = this.timeToMinutes(booked.endTime);
+
+          return (
+            currentMinutes < bookedEnd &&
+            slotEndMinutes > bookedStart
+          );
+        });
+
+      const overlapsDisabledSchedule =
+        dateDisabledSchedules.some((disabled) => {
+          if (!disabled.startTime || !disabled.endTime) {
+            return false;
+          }
+          const disabledStart = this.timeToMinutes(
+            disabled.startTime
+          );
+          const disabledEnd = this.timeToMinutes(
+            disabled.endTime
+          );
+          return (
+            currentMinutes < disabledEnd &&
+            slotEndMinutes > disabledStart
+          );
+        });
+
+      if (
+        !overlapsAppointment &&
+        !overlapsBookedAvailability &&
+        !overlapsDisabledSchedule
+      ) {
+        const slotStart = this.formatTime12Hour(
           currentMinutes
         );
 
-
-      const slotEnd =
-        this.formatTime12Hour(
-
-          currentMinutes +
-          availability.duration
-
+        const slotEnd = this.formatTime12Hour(
+          slotEndMinutes
         );
 
-
-      slots.push(
-        `${slotStart} - ${slotEnd}`
-      );
-
+        slots.push(`${slotStart} - ${slotEnd}`);
+      }
 
       currentMinutes +=
-
-        availability.duration
-
-        +
-
-        availability.breakTime;
+        availability.duration + availability.breakTime;
     }
-
 
     return slots;
   }
+
 
 
   private timeToMinutes(
@@ -1588,6 +2401,23 @@ export class Calendar {
       period
     );
   }
+
+
+  formatTime24Hour(time: string): string {
+    const [timePart, period] = time.split(' ');
+    let [hours, minutes] = timePart.split(':').map(Number);
+
+    if (period === 'PM' && hours !== 12) {
+      hours += 12;
+    }
+
+    if (period === 'AM' && hours === 12) {
+      hours = 0;
+    }
+
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  }
+
 
 
   private convert12to24(
@@ -1734,9 +2564,12 @@ export class Calendar {
 
     /*
      * Agregar descanso habitual únicamente
-     * cuando corresponde a esa jornada.
+     * cuando corresponde a esa jornada y
+     * el filtro no es exclusivo de reservados/reprogramación/inhabilitados.
      */
     if (
+      (this.statusFilter === 'all' ||
+        this.statusFilter === 'Disponible') &&
       this.doesHabitualBreakApplyToDay(
         date
       )
@@ -1856,9 +2689,16 @@ export class Calendar {
             disabledSchedule.startDate ||
             disabledSchedule.date;
 
-          const endDate =
+          const rawEndDate =
             disabledSchedule.endDate ||
-            disabledSchedule.date;
+            disabledSchedule.date ||
+            startDate;
+
+          const endDate =
+            disabledSchedule.type === 'Puntual' ||
+            rawEndDate < startDate
+              ? startDate
+              : rawEndDate;
 
 
           if (
@@ -1940,11 +2780,9 @@ export class Calendar {
 
 
           return (
-            disabledStart <
-              rowEnd
+            disabledStart < rowEnd
             &&
-            disabledEnd >
-              rowStart
+            disabledEnd > rowStart
           );
         }
       );
@@ -2536,7 +3374,9 @@ export class Calendar {
   ): boolean {
 
     if (
-      !this.hasHabitualBreak()
+      !this.hasHabitualBreak() ||
+      (this.statusFilter !== 'all' &&
+        this.statusFilter !== 'Disponible')
     ) {
 
       return false;
@@ -2581,33 +3421,36 @@ export class Calendar {
         (version) =>
           version + 1
       );
+
+    this.changeDetectorRef.detectChanges();
   }
+
 
 
   loadAvailabilities(): void {
+    this.calendarService.getAvailabilities().subscribe({
+      next: (data) => {
+        this.availabilities = data;
 
-    this.calendarService
-      .getAvailabilities()
-      .subscribe({
-
-        next: (data) => {
-
-          this.availabilities =
-            data;
-
-          this.notifyCalendarDataChanged();
-        },
-
-        error: (error) => {
-
-          console.error(
-            'Error loading availabilities:',
-            error
-          );
-        }
-
-      });
+        this.calendarService.getAppointments().subscribe({
+          next: (response) => {
+            this.appointments = response.appointments;
+            console.log('Citas recibidas:', this.appointments);
+            this.notifyCalendarDataChanged();
+          },
+          error: (error) => {
+            console.error('Error loading appointments:', error);
+            this.appointments = [];
+            this.notifyCalendarDataChanged();
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error loading availabilities:', error);
+      }
+    });
   }
+
 
 
   loadDisabledSchedules(): void {
@@ -2669,54 +3512,65 @@ export class Calendar {
    * HU-02A -> regular schedule
    * HU-02B -> disabled schedules
    */
+
   refreshCalendarData(): void {
+      forkJoin({
+        availabilities:
+          this.calendarService.getAvailabilities().pipe(
+            catchError((err) => {
+              console.error('Error loading availabilities:', err);
+              return of([]);
+            })
+          ),
 
-    forkJoin({
+        schedule:
+          this.regularScheduleService.getRegularSchedule().pipe(
+            catchError((err) => {
+              console.error('Error loading regular schedule:', err);
+              return of(null);
+            })
+          ),
 
-      availabilities:
-        this.calendarService
-          .getAvailabilities(),
+        disabledSchedules:
+          this.calendarService.getDisabledSchedules().pipe(
+            catchError((err) => {
+              console.error('Error loading disabled schedules:', err);
+              return of([]);
+            })
+          ),
 
-      schedule:
-        this.regularScheduleService
-          .getRegularSchedule(),
-
-      disabledSchedules:
-        this.calendarService
-          .getDisabledSchedules()
-
-    })
+        appointments:
+          this.calendarService.getAppointments().pipe(
+            catchError((err) => {
+              console.error('Error loading appointments:', err);
+              return of({ appointments: [] });
+            })
+          )
+      })
       .subscribe({
-
         next: ({
           availabilities,
           schedule,
-          disabledSchedules
+          disabledSchedules,
+          appointments
         }) => {
-
-          this.availabilities =
-            availabilities;
-
-          this.regularSchedule =
-            schedule;
-
-          this.disabledSchedules =
-            disabledSchedules;
-
+          this.availabilities = availabilities;
+          this.regularSchedule = schedule;
+          this.disabledSchedules = disabledSchedules;
+          this.appointments = appointments.appointments;
 
           this.notifyCalendarDataChanged();
         },
 
-        error: (error) => {
-
+      error: (error) => {
           console.error(
             'Error al actualizar los datos del calendario:',
             error
           );
         }
-
-      });
+    });
   }
+
 
 
   handleScheduleUpdated(

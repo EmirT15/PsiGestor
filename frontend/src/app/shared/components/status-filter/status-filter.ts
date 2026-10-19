@@ -5,6 +5,7 @@ export type StatusFilter =
   | 'Disponible'
   | 'Reservado'
   | 'Reprogramacion pendiente'
+  | 'Cancelado'
   | 'Inhabilitado';
 
 @Component({

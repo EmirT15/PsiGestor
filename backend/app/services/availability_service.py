@@ -95,16 +95,6 @@ def reschedule_appointment(
             'a la hora de fin.'
         )
 
-    if has_overlapping_availability(
-        date,
-        start_time,
-        end_time
-    ):
-        raise ValueError(
-            'Ya existe una disponibilidad que '
-            'se traslapa con el horario propuesto.'
-        )
-
     return propose_reschedule_repo(
         availability_id,
         date,
