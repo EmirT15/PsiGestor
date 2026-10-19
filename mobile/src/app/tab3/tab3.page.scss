@@ -1,0 +1,85 @@
+.profile-content {
+  --background: #f8fafc;
+}
+
+.profile-container {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.avatar-header {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-top: 10px;
+
+  .avatar-icon {
+    font-size: 80px;
+    color: #0284c7;
+    margin-bottom: 4px;
+  }
+
+  h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 6px;
+  }
+}
+
+.academic-card {
+  margin: 0 0 20px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+
+  ion-card-title {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  ion-item {
+    --padding-start: 16px;
+    margin-bottom: 2px;
+
+    h3 {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 2px;
+    }
+
+    p {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+  }
+}
+
+.logout-wrapper {
+  margin-bottom: 20px;
+
+  ion-button {
+    height: 44px;
+    font-weight: 700;
+    --border-radius: 10px;
+  }
+}
+
+.confidentiality-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  color: #64748b;
+
+  ion-icon {
+    font-size: 18px;
+    color: #0284c7;
+    flex-shrink: 0;
+  }
+}
