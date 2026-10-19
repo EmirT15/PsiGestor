@@ -376,6 +376,8 @@ def handle_disabled_schedules():
         if (
             not end_date
             or str(end_date).strip() == ''
+            or schedule_type == 'Puntual'
+            or str(end_date) < str(start_date)
         ):
             end_date = start_date
 
@@ -565,6 +567,14 @@ def handle_disabled_schedule_by_id(
             'type',
             'Puntual'
         )
+
+        if (
+            not end_date
+            or str(end_date).strip() == ''
+            or schedule_type == 'Puntual'
+            or str(end_date) < str(start_date)
+        ):
+            end_date = start_date
 
 
         try:

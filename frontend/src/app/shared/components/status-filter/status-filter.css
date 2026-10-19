@@ -127,35 +127,15 @@
   background: #0f9c9c;
 }
 
-/* Inhabilitados */
+/* Cancelados */
 .status-filter button:nth-child(5)::before {
-  background: #8491a3;
+  background: #ea580c;
 }
 
-/* 1. Todos */
-/*.status-filter button:nth-child(1)::before {
-  background: var(--color-primary);
-}*/
-
-/* 2. Disponibles 
-.status-filter button:nth-child(2)::before {
-  background: var(--color-success);
-}*/
-
-/* 3. Reservados 
-.status-filter button:nth-child(3)::before {
-  background: var(--color-danger);
-}*/
-
-/* 4. Reprogramación pendiente 
-.status-filter button:nth-child(4)::before {
-  background: var(--color-warning);
-}*/
-
-/* 5. Inhabilitados 
-.status-filter button:nth-child(5)::before {
-  background: var(--color-muted);
-}*/
+/* Inhabilitados */
+.status-filter button:nth-child(6)::before {
+  background: #8491a3;
+}
 
 /* ============================================================
    ESTADO SELECCIONADO (con colores por tipo)
@@ -194,14 +174,20 @@
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
-/* Reprogramación pendiente (naranja) */
+/* Reprogramación pendiente (teal) */
 .status-filter button:nth-child(4).selected {
-  background: linear-gradient(135deg, #f59e0b, #fbbf24);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+}
+
+/* Cancelados (naranja/ámbar) */
+.status-filter button:nth-child(5).selected {
+  background: linear-gradient(135deg, #ea580c, #f97316);
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
 }
 
 /* Inhabilitados (gris) */
-.status-filter button:nth-child(5).selected {
+.status-filter button:nth-child(6).selected {
   background: linear-gradient(135deg, #64748b, #94a3b8);
   box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
 }

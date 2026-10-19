@@ -20,6 +20,8 @@ def get_connection():
 def save_regular_schedule(
     appointment_duration,
     appointment_gap_minutes,
+    availability_range_value,
+    availability_range_unit,
     break_enabled,
     break_start_time,
     break_end_time,
@@ -36,6 +38,8 @@ def save_regular_schedule(
                 id,
                 appointment_duration,
                 appointment_gap_minutes,
+                availability_range_value,
+                availability_range_unit,
                 break_enabled,
                 break_start_time,
                 break_end_time
@@ -46,20 +50,42 @@ def save_regular_schedule(
                 %s,
                 %s,
                 %s,
+                %s,
+                %s,
                 %s
             )
             ON CONFLICT (id)
             DO UPDATE SET
-                appointment_duration = EXCLUDED.appointment_duration,
-                appointment_gap_minutes = EXCLUDED.appointment_gap_minutes,
-                break_enabled = EXCLUDED.break_enabled,
-                break_start_time = EXCLUDED.break_start_time,
-                break_end_time = EXCLUDED.break_end_time,
-                updated_at = CURRENT_TIMESTAMP
+                appointment_duration =
+                    EXCLUDED.appointment_duration,
+
+                appointment_gap_minutes =
+                    EXCLUDED.appointment_gap_minutes,
+
+                availability_range_value =
+                    EXCLUDED.availability_range_value,
+
+                availability_range_unit =
+                    EXCLUDED.availability_range_unit,
+
+                break_enabled =
+                    EXCLUDED.break_enabled,
+
+                break_start_time =
+                    EXCLUDED.break_start_time,
+
+                break_end_time =
+                    EXCLUDED.break_end_time,
+
+                updated_at =
+                    CURRENT_TIMESTAMP
+
             RETURNING
                 id,
                 appointment_duration,
                 appointment_gap_minutes,
+                availability_range_value,
+                availability_range_unit,
                 break_enabled,
                 break_start_time,
                 break_end_time,
@@ -69,6 +95,8 @@ def save_regular_schedule(
             (
                 appointment_duration,
                 appointment_gap_minutes,
+                availability_range_value,
+                availability_range_unit,
                 break_enabled,
                 break_start_time,
                 break_end_time
@@ -132,6 +160,8 @@ def get_regular_schedule():
                 id,
                 appointment_duration,
                 appointment_gap_minutes,
+                availability_range_value,
+                availability_range_unit,
                 break_enabled,
                 break_start_time,
                 break_end_time,

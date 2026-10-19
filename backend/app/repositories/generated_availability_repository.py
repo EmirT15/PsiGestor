@@ -34,14 +34,11 @@ def replace_generated_availabilities(
             """
             DELETE FROM availabilities
             WHERE source = 'regular_schedule'
-              AND regular_schedule_id = %s
-              AND status = 'Disponible'
-              AND date BETWEEN %s AND %s;
+            AND regular_schedule_id = %s
+            AND status = 'Disponible';
             """,
             (
                 regular_schedule_id,
-                start_date,
-                end_date
             )
         )
 

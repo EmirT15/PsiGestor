@@ -21,6 +21,11 @@ services:
       - "5000:5000"
     env_file:
       - ./backend/.env
+
+    volumes:
+      - ./backend:/app
+      - ./database:/database
+
     depends_on:
       - postgres
 

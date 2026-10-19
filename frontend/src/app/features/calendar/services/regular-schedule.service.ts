@@ -3,6 +3,12 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 
+export type AvailabilityRangeUnit =
+  | 'days'
+  | 'weeks'
+  | 'months';
+
+
 export interface RegularScheduleDayRequest {
   dayOfWeek: number;
   startTime: string;
@@ -19,11 +25,19 @@ export interface RegularScheduleBreakRequest {
 
 export interface SaveRegularScheduleRequest {
   appointmentDuration: number;
+
   appointmentGapMinutes: number;
 
-  workDays: RegularScheduleDayRequest[];
+  availabilityRangeValue: number;
 
-  break: RegularScheduleBreakRequest;
+  availabilityRangeUnit:
+    AvailabilityRangeUnit;
+
+  workDays:
+    RegularScheduleDayRequest[];
+
+  break:
+    RegularScheduleBreakRequest;
 }
 
 
@@ -33,6 +47,11 @@ export interface RegularScheduleResponse {
   appointmentDuration: number;
 
   appointmentGapMinutes: number;
+
+  availabilityRangeValue: number;
+
+  availabilityRangeUnit:
+    AvailabilityRangeUnit;
 
   break: {
     enabled: boolean;
@@ -67,7 +86,9 @@ export class RegularScheduleService {
 
 
   getRegularSchedule():
-    Observable<RegularScheduleResponse | null> {
+    Observable<
+      RegularScheduleResponse | null
+    > {
 
     return this.http.get<
       RegularScheduleResponse | null
@@ -88,4 +109,5 @@ export class RegularScheduleService {
       data
     );
   }
+
 }

@@ -172,6 +172,9 @@ export class DisabledSchedulesList implements OnInit {
 
   checkConflicts(): void {
     if (this.formData.startDate && this.formData.startTime && this.formData.endTime) {
+      if (this.formData.type === 'Puntual' || !this.formData.endDate || this.formData.endDate < this.formData.startDate) {
+        this.formData.endDate = this.formData.startDate;
+      }
       this.calendarService.checkConflicts({
         startDate: this.formData.startDate,
         endDate: this.formData.endDate || this.formData.startDate,
@@ -195,6 +198,10 @@ export class DisabledSchedulesList implements OnInit {
     if (!this.formData.startDate || !this.formData.startTime || !this.formData.endTime) {
       alert('Por favor, completa la fecha y franja horaria.');
       return;
+    }
+
+    if (this.formData.type === 'Puntual' || !this.formData.endDate || this.formData.endDate < this.formData.startDate) {
+      this.formData.endDate = this.formData.startDate;
     }
 
     // Si ya se está enviando la petición, ignoramos nuevos clics
