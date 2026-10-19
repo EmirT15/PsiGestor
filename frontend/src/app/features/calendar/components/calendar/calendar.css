@@ -100,21 +100,24 @@
 }
 
 .dot-available {
-  background-color: #10b981;
+  background-color: #16a34a;
 }
 
 .dot-reserved {
-  background-color: #ef4444;
+  background-color: #2563eb;
 }
 
 .dot-reschedule {
-  background-color: #0d9488;
+  background-color: #d97706;
+}
+
+.dot-cancelled {
+  background-color: #dc2626;
 }
 
 .dot-disabled {
   background-color: #64748b;
 }
-
 
 .calendar-grid button.month-day-cell:hover {
   background: #f8fbff;
@@ -180,6 +183,8 @@
   padding-top: 6px;
 }
 
+/* DISPONIBLE - VERDE */
+
 .month-availability-summary {
   width: 100%;
   display: flex;
@@ -190,27 +195,38 @@
   min-height: 23px;
   padding: 4px 6px;
   border-radius: 5px;
-  background: #7ee8a8;
-  color: #145c38;
+
+  background: #f0fdf4;
+  color: #166534;
+
+  border: 1px solid #86efac;
+
   font-size: 10px;
   font-weight: 700;
 }
 
 .month-availability-dot {
   flex-shrink: 0;
-  border-radius: 50%;
+
   width: 5px;
   height: 5px;
-  background: #138a57;
+
+  border-radius: 50%;
+
+  background: #16a34a;
 }
 
+
+/* RESERVADO - AZUL */
+
 .month-reserved-summary {
-  background: #fee2e2;
-  color: #991b1b;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #93c5fd;
 }
 
 .month-reserved-dot {
-  background: #dc2626;
+  background: #2563eb;
 }
 
 .month-reschedule-summary {
@@ -344,9 +360,9 @@
   align-items: center;
   gap: 14px;
   padding: 16px;
-  border: 1px solid #d9e4ee;
+  border: 1px solid #86efac;
   border-radius: 12px;
-  background: #f4f8fc;
+  background: #f0fdf4;
   text-align: left;
   cursor: pointer;
   box-sizing: border-box;
@@ -354,9 +370,12 @@
 }
 
 .day-availability-card:hover {
-  background: #eef7f2;
-  border-color: #a7ddc0;
-  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.08);
+  background: #dcfce7;
+  border-color: #4ade80;
+
+  box-shadow:
+    0 3px 10px
+    rgba(22, 163, 74, 0.10);
 }
 
 .day-availability-card:active {
@@ -364,9 +383,12 @@
 }
 
 .day-availability-card-selected {
-  background: #ecfdf3;
-  border-color: #168454;
-  box-shadow: 0 0 0 2px rgba(22, 132, 84, 0.10);
+  background: #dcfce7;
+  border-color: #16a34a;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(22, 163, 74, 0.14);
 }
 
 .day-availability-icon {
@@ -377,8 +399,8 @@
   justify-content: center;
   flex-shrink: 0;
   border-radius: 9px;
-  background: #b7f4d0;
-  color: #147749;
+  background: #bbf7d0;
+  color: #166534;
   font-size: 17px;
   font-weight: 700;
 }
@@ -410,7 +432,7 @@
   gap: 5px;
   padding: 3px 8px;
   border-radius: 999px;
-  background: #168454;
+  background: #16a34a;
   color: #ffffff;
   font-size: 11px;
   font-weight: 600;
@@ -431,83 +453,107 @@
 
 
 .day-reserved-card:hover {
-  background: #fee2e2;
-  border-color: #fca5a5;
-  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.08);
+  background: #dbeafe;
+  border-color: #60a5fa;
+
+  box-shadow:
+    0 3px 10px
+    rgba(37, 99, 235, 0.10);
 }
 
 .day-reserved-card.day-availability-card-selected {
-  background: #fee2e2;
-  border-color: #dc2626;
-  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.14);
+  background: #dbeafe;
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(37, 99, 235, 0.14);
 }
 
 .day-reserved-icon {
+  background: #bfdbfe;
+  color: #1d4ed8;
+  font-size: 13px;
+}
+
+.day-reserved-badge {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+/* REPROGRAMACIÓN PENDIENTE - ÁMBAR */
+
+.day-reschedule-card {
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+
+.day-reschedule-card:hover {
+  background: #fef3c7;
+  border-color: #fbbf24;
+
+  box-shadow:
+    0 3px 10px
+    rgba(217, 119, 6, 0.10);
+}
+
+.day-reschedule-card.day-availability-card-selected {
+  background: #fef3c7;
+  border-color: #d97706;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(217, 119, 6, 0.14);
+}
+
+.day-reschedule-icon {
+  background: #fde68a;
+  color: #92400e;
+  font-size: 13px;
+}
+
+.day-reschedule-badge {
+  background: #d97706;
+  color: #ffffff;
+}
+
+/* CANCELADO - ROJO */
+
+.day-cancelled-card {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.day-cancelled-card:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+
+  box-shadow:
+    0 3px 10px
+    rgba(220, 38, 38, 0.10);
+}
+
+.day-cancelled-card.day-availability-card-selected {
+  background: #fee2e2;
+  border-color: #dc2626;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(220, 38, 38, 0.14);
+}
+
+.day-cancelled-icon {
   background: #fecaca;
   color: #b91c1c;
   font-size: 13px;
 }
 
-.day-reserved-badge {
+.day-cancelled-badge {
   background: #dc2626;
   color: #ffffff;
 }
 
-.day-reschedule-card {
-  background: #f0fdfa;
-  border-color: #99f6e4;
-}
-
-.day-reschedule-card:hover {
-  background: #ccfbf1;
-  border-color: #5eead4;
-  box-shadow: 0 3px 10px rgba(20, 184, 166, 0.08);
-}
-
-.day-reschedule-card.day-availability-card-selected {
-  background: #ccfbf1;
-  border-color: #0f766e;
-  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.14);
-}
-
-.day-reschedule-icon {
-  background: #99f6e4;
-  color: #0f766e;
-  font-size: 13px;
-}
-
-.day-reschedule-badge {
-  background: #0d9488;
-  color: #ffffff;
-}
-
-.day-cancelled-card {
-  background: #fff7ed;
-  border-color: #fed7aa;
-}
-
-.day-cancelled-card:hover {
-  background: #ffedd5;
-  border-color: #fdba74;
-  box-shadow: 0 3px 10px rgba(234, 88, 12, 0.08);
-}
-
-.day-cancelled-card.day-availability-card-selected {
-  background: #ffedd5;
-  border-color: #ea580c;
-  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.14);
-}
-
-.day-cancelled-icon {
-  background: #fed7aa;
-  color: #c2410c;
-  font-size: 13px;
-}
-
-.day-cancelled-badge {
-  background: #ea580c;
-  color: #ffffff;
-}
+/* INHABILITADO - GRIS */
 
 .day-disabled-card {
   background: #f1f5f9;
@@ -995,78 +1041,165 @@
   min-height: 0;
 }
 
+/* ============================================================
+   ESTADOS - VISTA SEMANA
+   ============================================================ */
 
-.day-reserved-card,
-.week-reserved-card {
-  background: #fef2f2;
-  border-color: #fecaca;
+
+/* Mantener base azul de Reservado en vista Día */
+
+.day-reserved-card {
+  background: #eff6ff;
+  border-color: #93c5fd;
 }
 
-.week-reserved-card:hover {
-  background: #fee2e2;
-  border-color: #fca5a5;
+
+/* ============================================================
+   RESERVADO - AZUL
+   ============================================================ */
+
+.week-availability-card.week-reserved-card {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.week-availability-card.week-reserved-card:hover {
+  background: #dbeafe;
+  border-color: #60a5fa;
 }
 
 .week-reserved-card .week-availability-time,
 .week-reserved-card .week-availability-status {
-  color: #b91c1c;
+  color: #1d4ed8;
+}
+
+.week-reserved-card .week-availability-duration {
+  color: #2563eb;
 }
 
 .week-reserved-card .week-availability-dot {
-  background: #ef4444;
+  background: #2563eb;
 }
 
-.week-reschedule-card {
-  background: #f0fdfa;
-  border-color: #99f6e4;
+
+/* ============================================================
+   REPROGRAMACIÓN PENDIENTE - ÁMBAR
+   ============================================================ */
+
+.week-availability-card.week-reschedule-card {
+  background: #fffbeb;
+  border-color: #fcd34d;
 }
 
-.week-reschedule-card:hover {
-  background: #ccfbf1;
-  border-color: #5eead4;
+.week-availability-card.week-reschedule-card:hover {
+  background: #fef3c7;
+  border-color: #fbbf24;
 }
 
 .week-reschedule-card .week-availability-time,
 .week-reschedule-card .week-availability-status {
-  color: #0f766e;
+  color: #92400e;
+}
+
+.week-reschedule-card .week-availability-duration {
+  color: #d97706;
 }
 
 .week-reschedule-card .week-availability-dot {
-  background: #14b8a6;
+  background: #d97706;
 }
 
-.week-cancelled-card {
-  background: #fff7ed;
-  border-color: #fed7aa;
+
+/* ============================================================
+   CANCELADO - ROJO
+   ============================================================ */
+
+.week-availability-card.week-cancelled-card {
+  background: #fef2f2;
+  border-color: #fca5a5;
 }
 
-.week-cancelled-card:hover {
-  background: #ffedd5;
-  border-color: #fdba74;
+.week-availability-card.week-cancelled-card:hover {
+  background: #fee2e2;
+  border-color: #f87171;
 }
 
 .week-cancelled-card .week-availability-time,
 .week-cancelled-card .week-availability-status {
-  color: #c2410c;
+  color: #b91c1c;
+}
+
+.week-cancelled-card .week-availability-duration {
+  color: #dc2626;
 }
 
 .week-cancelled-card .week-availability-dot {
-  background: #ea580c;
+  background: #dc2626;
 }
 
-.week-disabled-card {
+
+/* ============================================================
+   INHABILITADO - GRIS
+   ============================================================ */
+
+.week-availability-card.week-disabled-card {
   background: #f1f5f9;
   border-color: #cbd5e1;
   cursor: default;
 }
 
-.week-disabled-card .week-availability-time,
-.week-disabled-card .week-availability-status {
+.week-availability-card.week-disabled-card
+.week-availability-time,
+.week-availability-card.week-disabled-card
+.week-availability-status {
   color: #475569;
 }
 
-.week-disabled-card .week-availability-dot {
+.week-availability-card.week-disabled-card
+.week-availability-duration {
+  color: #64748b;
+}
+
+.week-availability-card.week-disabled-card
+.week-availability-dot {
   background: #64748b;
+}
+
+/* ============================================================
+   SELECCIÓN SEGÚN ESTADO - VISTA SEMANA
+   ============================================================ */
+
+
+/* Reservado seleccionado - azul */
+
+.week-reserved-card.week-availability-card-selected {
+  border-color: #2563eb !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(37, 99, 235, 0.16) !important;
+}
+
+
+/* Reprogramación seleccionada - ámbar */
+
+.week-reschedule-card.week-availability-card-selected {
+  border-color: #d97706 !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(217, 119, 6, 0.16) !important;
+}
+
+
+/* Cancelado seleccionado - rojo */
+
+.week-cancelled-card.week-availability-card-selected {
+  border-color: #dc2626 !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(220, 38, 38, 0.16) !important;
 }
 
 /* ============================================================
@@ -1409,21 +1542,52 @@
 
 
   .week-availability-time {
-    gap: 3px;
+  grid-area: time;
 
-    font-size: 8px;
-  }
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 4px;
+
+  color: #166534;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.1;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 
   .week-availability-dot {
-    width: 4px;
-    height: 4px;
-  }
+  width: 5px;
+  height: 5px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #16a34a;
+}
 
 
   .week-availability-status {
-    font-size: 8px;
-  }
+  grid-area: status;
+
+  color: #166534;
+
+  font-size: 9px;
+  font-weight: 600;
+
+  line-height: 1.05;
+
+  white-space: nowrap;
+}
 
 
   .week-availability-duration {
@@ -1597,40 +1761,26 @@
   width: 100%;
   height: 100%;
   min-height: 0;
-
   display: grid;
-
   grid-template-columns:
     minmax(0, 1fr)
     auto;
-
   grid-template-areas:
     "time time"
     "status duration";
-
   align-content: start;
-
   column-gap: 5px;
   row-gap: 1px;
-
   box-sizing: border-box;
-
   padding: 4px 22px 4px 6px;
-
   overflow: hidden;
-
-  background: #eafaf1;
-  color: #145f3d;
-
-  border: 1px solid #9ee0bd;
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #86efac;
   border-radius: 5px;
-
   text-align: left;
-
   font: inherit;
-
   cursor: pointer;
-
   transition:
     background 0.12s ease,
     border-color 0.12s ease,
@@ -1638,22 +1788,22 @@
 }
 
 .week-slot-main:hover {
-  background: #ddf7e8;
-  border-color: #5fcf94;
+  background: #dcfce7;
+  border-color: #4ade80;
 
   box-shadow:
     0 2px 5px
-    rgba(16, 185, 129, 0.12);
+    rgba(22, 163, 74, 0.12);
 }
 
 
 .week-slot-block.week-availability-card-selected
 .week-slot-main {
-  border-color: #168454;
+  border-color: #16a34a;
 
   box-shadow:
     0 0 0 2px
-    rgba(22, 132, 84, 0.13);
+    rgba(22, 163, 74, 0.15);
 }
 
 
