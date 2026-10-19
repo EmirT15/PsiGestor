@@ -33,6 +33,8 @@ export class CalendarToolbar {
 
   @Output() manageSchedule = new EventEmitter<void>();
 
+  @Output() logout = new EventEmitter<void>();
+
   changeView(view: 'day' | 'week' | 'month'): void {
     this.viewChange.emit(view);
   }

@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 import traceback
+from app.services.auth_service import require_role
 
 from app.services.availability_service import (
     register_availability,
@@ -108,6 +109,7 @@ def map_schedule_data(data):
     '/availabilities',
     methods=['POST']
 )
+@require_role('psicologo')
 def create_availability():
     data = request.get_json()
 
@@ -321,6 +323,12 @@ def reschedule_availability_route(id):
 def handle_disabled_schedules():
 
     if request.method == 'POST':
+        # Solo el psicólogo puede registrar inhabilitaciones
+        from app.services.auth_service import get_current_user
+        current_user = get_current_user()
+        if not current_user or current_user.get('role') != 'psicologo':
+            return jsonify({'error': 'Acceso denegado. Solo el psicólogo puede inhabilitar horarios.'}), 403
+
         data = request.get_json() or {}
 
         start_date = (
@@ -528,6 +536,7 @@ def check_disabled_conflicts():
     '/disabled-schedules/<int:schedule_id>',
     methods=['PUT', 'DELETE']
 )
+@require_role('psicologo')
 def handle_disabled_schedule_by_id(
     schedule_id
 ):

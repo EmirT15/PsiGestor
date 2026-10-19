@@ -8,6 +8,7 @@ from app.routes.availability import availability_bp
 from app.routes.regular_schedule import regular_schedule_bp
 from app.routes.appointments import appointments_bp
 from app.routes.students import students_bp
+from app.routes.auth import auth_bp
 from app.init_db import init_database
 
 
@@ -20,9 +21,27 @@ if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
         print(f"[app] Advertencia al inicializar BD: {init_error}")
 
 app = Flask(__name__)
-CORS(app)
+
+# Configuración de seguridad para sesiones y cookies
+app.secret_key = os.getenv("SECRET_KEY", "psigestor_super_secret_session_key_2026")
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=os.getenv("FLASK_ENV") == "production",
+)
+
+# Permitir credenciales (cookies HttpOnly) para el frontend
+CORS(
+    app,
+    supports_credentials=True,
+    origins=[
+        "http://localhost:4200",
+        "http://127.0.0.1:4200",
+    ],
+)
 Swagger(app)
 
+app.register_blueprint(auth_bp)
 app.register_blueprint(availability_bp)
 app.register_blueprint(regular_schedule_bp)
 app.register_blueprint(appointments_bp)

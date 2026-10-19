@@ -11,6 +11,9 @@ import {
 } from '@angular/core';
 
 import { catchError, forkJoin, of } from 'rxjs';
+import { Router } from '@angular/router';
+
+import { AuthService } from '../../../../core/services/auth.service';
 
 import type {
   StatusFilter
@@ -3044,6 +3047,12 @@ export class Calendar {
     private changeDetectorRef:
       ChangeDetectorRef,
 
+    private authService:
+      AuthService,
+
+    private router:
+      Router,
+
     @Inject(PLATFORM_ID)
     platformId: object
 
@@ -3129,6 +3138,17 @@ export class Calendar {
     return (
       `${year}-${month}-${day}`
     );
+  }
+
+  onLogout(): void {
+    this.authService.logout().subscribe({
+      next: () => {
+        this.router.navigate(['/login']);
+      },
+      error: () => {
+        this.router.navigate(['/login']);
+      }
+    });
   }
 
 }
