@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -40,11 +40,19 @@ import {
   banOutline,
   personOutline,
   timeOutline,
-  refreshOutline
+  refreshOutline,
+  schoolOutline,
+  locationOutline,
+  documentTextOutline,
+  syncOutline,
+  searchOutline,
+  closeOutline,
+  arrowForwardOutline,
+  radioOutline
 } from 'ionicons/icons';
 import { AuthService } from '../../core/services/auth.service';
 import { CalendarService } from '../../core/services/calendar.service';
-import { Availability, DisabledSchedule, InvalidationReason } from '../../core/models/availability.model';
+import { Availability, DisabledSchedule, InvalidationReason, Student } from '../../core/models/availability.model';
 
 @Component({
   selector: 'app-psicologo',
@@ -94,16 +102,11 @@ export class PsicologoPage implements OnInit {
   // Filtro
   statusFilter: 'all' | 'Disponible' | 'Reservado' | 'Cancelado' | 'Inhabilitado' = 'all';
 
-  onFilterChange(event: any): void {
-    this.statusFilter = event.detail.value || 'all';
-  }
+  // Modal Activo
+  activeModal: 'none' | 'disable' | 'booking' | 'details' | 'cancel' | 'reschedule' | 'rescheduleDetails' | 'cancelDetails' = 'none';
+  selectedSlot: Availability | null = null;
 
-  // Modales
-  isDisableModalOpen = false;
-  isCancelModalOpen = false;
-  selectedAvailability: Availability | null = null;
-
-  // Formulario inhabilitar
+  // Formulario Inhabilitar
   disableForm = {
     date: this.formatDate(new Date()),
     startTime: '09:00',
@@ -112,10 +115,30 @@ export class PsicologoPage implements OnInit {
     observation: ''
   };
 
-  // Formulario cancelar
+  // Formulario Agendar Manualmente (Psicóloga)
+  bookingForm = {
+    studentSearch: '',
+    selectedStudent: null as Student | null,
+    modality: 'In person' as 'In person' | 'Online',
+    location: 'Consultorio de Psicopedagogía',
+    reason: ''
+  };
+  studentSearchResults: Student[] = [];
+  isSearchingStudents = false;
+  isSavingAppointment = false;
+
+  // Formulario Cancelar
   cancelForm = {
     reason: 'Fuerza mayor',
     observation: ''
+  };
+
+  // Formulario Reprogramar
+  rescheduleForm = {
+    newDate: this.formatDate(new Date()),
+    newSlotId: null as number | null,
+    selectedNewSlot: null as Availability | null,
+    reason: 'Ajuste de agenda psicopedagógica'
   };
 
   readonly invalidationReasons: InvalidationReason[] = [
@@ -141,7 +164,15 @@ export class PsicologoPage implements OnInit {
       banOutline,
       personOutline,
       timeOutline,
-      refreshOutline
+      refreshOutline,
+      schoolOutline,
+      locationOutline,
+      documentTextOutline,
+      syncOutline,
+      searchOutline,
+      closeOutline,
+      arrowForwardOutline,
+      radioOutline
     });
   }
 
@@ -180,7 +211,7 @@ export class PsicologoPage implements OnInit {
     });
   }
 
-  // Navegación de fecha
+  // Navegación
   changeDay(offset: number): void {
     const nextDate = new Date(this.selectedDate);
     nextDate.setDate(nextDate.getDate() + offset);
@@ -209,7 +240,11 @@ export class PsicologoPage implements OnInit {
     });
   }
 
-  // Filtrado de slots para el día seleccionado
+  // Filtrado
+  onFilterChange(event: any): void {
+    this.statusFilter = event.detail.value || 'all';
+  }
+
   get slotsForDay(): Availability[] {
     const dateStr = this.formatDate(this.selectedDate);
     return this.availabilities.filter(item => {
@@ -220,7 +255,6 @@ export class PsicologoPage implements OnInit {
     }).sort((a, b) => a.startTime.localeCompare(b.startTime));
   }
 
-  // Horarios inhabilitados del día
   get disabledSchedulesForDay(): DisabledSchedule[] {
     const dateStr = this.formatDate(this.selectedDate);
     return this.disabledSchedules.filter(item => {
@@ -231,20 +265,34 @@ export class PsicologoPage implements OnInit {
     });
   }
 
-  // Contadores del día
   getCount(status: string): number {
     const dateStr = this.formatDate(this.selectedDate);
     return this.availabilities.filter(i => i.date === dateStr && i.status === status).length;
   }
 
-  // Abrir modal de inhabilitar
-  openDisableModal(): void {
-    this.disableForm.date = this.formatDate(this.selectedDate);
-    this.isDisableModalOpen = true;
+  // Click en Slot
+  onSlotClick(slot: Availability): void {
+    this.selectedSlot = slot;
+
+    if (slot.status === 'Disponible') {
+      this.openBookingModal(slot);
+    } else if (slot.status === 'Reservado') {
+      this.activeModal = 'details';
+    } else if (slot.status === 'Cancelado') {
+      this.activeModal = 'cancelDetails';
+    } else if (slot.status === 'Reprogramacion pendiente') {
+      this.activeModal = 'rescheduleDetails';
+    }
   }
 
-  closeDisableModal(): void {
-    this.isDisableModalOpen = false;
+  closeModal(): void {
+    this.activeModal = 'none';
+  }
+
+  // 1. Inhabilitar Horario
+  openDisableModal(): void {
+    this.disableForm.date = this.formatDate(this.selectedDate);
+    this.activeModal = 'disable';
   }
 
   saveDisabledSchedule(): void {
@@ -256,7 +304,7 @@ export class PsicologoPage implements OnInit {
       observation: this.disableForm.observation
     }).subscribe({
       next: () => {
-        this.closeDisableModal();
+        this.closeModal();
         this.loadData();
       },
       error: (err) => {
@@ -265,32 +313,147 @@ export class PsicologoPage implements OnInit {
     });
   }
 
-  // Abrir modal de cancelar
-  openCancelModal(item: Availability): void {
-    this.selectedAvailability = item;
-    this.cancelForm.reason = 'Fuerza mayor';
-    this.cancelForm.observation = '';
-    this.isCancelModalOpen = true;
+  // 2. Agendar Cita Manualmente
+  openBookingModal(slot: Availability): void {
+    this.selectedSlot = slot;
+    this.bookingForm.studentSearch = '';
+    this.bookingForm.selectedStudent = null;
+    this.bookingForm.modality = 'In person';
+    this.bookingForm.location = 'Consultorio de Psicopedagogía';
+    this.bookingForm.reason = '';
+    this.studentSearchResults = [];
+    this.activeModal = 'booking';
   }
 
-  closeCancelModal(): void {
-    this.isCancelModalOpen = false;
-    this.selectedAvailability = null;
+  onStudentSearchInput(value: string): void {
+    this.bookingForm.studentSearch = value;
+    if (!value || value.trim().length < 2) {
+      this.studentSearchResults = [];
+      return;
+    }
+
+    this.isSearchingStudents = true;
+    this.calendarService.searchStudents(value.trim()).subscribe({
+      next: (students) => {
+        this.studentSearchResults = students || [];
+        this.isSearchingStudents = false;
+      },
+      error: () => {
+        this.studentSearchResults = [];
+        this.isSearchingStudents = false;
+      }
+    });
+  }
+
+  selectStudent(student: Student): void {
+    this.bookingForm.selectedStudent = student;
+    this.bookingForm.studentSearch = `${student.name} (${student.studentId})`;
+    this.studentSearchResults = [];
+  }
+
+  saveManualAppointment(): void {
+    if (!this.selectedSlot) return;
+
+    if (!this.bookingForm.selectedStudent) {
+      alert('Por favor busca y selecciona a un alumno de la lista.');
+      return;
+    }
+
+    if (!this.bookingForm.reason.trim()) {
+      alert('Por favor escribe el motivo de la cita.');
+      return;
+    }
+
+    this.isSavingAppointment = true;
+    this.calendarService.createAppointment({
+      student_id: this.bookingForm.selectedStudent.id,
+      student_name: this.bookingForm.selectedStudent.name,
+      date: this.selectedSlot.date,
+      start_time: this.selectedSlot.startTime,
+      end_time: this.selectedSlot.endTime,
+      duration: this.selectedSlot.duration,
+      modality: this.bookingForm.modality,
+      location: this.bookingForm.modality === 'In person' ? this.bookingForm.location : undefined,
+      reason: this.bookingForm.reason.trim()
+    }).subscribe({
+      next: () => {
+        this.isSavingAppointment = false;
+        this.closeModal();
+        this.loadData();
+      },
+      error: (err) => {
+        this.isSavingAppointment = false;
+        alert(err.error?.error || 'Error al agendar la cita.');
+      }
+    });
+  }
+
+  // 3. Cancelar Cita
+  openCancelModal(slot?: Availability): void {
+    if (slot) this.selectedSlot = slot;
+    this.cancelForm.reason = 'Fuerza mayor';
+    this.cancelForm.observation = '';
+    this.activeModal = 'cancel';
   }
 
   confirmCancel(): void {
-    if (!this.selectedAvailability) return;
+    if (!this.selectedSlot) return;
     this.calendarService.cancelAppointment(
-      this.selectedAvailability.id,
+      this.selectedSlot.id,
       this.cancelForm.reason,
       this.cancelForm.observation
     ).subscribe({
       next: () => {
-        this.closeCancelModal();
+        this.closeModal();
         this.loadData();
       },
       error: (err) => {
         alert(err.error?.error || 'Error al cancelar la cita.');
+      }
+    });
+  }
+
+  // 4. Reprogramar Cita
+  openRescheduleModal(slot?: Availability): void {
+    if (slot) this.selectedSlot = slot;
+    this.rescheduleForm.newDate = this.selectedSlot?.date || this.formatDate(this.selectedDate);
+    this.rescheduleForm.newSlotId = null;
+    this.rescheduleForm.selectedNewSlot = null;
+    this.rescheduleForm.reason = 'Ajuste de agenda psicopedagógica';
+    this.activeModal = 'reschedule';
+  }
+
+  get availableSlotsForReschedule(): Availability[] {
+    return this.availabilities.filter(item =>
+      item.date === this.rescheduleForm.newDate &&
+      item.status === 'Disponible' &&
+      item.id !== this.selectedSlot?.id
+    ).sort((a, b) => a.startTime.localeCompare(b.startTime));
+  }
+
+  selectRescheduleSlot(slot: Availability): void {
+    this.rescheduleForm.newSlotId = slot.id;
+    this.rescheduleForm.selectedNewSlot = slot;
+  }
+
+  saveReschedule(): void {
+    if (!this.selectedSlot || !this.rescheduleForm.selectedNewSlot) {
+      alert('Por favor selecciona el nuevo horario propuesto.');
+      return;
+    }
+
+    this.calendarService.rescheduleAppointment(
+      this.selectedSlot.id,
+      this.rescheduleForm.newDate,
+      this.rescheduleForm.selectedNewSlot.startTime,
+      this.rescheduleForm.selectedNewSlot.endTime
+    ).subscribe({
+      next: () => {
+        this.closeModal();
+        this.loadData();
+      },
+      error: (err) => {
+        alert(err.error?.error || 'Error al proponer la reprogramación.');
       }
     });
   }
