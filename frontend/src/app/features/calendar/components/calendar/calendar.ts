@@ -4,7 +4,11 @@ import {
   afterNextRender,
   ChangeDetectorRef,
   Component,
+  EventEmitter,
   Inject,
+  Input,
+  OnDestroy,
+  Output,
   PLATFORM_ID,
   signal
 } from '@angular/core';
@@ -69,6 +73,10 @@ interface CalendarSlot extends Availability {
   slotStatus: 'Disponible' | 'Reservado';
 }
 
+export interface PatientScheduleSelection {
+  availability: Availability;
+  slot: string;
+}
 @Component({
   selector: 'app-calendar',
   standalone: true,
@@ -90,10 +98,22 @@ interface CalendarSlot extends Availability {
 
 
 
-export class Calendar {
+export class Calendar implements OnDestroy {
+
+  @Output()
+    patientScheduleSelected = 
+    new EventEmitter<PatientScheduleSelection>();
+
+  @Input() mode: 'psychologist' | 'patient' = 'psychologist';
 
   private isBrowser: boolean;
-
+  
+  /*
+ * Actualización automática de la agenda
+ * del paciente.
+ */
+  private patientRefreshInterval:
+    ReturnType<typeof setInterval> | null = null;
 
   /*
    * Fuerza la actualización visual del calendario
@@ -836,6 +856,10 @@ private toastTimeout:
     availability: Availability
   ): void {
 
+    if (this.mode === 'patient') {
+      return;
+      }
+
     this.selectedSlot =
       slot;
 
@@ -1042,33 +1066,91 @@ private toastTimeout:
    */
 
 
+selectAvailableSlot(
+  availability: Availability,
+  slot?: string
+): void {
 
-  selectAvailableSlot(
-    availability: Availability,
-    slot?: string
-  ): void {
-    this.selectedAvailability = availability;
-    this.selectedAvailabilityId = availability.id;
-    this.selectedAvailabilityStatus = availability.status;
-    this.selectedSlotDate = availability.date;
-    this.selectedDate = availability.date;
-    this.currentDate = new Date(availability.date + 'T00:00:00');
+  /*
+   * En la vista del paciente solamente
+   * se permite seleccionar Disponible.
+   */
+  if (
+    this.mode === 'patient' &&
+    availability.status !== 'Disponible'
+  ) {
+    return;
+  }
 
-    const slots = this.generateSlots(availability);
+
+  this.selectedAvailability =
+    availability;
+
+  this.selectedAvailabilityId =
+    availability.id;
+
+  this.selectedAvailabilityStatus =
+    availability.status;
+
+  this.selectedSlotDate =
+    availability.date;
+
+  this.selectedDate =
+    availability.date;
+
+  this.currentDate =
+    new Date(
+      availability.date + 'T00:00:00'
+    );
+
+
+  const slots =
+    this.generateSlots(
+      availability
+    );
+
 
   if (slots.length === 0) {
+
     this.showToast(
       'No hay horarios disponibles en este bloque.',
       'warning'
-  );
+    );
 
-  return;
-}
-
-    this.selectedSlot = slot ?? slots[0];
-
-    this.isSidebarOpen = true;
+    return;
   }
+
+
+  this.selectedSlot =
+    slot ?? slots[0];
+
+
+  /*
+   * PACIENTE:
+   * no abre el sidebar administrativo.
+   * Envía la selección a su propia página.
+   */
+  if (this.mode === 'patient') {
+
+    this.isSidebarOpen =
+      false;
+
+    this.patientScheduleSelected.emit({
+      availability,
+      slot: this.selectedSlot
+    });
+
+    return;
+  }
+
+
+  /*
+   * PSICÓLOGA:
+   * conserva el comportamiento actual.
+   */
+  this.isSidebarOpen =
+    true;
+}
 
   showToast(
   message: string,
@@ -1864,53 +1946,104 @@ private toastTimeout:
   }
 
 
-  getBookedAvailabilitiesForHour(
-    date: Date,
-    hour: string
-  ): Availability[] {
-    if (
-      this.statusFilter !== 'all' &&
-      this.statusFilter !== 'Reservado' &&
-      this.statusFilter !== 'Reprogramacion pendiente' &&
-      this.statusFilter !== 'Cancelado'
-    ) {
-      return [];
-    }
+getBookedAvailabilitiesForHour(
+  date: Date,
+  hour: string
+): Availability[] {
 
-    const dateString = this.formatDate(date);
-    const hourStart = this.timeToMinutes(hour);
-    const hourEnd = hourStart + 60;
+  /*
+   * Los filtros administrativos solamente
+   * aplican a la vista de la psicóloga.
+   */
+  if (
+    this.mode === 'psychologist' &&
+    this.statusFilter !== 'all' &&
+    this.statusFilter !== 'Reservado' &&
+    this.statusFilter !== 'Reprogramacion pendiente' &&
+    this.statusFilter !== 'Cancelado'
+  ) {
+    return [];
+  }
 
-    return this.getMergedAvailabilitiesForDateString(dateString)
-      .filter((availability) => {
-        if (
-          availability.status !== 'Reservado' &&
-          availability.status !== 'Reprogramacion pendiente' &&
-          availability.status !== 'Cancelado'
-        ) {
+
+  const dateString =
+    this.formatDate(date);
+
+  const hourStart =
+    this.timeToMinutes(hour);
+
+  const hourEnd =
+    hourStart + 60;
+
+
+  return this
+    .getMergedAvailabilitiesForDateString(
+      dateString
+    )
+    .filter((availability) => {
+
+      /*
+       * Para paciente:
+       * Reservado y Reprogramación pendiente
+       * se consideran simplemente Ocupado.
+       *
+       * Cancelado no se muestra.
+       */
+      if (this.mode === 'patient') {
+
+        const isOccupied =
+          availability.status === 'Reservado' ||
+          availability.status ===
+            'Reprogramacion pendiente';
+
+        if (!isOccupied) {
           return false;
         }
+
+      } else {
+
+        const isAdministrativeStatus =
+          availability.status === 'Reservado' ||
+          availability.status ===
+            'Reprogramacion pendiente' ||
+          availability.status === 'Cancelado';
+
+        if (!isAdministrativeStatus) {
+          return false;
+        }
+
 
         if (
           this.statusFilter !== 'all' &&
-          availability.status !== this.statusFilter
+          availability.status !==
+            this.statusFilter
         ) {
           return false;
         }
 
-        const startMinutes = this.timeToMinutes(
+      }
+
+
+      const startMinutes =
+        this.timeToMinutes(
           availability.startTime
         );
 
-        return startMinutes >= hourStart && startMinutes < hourEnd;
-      })
-      .sort(
-        (first, second) =>
-          this.timeToMinutes(first.startTime) -
-          this.timeToMinutes(second.startTime)
+      return (
+        startMinutes >= hourStart &&
+        startMinutes < hourEnd
       );
-  }
-
+    })
+    .sort(
+      (first, second) =>
+        this.timeToMinutes(
+          first.startTime
+        ) -
+        this.timeToMinutes(
+          second.startTime
+        )
+    );
+}
 
   getFormattedRange12h(
     availability: Availability
@@ -2115,6 +2248,25 @@ private toastTimeout:
       .length;
   }
 
+  getPatientOccupiedCountForDate(
+  date: Date
+): number {
+
+  const dateString =
+    this.formatDate(date);
+
+  return this
+    .getMergedAvailabilitiesForDateString(
+      dateString
+    )
+    .filter(
+      (availability) =>
+        availability.status === 'Reservado' ||
+        availability.status ===
+          'Reprogramacion pendiente'
+    )
+    .length;
+}
 
   getAvailableSlots():
     Availability[] {
@@ -2549,6 +2701,19 @@ private toastTimeout:
         )
     ) {
 
+      if (this.mode === 'patient') {
+
+        const visibleForPatient =
+          availability.status === 'Disponible' ||
+          availability.status === 'Reservado' ||
+          availability.status === 'Reprogramacion pendiente';
+
+          if (!visibleForPatient) {
+            continue;
+          }
+
+        }
+
       items.push({
 
         type:
@@ -2656,70 +2821,62 @@ private toastTimeout:
   /* ============================================================
      HU-02B - HORARIOS INHABILITADOS
      ============================================================ */
+getDisabledSchedulesForDate(
+  date: Date
+): any[] {
 
+ /*
+ * Los filtros administrativos solamente
+ * afectan la agenda de la psicóloga.
+ *
+ * En la vista paciente los horarios
+ * inhabilitados siempre deben poder
+ * representarse.
+ */
+if (
+  this.mode === 'psychologist' &&
+  this.statusFilter !== 'all' &&
+  this.statusFilter !== 'Inhabilitado'
+) {
+  return [];
+}
 
-  getDisabledSchedulesForDate(
-    date: Date
-  ): any[] {
+  const dateString =
+    this.formatDate(date);
 
-    /*
-     * Respetar filtro de estado.
-     */
-    if (
-      this.statusFilter !==
-        'all'
-      &&
-      this.statusFilter !==
-        'Inhabilitado'
-    ) {
+  return this.disabledSchedules
+    .filter(
+      (disabledSchedule) => {
 
-      return [];
-    }
+        const startDate =
+          disabledSchedule.startDate ||
+          disabledSchedule.date;
 
+        const rawEndDate =
+          disabledSchedule.endDate ||
+          disabledSchedule.date ||
+          startDate;
 
-    const dateString =
-      this.formatDate(date);
+        const endDate =
+          disabledSchedule.type === 'Puntual' ||
+          rawEndDate < startDate
+            ? startDate
+            : rawEndDate;
 
-
-    return this.disabledSchedules
-      .filter(
-        (disabledSchedule) => {
-
-          const startDate =
-            disabledSchedule.startDate ||
-            disabledSchedule.date;
-
-          const rawEndDate =
-            disabledSchedule.endDate ||
-            disabledSchedule.date ||
-            startDate;
-
-          const endDate =
-            disabledSchedule.type === 'Puntual' ||
-            rawEndDate < startDate
-              ? startDate
-              : rawEndDate;
-
-
-          if (
-            !startDate ||
-            !endDate
-          ) {
-
-            return false;
-          }
-
-
-          return (
-            dateString >=
-              startDate
-            &&
-            dateString <=
-              endDate
-          );
+        if (
+          !startDate ||
+          !endDate
+        ) {
+          return false;
         }
-      );
-  }
+
+        return (
+          dateString >= startDate &&
+          dateString <= endDate
+        );
+      }
+    );
+}
 
 
   hasDisabledSchedule(
@@ -3607,43 +3764,104 @@ private toastTimeout:
         platformId
       );
 
+      afterNextRender(
+        
+        () => {
 
-    afterNextRender(
-      () => {
+    if (!this.isBrowser) {
+      return;
+    }
 
-        if (
-          !this.isBrowser
-        ) {
 
-          return;
+    /*
+     * Primera carga del calendario.
+     */
+    this.refreshCalendarData();
+
+
+    /*
+     * Actualización cuando los cambios
+     * ocurren dentro de la misma instancia
+     * de Angular.
+     */
+    this.calendarService
+      .scheduleChanged$
+      .subscribe(
+        () => {
+
+          this.refreshCalendarData();
+
         }
+      );
 
 
-        /*
-         * Primera carga después
-         * de la hidratación.
-         */
-        this.refreshCalendarData();
+    /*
+     * PACIENTE:
+     *
+     * Como la vista de la psicóloga y la
+     * del paciente pueden estar abiertas
+     * en pestañas, puertos o sesiones
+     * diferentes, scheduleChanged$ no es
+     * suficiente.
+     *
+     * Consultamos el backend cada 3 segundos.
+     */
+    if (
+      this.mode === 'patient' &&
+      this.patientRefreshInterval === null
+    ) {
 
+      this.patientRefreshInterval =
+        setInterval(
+          () => {
 
-        /*
-         * Cuando HU-02B modifica,
-         * elimina o crea un horario
-         * inhabilitado, refrescar agenda.
-         */
-        this.calendarService
-          .scheduleChanged$
-          .subscribe(
-            () => {
+            this.refreshCalendarData();
 
-              this.refreshCalendarData();
+          },
+          3000
+        );
+    }
 
-            }
-          );
-
-      }
-    );
   }
+);
+
+  }
+
+  ngOnDestroy(): void {
+
+  /*
+   * Detener la actualización automática
+   * cuando se abandona la vista.
+   */
+  if (
+    this.patientRefreshInterval !== null
+  ) {
+
+    clearInterval(
+      this.patientRefreshInterval
+    );
+
+    this.patientRefreshInterval =
+      null;
+  }
+
+
+  /*
+   * Limpiar también el timeout
+   * de las notificaciones.
+   */
+  if (
+    this.toastTimeout !== null
+  ) {
+
+    clearTimeout(
+      this.toastTimeout
+    );
+
+    this.toastTimeout =
+      null;
+  }
+}
 
 
   /* ============================================================

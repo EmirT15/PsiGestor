@@ -81,6 +81,7 @@
       [currentDate]="getCurrentViewDate()"
       [currentView]="currentView"
       [selectedStatus]="statusFilter"
+      [mode]="mode"
 
       (previous)="changeMonth(-1)"
       (next)="changeMonth(1)"
@@ -92,7 +93,7 @@
     />
 
 
-    @if (isManageScheduleOpen) {
+    @if (mode === 'psychologist' && isManageScheduleOpen) {
 
       <app-manage-schedule-modal
         [initialData]="initialModalData"
@@ -171,175 +172,294 @@
             </div>
 
 
-            <div class="month-day-body">
+           <div class="month-day-body">
 
-              @if (
-                getAvailableCountForDate(day) > 0
-              ) {
+  <!-- ====================================== -->
+  <!-- DISPONIBLES - AMBOS ROLES             -->
+  <!-- ====================================== -->
 
-                <span
-                  class="month-availability-summary"
-                >
+  @if (
+    getAvailableCountForDate(day) > 0
+  ) {
 
-                  <span
-                    class="month-availability-dot"
-                  ></span>
+    <span
+      class="month-availability-summary"
+    >
 
-                  {{ getAvailableCountForDate(day) }}
-                  disp.
+      <span
+        class="month-availability-dot"
+      ></span>
 
-                </span>
+      {{ getAvailableCountForDate(day) }}
+      disp.
 
-              }
+    </span>
 
-              @if (
-                getReservedCountForDate(day) > 0
-              ) {
-
-                <span
-                  class="month-availability-summary month-reserved-summary"
-                >
-
-                  <span
-                    class="month-availability-dot month-reserved-dot"
-                  ></span>
-
-                  {{ getReservedCountForDate(day) }}
-                  res.
-
-                </span>
-
-              }
-
-              @if (
-                getRescheduleCountForDate(day) > 0
-              ) {
-
-                <span
-                  class="month-availability-summary month-reschedule-summary"
-                >
-
-                  <span
-                    class="month-availability-dot month-reschedule-dot"
-                  ></span>
-
-                  {{ getRescheduleCountForDate(day) }}
-                  repr.
-
-                </span>
-
-              }
-
-              @if (
-                getCancelledCountForDate(day) > 0
-              ) {
-
-                <span
-                  class="month-availability-summary month-cancelled-summary"
-                >
-
-                  <span
-                    class="month-availability-dot month-cancelled-dot"
-                  ></span>
-
-                  {{ getCancelledCountForDate(day) }}
-                  canc.
-
-                </span>
-
-              }
-
-              @if (
-                getDisabledSchedulesForDate(day).length > 0
-              ) {
-
-                <span
-                  class="month-availability-summary month-disabled-summary"
-                >
-
-                  <span
-                    class="month-availability-dot month-disabled-dot"
-                  ></span>
-
-                  {{ getDisabledSchedulesForDate(day).length }}
-                  inh.
-
-                </span>
-
-              }
+  }
 
 
-              @if (
-                getAvailableCountForDate(day) > 0 ||
-                getReservedCountForDate(day) > 0 ||
-                getRescheduleCountForDate(day) > 0 ||
-                getCancelledCountForDate(day) > 0 ||
-                hasDisabledSchedule(day)
-              ) {
+  <!-- ====================================== -->
+  <!-- OCUPADOS - SOLO PACIENTE              -->
+  <!-- Reservado + Reprogramación pendiente  -->
+  <!-- ====================================== -->
 
-                <div class="dots-container">
+  @if (
+    mode === 'patient' &&
+    getPatientOccupiedCountForDate(day) > 0
+  ) {
 
-                  @if (
-                    getAvailableCountForDate(day) > 0
-                  ) {
+    <span
+      class="
+        month-availability-summary
+        month-reserved-summary
+      "
+    >
 
-                    <span
-                      class="dot dot-available"
-                      title="Disponible"
-                    ></span>
+      <span
+        class="
+          month-availability-dot
+          month-reserved-dot
+        "
+      ></span>
 
-                  }
+      {{ getPatientOccupiedCountForDate(day) }}
+      ocup.
 
-                  @if (
-                    getReservedCountForDate(day) > 0
-                  ) {
+    </span>
 
-                    <span
-                      class="dot dot-reserved"
-                      title="Reservado"
-                    ></span>
-
-                  }
-
-                  @if (
-                    getRescheduleCountForDate(day) > 0
-                  ) {
-
-                    <span
-                      class="dot dot-reschedule"
-                      title="Reprogramación pendiente"
-                    ></span>
-
-                  }
-
-                  @if (
-                    getCancelledCountForDate(day) > 0
-                  ) {
-
-                    <span
-                      class="dot dot-cancelled"
-                      title="Cancelado"
-                    ></span>
-
-                  }
+  }
 
 
-                  @if (
-                    hasDisabledSchedule(day)
-                  ) {
+  <!-- ====================================== -->
+  <!-- ESTADOS ADMINISTRATIVOS - PSICÓLOGA   -->
+  <!-- ====================================== -->
 
-                    <span
-                      class="dot dot-disabled"
-                      title="Inhabilitado"
-                    ></span>
+  @if (mode === 'psychologist') {
 
-                  }
+    @if (
+      getReservedCountForDate(day) > 0
+    ) {
 
-                </div>
+      <span
+        class="
+          month-availability-summary
+          month-reserved-summary
+        "
+      >
 
-              }
+        <span
+          class="
+            month-availability-dot
+            month-reserved-dot
+          "
+        ></span>
 
-            </div>
+        {{ getReservedCountForDate(day) }}
+        res.
+
+      </span>
+
+    }
+
+
+    @if (
+      getRescheduleCountForDate(day) > 0
+    ) {
+
+      <span
+        class="
+          month-availability-summary
+          month-reschedule-summary
+        "
+      >
+
+        <span
+          class="
+            month-availability-dot
+            month-reschedule-dot
+          "
+        ></span>
+
+        {{ getRescheduleCountForDate(day) }}
+        repr.
+
+      </span>
+
+    }
+
+
+    @if (
+      getCancelledCountForDate(day) > 0
+    ) {
+
+      <span
+        class="
+          month-availability-summary
+          month-cancelled-summary
+        "
+      >
+
+        <span
+          class="
+            month-availability-dot
+            month-cancelled-dot
+          "
+        ></span>
+
+        {{ getCancelledCountForDate(day) }}
+        canc.
+
+      </span>
+
+    }
+
+  }
+
+
+  <!-- ====================================== -->
+  <!-- INHABILITADOS - AMBOS ROLES           -->
+  <!-- ====================================== -->
+
+  @if (
+    getDisabledSchedulesForDate(day).length > 0
+  ) {
+
+    <span
+      class="
+        month-availability-summary
+        month-disabled-summary
+      "
+    >
+
+      <span
+        class="
+          month-availability-dot
+          month-disabled-dot
+        "
+      ></span>
+
+      {{
+        getDisabledSchedulesForDate(day).length
+      }}
+      inh.
+
+    </span>
+
+  }
+
+
+  <!-- ====================================== -->
+  <!-- INDICADORES DE COLOR                  -->
+  <!-- ====================================== -->
+
+  @if (
+    getAvailableCountForDate(day) > 0 ||
+    hasDisabledSchedule(day) ||
+    (
+      mode === 'patient' &&
+      getPatientOccupiedCountForDate(day) > 0
+    ) ||
+    (
+      mode === 'psychologist' &&
+      (
+        getReservedCountForDate(day) > 0 ||
+        getRescheduleCountForDate(day) > 0 ||
+        getCancelledCountForDate(day) > 0
+      )
+    )
+  ) {
+
+    <div class="dots-container">
+
+      <!-- Disponible: ambos -->
+
+      @if (
+        getAvailableCountForDate(day) > 0
+      ) {
+
+        <span
+          class="dot dot-available"
+          title="Disponible"
+        ></span>
+
+      }
+
+
+      <!-- Ocupado: paciente -->
+
+      @if (
+        mode === 'patient' &&
+        getPatientOccupiedCountForDate(day) > 0
+      ) {
+
+        <span
+          class="dot dot-reserved"
+          title="Ocupado"
+        ></span>
+
+      }
+
+
+      <!-- Estados individuales: psicóloga -->
+
+      @if (mode === 'psychologist') {
+
+        @if (
+          getReservedCountForDate(day) > 0
+        ) {
+
+          <span
+            class="dot dot-reserved"
+            title="Reservado"
+          ></span>
+
+        }
+
+
+        @if (
+          getRescheduleCountForDate(day) > 0
+        ) {
+
+          <span
+            class="dot dot-reschedule"
+            title="Reprogramación pendiente"
+          ></span>
+
+        }
+
+
+        @if (
+          getCancelledCountForDate(day) > 0
+        ) {
+
+          <span
+            class="dot dot-cancelled"
+            title="Cancelado"
+          ></span>
+
+        }
+
+      }
+
+
+      <!-- Inhabilitado: ambos -->
+
+      @if (
+        hasDisabledSchedule(day)
+      ) {
+
+        <span
+          class="dot dot-disabled"
+          title="Inhabilitado"
+        ></span>
+
+      }
+
+    </div>
+
+  }
+
+</div>
 
           </button>
 
@@ -406,7 +526,22 @@
                 </span>
 
                 <span class="day-availability-duration">
-                  Motivo: {{ disabled.reason }}{{ disabled.observation ? ' (' + disabled.observation + ')' : '' }}
+
+                  @if (mode === 'psychologist') {
+
+                    Motivo:
+                    {{ disabled.reason }}
+
+                    @if (disabled.observation) {
+                      ({{ disabled.observation }})
+                    }
+
+                  } @else {
+
+                    Horario no disponible
+
+                  }
+
                 </span>
 
               </div>
@@ -562,6 +697,9 @@
               <button
                 type="button"
                 class="day-availability-card"
+
+                [disabled]="mode === 'patient'"
+
                 [class.day-reserved-card]="
                   item.availability.status === 'Reservado'
                 "
@@ -595,7 +733,13 @@
                     item.availability.status === 'Cancelado'
                   "
                 >
-                  {{ item.availability.studentInitials || 'AL' }}
+                  @if (mode === 'patient') {
+                      <span aria-hidden="true">
+                        •
+                      </span>
+                    } @else {
+                      {{ item.availability.studentInitials || 'AL' }}
+                    }
                 </div>
 
 
@@ -634,12 +778,16 @@
                       <span
                         class="day-availability-dot"
                       ></span>
-
-                      {{
-                        item.availability.status === 'Reprogramacion pendiente'
-                          ? 'Reprogramación pendiente'
-                          : item.availability.status
-                      }}
+                      @if (mode === 'patient') {
+                          Ocupado
+                        } @else {
+                          {{
+                            item.availability.status ===
+                              'Reprogramacion pendiente'
+                              ? 'Reprogramación pendiente'
+                              : item.availability.status
+                          }}
+                        }
 
                     </span>
 
@@ -647,11 +795,23 @@
                     <span
                       class="day-availability-duration"
                     >
-                      {{ item.availability.studentName || 'Cita' }}
-                      •
-                      {{ item.availability.modality || 'Presencial' }}
-                      •
-                      Duración: {{ item.availability.duration }} min
+                      @if (mode === 'patient') {
+
+                          Duración:
+                          {{ item.availability.duration }}
+                          min
+
+                        } @else {
+
+                          {{ item.availability.studentName || 'Cita' }}
+                          •
+                          {{ item.availability.modality || 'Presencial' }}
+                          •
+                          Duración:
+                          {{ item.availability.duration }}
+                          min
+
+                        }
                     </span>
 
                   </div>
@@ -849,7 +1009,17 @@
                       </span>
 
                       <span class="week-availability-duration">
-                        {{ disabled.reason }}
+
+                        @if (mode === 'psychologist') {
+
+                          {{ disabled.reason }}
+
+                        } @else {
+
+                          No disponible
+
+                        }
+
                       </span>
 
                     </div>
@@ -996,6 +1166,7 @@
                           </button>
 
 
+                        @if (mode === 'psychologist') {
                           <button
                             type="button"
                             class="week-quick-disable"
@@ -1009,6 +1180,7 @@
                           >
                             ×
                           </button>
+                        }
 
                         </div>
 
@@ -1039,6 +1211,9 @@
                         week-availability-card
                         week-positioned-block
                       "
+                      
+                      [disabled]="mode === 'patient'"
+
                       [class.week-reserved-card]="
                         booked.status ===
                           'Reservado'
@@ -1073,7 +1248,7 @@
                           ),
                           booked
                         )
-                      "
+                      "                     
                     >
 
                       <span class="week-availability-time">
@@ -1092,25 +1267,37 @@
 
                       <span class="week-availability-status">
 
-                        {{
-                          booked.status ===
-                            'Reprogramacion pendiente'
-                            ? 'Reprogramación pendiente'
-                            : booked.status
-                        }}
+                              @if (mode === 'patient') {
+
+                                Ocupado
+
+                              } @else {
+
+                                {{
+                                  booked.status ===
+                                    'Reprogramacion pendiente'
+                                    ? 'Reprogramación pendiente'
+                                    : booked.status
+                                }}
+
+                              }
 
                       </span>
 
                       <span class="week-availability-duration">
 
-                        {{
-                          booked.studentName
-                            ? booked.studentName + ' • '
-                            : ''
-                        }}
+                          @if (mode === 'patient') {
+                            {{ booked.duration }} min
+                          } @else {
+                            
+                            {{
+                              booked.studentName
+                                ? booked.studentName + ' • '
+                                : ''
+                            }}
 
-                        {{ booked.duration }} min
-
+                            {{ booked.duration }} min
+                          }
                       </span>
 
                     </button>
@@ -1135,7 +1322,7 @@
     <!-- FECHA SELECCIONADA                       -->
     <!-- ========================================= -->
 
-    @if (selectedDate && currentView === 'month') {
+    @if (mode === 'psychologist' && selectedDate && currentView === 'month') {
 
       <div class="selected-date">
 
@@ -1185,7 +1372,22 @@
                 </span>
 
                 <span class="day-availability-duration">
-                  Motivo: {{ disabled.reason }}{{ disabled.observation ? ' (' + disabled.observation + ')' : '' }}
+
+                  @if (mode === 'psychologist') {
+
+                    Motivo:
+                    {{ disabled.reason }}
+
+                    @if (disabled.observation) {
+                      ({{ disabled.observation }})
+                    }
+
+                  } @else {
+
+                    Horario no disponible
+
+                  }
+
                 </span>
 
               </div>
@@ -1221,6 +1423,7 @@
                   <span class="day-availability-time">
                     {{ getAvailabilityTimeRange(availability) }}
                   </span>
+
                   <span class="day-availability-badge">
                     <span class="day-availability-dot"></span>
                     Disponible
@@ -1294,7 +1497,7 @@
   <!-- ========================================= -->
   <!-- SIDEBAR DE HU-03                         -->
   <!-- ========================================= -->
-
+@if (mode === 'psychologist') {
   <div
     class="calendar-sidebar-wrapper"
     [class.open]="isSidebarOpen"
@@ -1482,8 +1685,8 @@
 
     }
 
-  </div>
-
+    </div>
+  }
 </div>
 
 
@@ -1491,7 +1694,10 @@
 <!-- MODAL DE REPROGRAMACIÓN                   -->
 <!-- ========================================= -->
 
-@if (isRescheduleModalOpen) {
+@if (
+  mode === 'psychologist' &&
+  isRescheduleModalOpen
+) {
 
   <app-reschedule-modal
     [data]="rescheduleData"
@@ -1516,8 +1722,10 @@
 <!-- MODAL DE CANCELACIÓN                      -->
 <!-- ========================================= -->
 
-@if (isCancelModalOpen) {
-
+@if (
+  mode === 'psychologist' &&
+  isCancelModalOpen
+) {
   <app-cancel-modal
     [data]="cancelData"
 
