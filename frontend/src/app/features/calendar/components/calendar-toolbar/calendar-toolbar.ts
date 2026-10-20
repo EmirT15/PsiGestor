@@ -12,6 +12,8 @@ import {
 })
 export class CalendarToolbar {
 
+  @Input() mode: 'psychologist' | 'patient' = 'psychologist';
+
   @Input() currentDate = new Date();
 
   @Input() currentView: 'day' | 'week' | 'month' = 'week';

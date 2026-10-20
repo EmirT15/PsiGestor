@@ -1,11 +1,14 @@
-import { isPlatformBrowser } from '@angular/common';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 
 import {
   afterNextRender,
   ChangeDetectorRef,
   Component,
+  EventEmitter,
   Inject,
+  Input,
+  OnDestroy,
+  Output,
   PLATFORM_ID,
   signal
 } from '@angular/core';
@@ -73,6 +76,10 @@ interface CalendarSlot extends Availability {
   slotStatus: 'Disponible' | 'Reservado';
 }
 
+export interface PatientScheduleSelection {
+  availability: Availability;
+  slot: string;
+}
 @Component({
   selector: 'app-calendar',
   standalone: true,
@@ -94,10 +101,22 @@ interface CalendarSlot extends Availability {
 
 
 
-export class Calendar {
+export class Calendar implements OnDestroy {
+
+  @Output()
+    patientScheduleSelected = 
+    new EventEmitter<PatientScheduleSelection>();
+
+  @Input() mode: 'psychologist' | 'patient' = 'psychologist';
 
   private isBrowser: boolean;
-
+  
+  /*
+ * Actualización automática de la agenda
+ * del paciente.
+ */
+  private patientRefreshInterval:
+    ReturnType<typeof setInterval> | null = null;
 
   /*
    * Fuerza la actualización visual del calendario
@@ -120,6 +139,20 @@ export class Calendar {
   selectedStudent: Student | null = null;
 
   studentSearchResults: Student[] = [];
+
+/*Notificación visual del calendario. */
+toastMessage = '';
+
+toastType:
+  'success'
+  | 'error'
+  | 'warning' = 'success';
+
+toastVisible = false;
+
+private toastTimeout:
+  ReturnType<typeof setTimeout>
+  | null = null;
 
   /*
    * Horarios inhabilitados de HU-02B.
@@ -427,14 +460,14 @@ export class Calendar {
     this.refreshCalendarData();
   }
 
-
-  /*
+    /*
    * Inhabilitación rápida desde
    * una disponibilidad concreta.
    */
   handleDisableFromCard(
     availability: Availability
   ): void {
+
 
     const dateStr =
       availability.date ||
@@ -791,12 +824,26 @@ export class Calendar {
   ): void {
 
     this.currentDate =
-      new Date(date);
+
+      new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+      );
 
     this.selectedDate =
-      this.formatDate(date);
+      this.formatDate(
+        this.currentDate
+      );
+
 
     this.selectedSlot = '';
+
+    this.selectedSlotDate = '';
+
+    this.selectedAvailabilityId =
+      null;
+
 
     this.changeDetectorRef
       .detectChanges();
@@ -811,6 +858,10 @@ export class Calendar {
     slot: string,
     availability: Availability
   ): void {
+
+    if (this.mode === 'patient') {
+      return;
+      }
 
     this.selectedSlot =
       slot;
@@ -1018,31 +1069,132 @@ export class Calendar {
    */
 
 
+selectAvailableSlot(
+  availability: Availability,
+  slot?: string
+): void {
 
-  selectAvailableSlot(
-    availability: Availability,
-    slot?: string
-  ): void {
-    this.selectedAvailability = availability;
-    this.selectedAvailabilityId = availability.id;
-    this.selectedAvailabilityStatus = availability.status;
-    this.selectedSlotDate = availability.date;
-    this.selectedDate = availability.date;
-    this.currentDate = new Date(availability.date + 'T00:00:00');
-
-    const slots = this.generateSlots(availability);
-
-    if (slots.length === 0) {
-      alert('No hay horarios disponibles en este bloque.');
-      return;
-    }
-
-    this.selectedSlot = slot ?? slots[0];
-
-    this.isSidebarOpen = true;
+  /*
+   * En la vista del paciente solamente
+   * se permite seleccionar Disponible.
+   */
+  if (
+    this.mode === 'patient' &&
+    availability.status !== 'Disponible'
+  ) {
+    return;
   }
 
 
+  this.selectedAvailability =
+    availability;
+
+  this.selectedAvailabilityId =
+    availability.id;
+
+  this.selectedAvailabilityStatus =
+    availability.status;
+
+  this.selectedSlotDate =
+    availability.date;
+
+  this.selectedDate =
+    availability.date;
+
+  this.currentDate =
+    new Date(
+      availability.date + 'T00:00:00'
+    );
+
+
+  const slots =
+    this.generateSlots(
+      availability
+    );
+
+
+  if (slots.length === 0) {
+
+    this.showToast(
+      'No hay horarios disponibles en este bloque.',
+      'warning'
+    );
+
+    return;
+  }
+
+
+  this.selectedSlot =
+    slot ?? slots[0];
+
+
+  /*
+   * PACIENTE:
+   * no abre el sidebar administrativo.
+   * Envía la selección a su propia página.
+   */
+  if (this.mode === 'patient') {
+
+    this.isSidebarOpen =
+      false;
+
+    this.patientScheduleSelected.emit({
+      availability,
+      slot: this.selectedSlot
+    });
+
+    return;
+  }
+
+
+  /*
+   * PSICÓLOGA:
+   * conserva el comportamiento actual.
+   */
+  this.isSidebarOpen =
+    true;
+}
+
+  showToast(
+  message: string,
+  type:
+    'success'
+    | 'error'
+    | 'warning' = 'success'
+): void {
+
+  if (this.toastTimeout) {
+    clearTimeout(
+      this.toastTimeout
+    );
+  }
+
+  this.toastMessage =
+    message;
+
+  this.toastType =
+    type;
+
+  this.toastVisible =
+    true;
+
+  this.toastTimeout =
+    setTimeout(
+      () => {
+
+        this.toastVisible =
+          false;
+
+        this.toastTimeout =
+          null;
+
+        this.changeDetectorRef
+          .detectChanges();
+
+      },
+      3500
+    );
+}
 
   onAppointmentSubmit(event: Event): void {
     event.preventDefault();
@@ -1057,8 +1209,11 @@ export class Calendar {
     const selectedStudent = this.selectedStudent;
 
     if (!selectedStudent) {
-      alert('Busca y selecciona un alumno de la lista.');
-      return;
+
+      this.showToast(
+          'Busca y selecciona un alumno de la lista.',
+          'warning'
+  );      return;
     }
 
     const modality = String(
@@ -1076,8 +1231,10 @@ export class Calendar {
     const availability = this.selectedAvailability;
 
     if (!reason) {
-      alert('Completa el motivo de la cita.');
-      return;
+      this.showToast(
+        'Completa el motivo de la cita.',
+        'warning'
+      );
     }
 
     if (
@@ -1086,7 +1243,10 @@ export class Calendar {
       !this.selectedAvailabilityId ||
       this.selectedAvailabilityStatus !== 'Disponible'
     ) {
-      alert('Selecciona primero un horario disponible.');
+      this.showToast(
+        'Selecciona primero un horario disponible.',
+        'warning'
+      );
       return;
     }
 
@@ -1094,19 +1254,28 @@ export class Calendar {
       modality !== 'In person' &&
       modality !== 'Online'
     ) {
-      alert('Selecciona una modalidad válida.');
+      this.showToast(
+        'Selecciona una modalidad válida.',
+        'warning'
+      );
       return;
     }
 
     if (modality === 'In person' && !location) {
-      alert('Escribe la ubicación de la atención.');
+      this.showToast(
+        'Escribe la ubicación de la atención.',
+        'warning'
+      );
       return;
     }
 
     const selectedRange = this.selectedSlot.split(' - ');
 
     if (selectedRange.length !== 2) {
-      alert('No se pudo interpretar el horario seleccionado.');
+      this.showToast(
+        'No se pudo interpretar el horario seleccionado.',
+        'warning'
+      );
       return;
     }
 
@@ -1124,7 +1293,10 @@ export class Calendar {
       !Number.isFinite(duration) ||
       duration <= 0
     ) {
-      alert('La duración del horario no es válida.');
+      this.showToast(
+        'La duración del horario no es válida.',
+        'warning'
+      );
       return;
     }
 
@@ -1142,13 +1314,19 @@ export class Calendar {
       location: modality === 'In person' ? location : undefined,
       reason
     }).subscribe({
-      next: (response) => {
-        console.log('Cita registrada:', response);
-
-        alert('La cita se guardó correctamente.');
+     next: (response) => {
+        console.log(
+          'Cita registrada:',
+          response
+        );
 
         this.closeSidebar();
-        this.loadAvailabilities();
+        this.showToast(
+          'La cita se agendó correctamente.',
+          'success'
+        );
+
+        this.refreshCalendarData();
       },
       error: (error) => {
         console.error('Error al guardar la cita:', error);
@@ -1157,7 +1335,7 @@ export class Calendar {
           error?.error?.error ??
           'No fue posible guardar la cita. Inténtalo nuevamente.';
 
-        alert(message);
+        this.showToast(message, 'error');
       }
     });
   }
@@ -1373,23 +1551,14 @@ export class Calendar {
       new Date(date);
 
 
-    if (
-      dayOfWeek === 0
-    ) {
+    if (dayOfWeek === 0) {
 
-      /*
-       * Si la referencia es domingo,
-       * comenzar el lunes siguiente.
-       */
       startOfWeek.setDate(
         date.getDate() + 1
       );
 
     } else {
 
-      /*
-       * Obtener lunes de la semana.
-       */
       const daysFromMonday =
         dayOfWeek - 1;
 
@@ -1410,16 +1579,12 @@ export class Calendar {
     ) {
 
       const day =
-        new Date(
-          startOfWeek
-        );
-
+        new Date(startOfWeek);
 
       day.setDate(
         startOfWeek.getDate() +
         index
       );
-
 
       days.push(day);
     }
@@ -1430,20 +1595,18 @@ export class Calendar {
 
 
   /*
-   * Visualmente mostrar
-   * domingo-sábado.
+   * Mostrar visualmente la semana
+   * completa de domingo a sábado.
    */
   getDisplayedWeekDays(): Date[] {
 
     const weekDays =
       this.getWeekDays();
 
-
     const sunday =
       new Date(
         weekDays[0]
       );
-
 
     sunday.setDate(
       sunday.getDate() - 1
@@ -1458,52 +1621,273 @@ export class Calendar {
 
 
   /*
-   * Generar filas horarias a partir
-   * de las disponibilidades existentes.
+   * La cuadrícula semanal permanece
+   * visible aunque no existan disponibilidades.
    */
   getWeekTimeRows(): string[] {
     const displayedDays = this.getDisplayedWeekDays();
 
-    const startHours: number[] = [8, 15];
-
-    for (const day of displayedDays) {
-      const dateString = this.formatDate(day);
-      const merged = this.getMergedAvailabilitiesForDateString(
-        dateString
+    /*
+     * Mantener siempre visible el rango base definido
+     * en visualTimeRows, pero ampliar la cuadrícula
+     * cuando existan citas, disponibilidades o
+     * inhabilitaciones fuera de dicho rango.
+     */
+    const startHours: number[] =
+      this.visualTimeRows.map(
+        (time) =>
+          Math.floor(
+            this.timeToMinutes(time) / 60
+          )
       );
 
-      for (const availability of merged) {
+
+    for (const day of displayedDays) {
+
+      const dateString =
+        this.formatDate(day);
+
+
+      const merged =
+        this.getMergedAvailabilitiesForDateString(
+          dateString
+        );
+
+
+      for (
+        const availability of merged
+      ) {
+
         startHours.push(
           Math.floor(
-            this.timeToMinutes(availability.startTime) / 60
+            this.timeToMinutes(
+              availability.startTime
+            ) / 60
           )
         );
       }
 
-      for (const disabled of this.getDisabledSchedulesForDate(day)) {
-        if (disabled.startTime) {
+
+      for (
+        const disabled of
+          this.getDisabledSchedulesForDate(
+            day
+          )
+      ) {
+
+        if (
+          disabled.startTime
+        ) {
+
           startHours.push(
             Math.floor(
-              this.timeToMinutes(disabled.startTime) / 60
+              this.timeToMinutes(
+                disabled.startTime
+              ) / 60
             )
           );
         }
       }
     }
 
-    const firstHour = Math.min(...startHours);
-    const lastHour = Math.max(...startHours);
+
+    const firstHour =
+      Math.min(...startHours);
+
+    const lastHour =
+      Math.max(...startHours);
+
 
     const rows: string[] = [];
 
-    for (let hour = firstHour; hour <= lastHour; hour++) {
-      rows.push(`${hour.toString().padStart(2, '0')}:00`);
+
+    for (
+      let hour = firstHour;
+      hour <= lastHour;
+      hour++
+    ) {
+
+      rows.push(
+        `${hour
+          .toString()
+          .padStart(2, '0')}:00`
+      );
     }
+
 
     return rows;
   }
 
 
+  /*
+   * Posición vertical de un bloque dentro
+   * de su fila horaria.
+   *
+   * Ejemplo:
+   * 10:30 -> 50 % de la fila 10:00.
+   */
+  getWeekBlockTopPercent(
+    startTime: string
+  ): number {
+
+    const startMinutes =
+      this.timeToMinutes(
+        startTime
+      );
+
+    const minutesInsideHour =
+      startMinutes % 60;
+
+
+    return (
+      minutesInsideHour / 60
+    ) * 100;
+  }
+
+
+  /*
+   * Altura proporcional según la duración
+   * real del bloque.
+   */
+  getWeekBlockHeightPercent(
+    startTime: string,
+    endTime: string
+  ): number {
+
+    const startMinutes =
+      this.timeToMinutes(
+        startTime
+      );
+
+    const endMinutes =
+      this.timeToMinutes(
+        endTime
+      );
+
+
+    const duration =
+      Math.max(
+        1,
+        endMinutes -
+        startMinutes
+      );
+
+
+    return (
+      duration / 60
+    ) * 100;
+  }
+  
+  /*
+   * Posición vertical de un slot generado
+   * dentro de su fila horaria.
+   */
+  getWeekSlotTopPercent(
+    slot: string
+  ): number {
+
+    const [
+      startLabel
+    ] = slot.split(' - ');
+
+
+    if (!startLabel) {
+      return 0;
+    }
+
+
+    return this.getWeekBlockTopPercent(
+      this.formatTime24Hour(
+        startLabel.trim()
+      )
+    );
+  }
+
+
+  /*
+   * Altura proporcional de un slot
+   * generado.
+   */
+  getWeekSlotHeightPercent(
+    slot: string
+  ): number {
+
+    const [
+      startLabel,
+      endLabel
+    ] = slot.split(' - ');
+
+
+    if (
+      !startLabel ||
+      !endLabel
+    ) {
+      return 0;
+    }
+
+
+    return this.getWeekBlockHeightPercent(
+
+      this.formatTime24Hour(
+        startLabel.trim()
+      ),
+
+      this.formatTime24Hour(
+        endLabel.trim()
+      )
+    );
+  }
+
+
+  /*
+   * Para la vista Semana, devuelve únicamente
+   * las inhabilitaciones que COMIENZAN en
+   * esta fila.
+   *
+   * getDisabledForTimeCell() conserva la lógica
+   * de traslape real para otras comprobaciones.
+   */
+  getDisabledStartingInTimeCell(
+    date: Date,
+    timeRow: string
+  ): any[] {
+
+    const rowStart =
+      this.timeToMinutes(
+        timeRow
+      );
+
+    const rowEnd =
+      rowStart + 60;
+
+
+    return this
+      .getDisabledSchedulesForDate(
+        date
+      )
+      .filter(
+        (disabledSchedule) => {
+
+          if (
+            !disabledSchedule.startTime ||
+            !disabledSchedule.endTime
+          ) {
+            return false;
+          }
+
+
+          const disabledStart =
+            this.timeToMinutes(
+              disabledSchedule.startTime
+            );
+
+          return (
+            disabledStart >= rowStart &&
+            disabledStart < rowEnd
+          );
+        }
+      );
+  }
   getSlotsForHour(
     availability: Availability,
     hour: string
@@ -1531,8 +1915,10 @@ export class Calendar {
     hour: string
   ): Availability[] {
     if (
-      this.statusFilter !== 'all' &&
-      this.statusFilter !== 'Disponible'
+
+    this.statusFilter !== 'all' &&
+    this.statusFilter !== 'Disponible'
+
     ) {
       return [];
     }
@@ -1552,59 +1938,115 @@ export class Calendar {
       })
       .sort(
         (first, second) =>
-          this.timeToMinutes(first.startTime) -
-          this.timeToMinutes(second.startTime)
+
+          this.timeToMinutes(
+            first.startTime
+          ) -
+          this.timeToMinutes(
+            second.startTime
+          )
       );
   }
 
 
-  getBookedAvailabilitiesForHour(
-    date: Date,
-    hour: string
-  ): Availability[] {
-    if (
-      this.statusFilter !== 'all' &&
-      this.statusFilter !== 'Reservado' &&
-      this.statusFilter !== 'Reprogramacion pendiente' &&
-      this.statusFilter !== 'Cancelado'
-    ) {
-      return [];
-    }
+getBookedAvailabilitiesForHour(
+  date: Date,
+  hour: string
+): Availability[] {
 
-    const dateString = this.formatDate(date);
-    const hourStart = this.timeToMinutes(hour);
-    const hourEnd = hourStart + 60;
+  /*
+   * Los filtros administrativos solamente
+   * aplican a la vista de la psicóloga.
+   */
+  if (
+    this.mode === 'psychologist' &&
+    this.statusFilter !== 'all' &&
+    this.statusFilter !== 'Reservado' &&
+    this.statusFilter !== 'Reprogramacion pendiente' &&
+    this.statusFilter !== 'Cancelado'
+  ) {
+    return [];
+  }
 
-    return this.getMergedAvailabilitiesForDateString(dateString)
-      .filter((availability) => {
-        if (
-          availability.status !== 'Reservado' &&
-          availability.status !== 'Reprogramacion pendiente' &&
-          availability.status !== 'Cancelado'
-        ) {
+
+  const dateString =
+    this.formatDate(date);
+
+  const hourStart =
+    this.timeToMinutes(hour);
+
+  const hourEnd =
+    hourStart + 60;
+
+
+  return this
+    .getMergedAvailabilitiesForDateString(
+      dateString
+    )
+    .filter((availability) => {
+
+      /*
+       * Para paciente:
+       * Reservado y Reprogramación pendiente
+       * se consideran simplemente Ocupado.
+       *
+       * Cancelado no se muestra.
+       */
+      if (this.mode === 'patient') {
+
+        const isOccupied =
+          availability.status === 'Reservado' ||
+          availability.status ===
+            'Reprogramacion pendiente';
+
+        if (!isOccupied) {
           return false;
         }
+
+      } else {
+
+        const isAdministrativeStatus =
+          availability.status === 'Reservado' ||
+          availability.status ===
+            'Reprogramacion pendiente' ||
+          availability.status === 'Cancelado';
+
+        if (!isAdministrativeStatus) {
+          return false;
+        }
+
 
         if (
           this.statusFilter !== 'all' &&
-          availability.status !== this.statusFilter
+          availability.status !==
+            this.statusFilter
         ) {
           return false;
         }
 
-        const startMinutes = this.timeToMinutes(
+      }
+
+
+      const startMinutes =
+        this.timeToMinutes(
           availability.startTime
         );
 
-        return startMinutes >= hourStart && startMinutes < hourEnd;
-      })
-      .sort(
-        (first, second) =>
-          this.timeToMinutes(first.startTime) -
-          this.timeToMinutes(second.startTime)
+      return (
+        startMinutes >= hourStart &&
+        startMinutes < hourEnd
       );
-  }
-
+    })
+    .sort(
+      (first, second) =>
+        this.timeToMinutes(
+          first.startTime
+        ) -
+        this.timeToMinutes(
+          second.startTime
+        )
+    );
+}
 
   getFormattedRange12h(
     availability: Availability
@@ -1625,6 +2067,7 @@ export class Calendar {
       5
     );
   }
+
 
 
   getAvailabilityTimeRange(
@@ -1808,6 +2251,25 @@ export class Calendar {
       .length;
   }
 
+  getPatientOccupiedCountForDate(
+  date: Date
+): number {
+
+  const dateString =
+    this.formatDate(date);
+
+  return this
+    .getMergedAvailabilitiesForDateString(
+      dateString
+    )
+    .filter(
+      (availability) =>
+        availability.status === 'Reservado' ||
+        availability.status ===
+          'Reprogramacion pendiente'
+    )
+    .length;
+}
 
   getAvailableSlots():
     Availability[] {
@@ -2242,6 +2704,19 @@ export class Calendar {
         )
     ) {
 
+      if (this.mode === 'patient') {
+
+        const visibleForPatient =
+          availability.status === 'Disponible' ||
+          availability.status === 'Reservado' ||
+          availability.status === 'Reprogramacion pendiente';
+
+          if (!visibleForPatient) {
+            continue;
+          }
+
+        }
+
       items.push({
 
         type:
@@ -2349,70 +2824,62 @@ export class Calendar {
   /* ============================================================
      HU-02B - HORARIOS INHABILITADOS
      ============================================================ */
+getDisabledSchedulesForDate(
+  date: Date
+): any[] {
 
+ /*
+ * Los filtros administrativos solamente
+ * afectan la agenda de la psicóloga.
+ *
+ * En la vista paciente los horarios
+ * inhabilitados siempre deben poder
+ * representarse.
+ */
+if (
+  this.mode === 'psychologist' &&
+  this.statusFilter !== 'all' &&
+  this.statusFilter !== 'Inhabilitado'
+) {
+  return [];
+}
 
-  getDisabledSchedulesForDate(
-    date: Date
-  ): any[] {
+  const dateString =
+    this.formatDate(date);
 
-    /*
-     * Respetar filtro de estado.
-     */
-    if (
-      this.statusFilter !==
-        'all'
-      &&
-      this.statusFilter !==
-        'Inhabilitado'
-    ) {
+  return this.disabledSchedules
+    .filter(
+      (disabledSchedule) => {
 
-      return [];
-    }
+        const startDate =
+          disabledSchedule.startDate ||
+          disabledSchedule.date;
 
+        const rawEndDate =
+          disabledSchedule.endDate ||
+          disabledSchedule.date ||
+          startDate;
 
-    const dateString =
-      this.formatDate(date);
+        const endDate =
+          disabledSchedule.type === 'Puntual' ||
+          rawEndDate < startDate
+            ? startDate
+            : rawEndDate;
 
-
-    return this.disabledSchedules
-      .filter(
-        (disabledSchedule) => {
-
-          const startDate =
-            disabledSchedule.startDate ||
-            disabledSchedule.date;
-
-          const rawEndDate =
-            disabledSchedule.endDate ||
-            disabledSchedule.date ||
-            startDate;
-
-          const endDate =
-            disabledSchedule.type === 'Puntual' ||
-            rawEndDate < startDate
-              ? startDate
-              : rawEndDate;
-
-
-          if (
-            !startDate ||
-            !endDate
-          ) {
-
-            return false;
-          }
-
-
-          return (
-            dateString >=
-              startDate
-            &&
-            dateString <=
-              endDate
-          );
+        if (
+          !startDate ||
+          !endDate
+        ) {
+          return false;
         }
-      );
-  }
+
+        return (
+          dateString >= startDate &&
+          dateString <= endDate
+        );
+      }
+    );
+}
 
 
   hasDisabledSchedule(
@@ -2466,13 +2933,16 @@ export class Calendar {
               disabledSchedule.startTime
             );
 
+          const disabledEnd =
+            this.timeToMinutes(
+              disabledSchedule.endTime
+            );
+
 
           return (
-            disabledStart >=
-              rowStart
+            disabledStart < rowEnd
             &&
-            disabledStart <
-              rowEnd
+            disabledEnd > rowStart
           );
         }
       );
@@ -2553,7 +3023,7 @@ export class Calendar {
   }
 
 
-  isRegularWorkDay(
+   isRegularWorkDay(
     date: Date
   ): boolean {
 
@@ -2594,6 +3064,10 @@ export class Calendar {
       !this.hasHabitualBreak()
       ||
       !this.regularSchedule
+      ||
+      !this.isInsideAvailabilityRange(
+        date
+      )
     ) {
 
       return false;
@@ -2654,6 +3128,242 @@ export class Calendar {
   }
 
 
+  private getAvailabilityRangeStartDate():
+    Date | null {
+
+    if (
+      !this.regularSchedule?.updatedAt
+    ) {
+
+      return null;
+    }
+
+
+    const updatedAt =
+      new Date(
+        this.regularSchedule.updatedAt
+      );
+
+
+    if (
+      Number.isNaN(
+        updatedAt.getTime()
+      )
+    ) {
+
+      return null;
+    }
+
+
+    /*
+     * El backend genera el horario
+     * usando America/Merida.
+     */
+    const parts =
+      new Intl.DateTimeFormat(
+        'en-US',
+        {
+          timeZone: 'America/Merida',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }
+      )
+        .formatToParts(
+          updatedAt
+        );
+
+
+    const year =
+      Number(
+        parts.find(
+          (part) =>
+            part.type === 'year'
+        )?.value
+      );
+
+    const month =
+      Number(
+        parts.find(
+          (part) =>
+            part.type === 'month'
+        )?.value
+      );
+
+    const day =
+      Number(
+        parts.find(
+          (part) =>
+            part.type === 'day'
+        )?.value
+      );
+
+
+    if (
+      !year ||
+      !month ||
+      !day
+    ) {
+
+      return null;
+    }
+
+
+    return new Date(
+      year,
+      month - 1,
+      day
+    );
+  }
+
+
+  private getAvailabilityRangeEndDate():
+    Date | null {
+
+    if (
+      !this.regularSchedule
+    ) {
+
+      return null;
+    }
+
+
+    const startDate =
+      this.getAvailabilityRangeStartDate();
+
+
+    if (
+      !startDate
+    ) {
+
+      return null;
+    }
+
+
+    const value =
+      this.regularSchedule
+        .availabilityRangeValue;
+
+    const unit =
+      this.regularSchedule
+        .availabilityRangeUnit;
+
+
+    if (
+      !Number.isInteger(value)
+      ||
+      value <= 0
+    ) {
+
+      return null;
+    }
+
+
+    if (
+      unit === 'days'
+    ) {
+
+      const endDate =
+        new Date(startDate);
+
+      endDate.setDate(
+        endDate.getDate() +
+        value - 1
+      );
+
+      return endDate;
+    }
+
+
+    if (
+      unit === 'weeks'
+    ) {
+
+      const endDate =
+        new Date(startDate);
+
+      endDate.setDate(
+        endDate.getDate() +
+        (value * 7) - 1
+      );
+
+      return endDate;
+    }
+
+
+    if (
+      unit === 'months'
+    ) {
+
+      const sourceDay =
+        startDate.getDate();
+
+      const endDate =
+        new Date(
+          startDate.getFullYear(),
+          startDate.getMonth() +
+            value,
+          1
+        );
+
+      const lastDay =
+        new Date(
+          endDate.getFullYear(),
+          endDate.getMonth() + 1,
+          0
+        ).getDate();
+
+      endDate.setDate(
+        Math.min(
+          sourceDay,
+          lastDay
+        )
+      );
+
+      return endDate;
+    }
+
+
+    return null;
+  }
+
+
+  private isInsideAvailabilityRange(
+    date: Date
+  ): boolean {
+
+    const startDate =
+      this.getAvailabilityRangeStartDate();
+
+    const endDate =
+      this.getAvailabilityRangeEndDate();
+
+
+    if (
+      !startDate ||
+      !endDate
+    ) {
+
+      return false;
+    }
+
+
+    const targetDate =
+      new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+      );
+
+
+    return (
+      targetDate >=
+        startDate
+      &&
+      targetDate <=
+        endDate
+    );
+  }
   isHabitualBreakSegmentStart(
     date: Date
   ): boolean {
@@ -3063,43 +3773,104 @@ export class Calendar {
         platformId
       );
 
+      afterNextRender(
+        
+        () => {
 
-    afterNextRender(
-      () => {
+    if (!this.isBrowser) {
+      return;
+    }
 
-        if (
-          !this.isBrowser
-        ) {
 
-          return;
+    /*
+     * Primera carga del calendario.
+     */
+    this.refreshCalendarData();
+
+
+    /*
+     * Actualización cuando los cambios
+     * ocurren dentro de la misma instancia
+     * de Angular.
+     */
+    this.calendarService
+      .scheduleChanged$
+      .subscribe(
+        () => {
+
+          this.refreshCalendarData();
+
         }
+      );
 
 
-        /*
-         * Primera carga después
-         * de la hidratación.
-         */
-        this.refreshCalendarData();
+    /*
+     * PACIENTE:
+     *
+     * Como la vista de la psicóloga y la
+     * del paciente pueden estar abiertas
+     * en pestañas, puertos o sesiones
+     * diferentes, scheduleChanged$ no es
+     * suficiente.
+     *
+     * Consultamos el backend cada 3 segundos.
+     */
+    if (
+      this.mode === 'patient' &&
+      this.patientRefreshInterval === null
+    ) {
 
+      this.patientRefreshInterval =
+        setInterval(
+          () => {
 
-        /*
-         * Cuando HU-02B modifica,
-         * elimina o crea un horario
-         * inhabilitado, refrescar agenda.
-         */
-        this.calendarService
-          .scheduleChanged$
-          .subscribe(
-            () => {
+            this.refreshCalendarData();
 
-              this.refreshCalendarData();
+          },
+          3000
+        );
+    }
 
-            }
-          );
-
-      }
-    );
   }
+);
+
+  }
+
+  ngOnDestroy(): void {
+
+  /*
+   * Detener la actualización automática
+   * cuando se abandona la vista.
+   */
+  if (
+    this.patientRefreshInterval !== null
+  ) {
+
+    clearInterval(
+      this.patientRefreshInterval
+    );
+
+    this.patientRefreshInterval =
+      null;
+  }
+
+
+  /*
+   * Limpiar también el timeout
+   * de las notificaciones.
+   */
+  if (
+    this.toastTimeout !== null
+  ) {
+
+    clearTimeout(
+      this.toastTimeout
+    );
+
+    this.toastTimeout =
+      null;
+  }
+}
 
 
   /* ============================================================

@@ -1,3 +1,4 @@
+from calendar import monthrange
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -14,8 +15,11 @@ from app.repositories.generated_availability_repository import (
     replace_generated_availabilities
 )
 
-
-AVAILABILITY_GENERATION_DAYS = 90
+AVAILABILITY_RANGE_LIMITS = {
+    'days': 365,
+    'weeks': 52,
+    'months': 12
+}
 
 LOCAL_TIMEZONE = ZoneInfo(
     'America/Merida'
@@ -60,7 +64,6 @@ def validate_positive_integer(
             f'{field_name} debe ser un número entero mayor que 0.'
         )
 
-
 def validate_non_negative_integer(
     value,
     field_name
@@ -75,6 +78,107 @@ def validate_non_negative_integer(
         )
 
 
+def validate_availability_range(
+    value,
+    unit
+):
+    validate_positive_integer(
+        value,
+        'El rango de disponibilidad'
+    )
+
+    if unit not in AVAILABILITY_RANGE_LIMITS:
+        raise ValueError(
+            'La unidad del rango de disponibilidad '
+            'debe ser days, weeks o months.'
+        )
+
+    maximum = AVAILABILITY_RANGE_LIMITS[
+        unit
+    ]
+
+    if value > maximum:
+        unit_labels = {
+            'days': 'días',
+            'weeks': 'semanas',
+            'months': 'meses'
+        }
+
+        raise ValueError(
+            'El rango máximo permitido para '
+            f'{unit_labels[unit]} es {maximum}.'
+        )
+
+
+def add_months(
+    source_date,
+    months
+):
+    month_index = (
+        source_date.month - 1
+        + months
+    )
+
+    year = (
+        source_date.year
+        + month_index // 12
+    )
+
+    month = (
+        month_index % 12
+        + 1
+    )
+
+    last_day = monthrange(
+        year,
+        month
+    )[1]
+
+    day = min(
+        source_date.day,
+        last_day
+    )
+
+    return source_date.replace(
+        year=year,
+        month=month,
+        day=day
+    )
+
+
+def calculate_generation_end_date(
+    start_date,
+    range_value,
+    range_unit
+):
+    if range_unit == 'days':
+        return (
+            start_date
+            + timedelta(
+                days=range_value - 1
+            )
+        )
+
+    if range_unit == 'weeks':
+        return (
+            start_date
+            + timedelta(
+                days=(range_value * 7) - 1
+            )
+        )
+
+    if range_unit == 'months':
+        return add_months(
+            start_date,
+            range_value
+        )
+
+    raise ValueError(
+        'La unidad del rango de disponibilidad '
+        'es inválida.'
+    )
+
+
 def save_regular_schedule_config(data):
     if not isinstance(data, dict):
         raise ValueError(
@@ -87,6 +191,14 @@ def save_regular_schedule_config(data):
 
     appointment_gap_minutes = data.get(
         'appointmentGapMinutes'
+    )
+
+    availability_range_value = data.get(
+        'availabilityRangeValue'
+    )
+
+    availability_range_unit = data.get(
+        'availabilityRangeUnit'
     )
 
     work_days = data.get(
@@ -107,6 +219,11 @@ def save_regular_schedule_config(data):
     validate_non_negative_integer(
         appointment_gap_minutes,
         'La pausa entre citas'
+    )
+
+    validate_availability_range(
+        availability_range_value,
+        availability_range_unit
     )
 
 
@@ -329,6 +446,8 @@ def save_regular_schedule_config(data):
     save_regular_schedule_repo(
         appointment_duration,
         appointment_gap_minutes,
+        availability_range_value,
+        availability_range_unit,
         break_enabled,
         break_start_time,
         break_end_time,
@@ -356,9 +475,14 @@ def save_regular_schedule_config(data):
     ).date()
 
     generation_end_date = (
-        generation_start_date
-        + timedelta(
-            days=AVAILABILITY_GENERATION_DAYS - 1
+        calculate_generation_end_date(
+            generation_start_date,
+            saved_schedule[
+                'availabilityRangeValue'
+            ],
+            saved_schedule[
+                'availabilityRangeUnit'
+            ]
         )
     )
 
@@ -411,7 +535,6 @@ def save_regular_schedule_config(data):
         }
     }
 
-
 def get_regular_schedule_config():
     result = get_regular_schedule_repo()
 
@@ -431,51 +554,61 @@ def get_regular_schedule_config():
     return {
         'id': schedule[0],
 
-        'appointmentDuration': schedule[1],
+        'appointmentDuration':
+            schedule[1],
 
-        'appointmentGapMinutes': schedule[2],
+        'appointmentGapMinutes':
+            schedule[2],
+
+        'availabilityRangeValue':
+            schedule[3],
+
+        'availabilityRangeUnit':
+            schedule[4],
 
         'break': {
-            'enabled': schedule[3],
+            'enabled':
+                schedule[5],
 
             'startTime': (
-                schedule[4].strftime(
+                schedule[6].strftime(
                     '%H:%M'
                 )
-                if schedule[4]
+                if schedule[6]
                 else None
             ),
 
             'endTime': (
-                schedule[5].strftime(
+                schedule[7].strftime(
                     '%H:%M'
                 )
-                if schedule[5]
+                if schedule[7]
                 else None
             )
         },
 
         'workDays': [
             {
-                'dayOfWeek': day[2],
+                'dayOfWeek':
+                    day[2],
 
-                'startTime': day[3].strftime(
-                    '%H:%M'
-                ),
+                'startTime':
+                    day[3].strftime(
+                        '%H:%M'
+                    ),
 
-                'endTime': day[4].strftime(
-                    '%H:%M'
-                )
+                'endTime':
+                    day[4].strftime(
+                        '%H:%M'
+                    )
             }
 
             for day in work_days
         ],
 
-        'createdAt': schedule[
-            6
-        ].isoformat(),
+        'createdAt':
+            schedule[8].isoformat(),
 
-        'updatedAt': schedule[
-            7
-        ].isoformat()
+        'updatedAt':
+            schedule[9].isoformat()
     }

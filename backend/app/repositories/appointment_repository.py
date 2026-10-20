@@ -291,8 +291,6 @@ def create_appointment(
     finally:
         connection.close()
 
-
-    
 def get_appointments(date=None):
     connection = get_db_connection()
 
@@ -339,4 +337,3 @@ def get_appointments(date=None):
 
     finally:
         connection.close()
-

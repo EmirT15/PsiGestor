@@ -1203,3 +1203,184 @@
   }
 
 }
+
+/* ============================================================
+   GENERACIÓN DE DISPONIBILIDAD
+   ============================================================ */
+
+.availability-range-setting {
+  width: 100%;
+  min-width: 0;
+}
+
+
+.availability-range-content {
+  display: flex;
+  flex-direction: column;
+
+  gap: 9px;
+}
+
+
+.availability-range-fields {
+  display: grid;
+
+  grid-template-columns:
+    minmax(120px, 0.65fr)
+    minmax(160px, 1fr);
+
+  gap: 10px;
+}
+
+
+.availability-range-field {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+
+.availability-range-field label {
+  color: #6b7280;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+
+.availability-range-field input,
+.availability-range-field select {
+  width: 100%;
+  height: 36px;
+
+  box-sizing: border-box;
+
+  padding: 0 10px;
+
+  color: #374151;
+  background: #ffffff;
+
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+
+  font-family: inherit;
+  font-size: 12px;
+
+  outline: none;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+
+.availability-range-field input:hover,
+.availability-range-field select:hover {
+  border-color: #9ca3af;
+}
+
+
+.availability-range-field input:focus,
+.availability-range-field select:focus {
+  border-color: #075ea5;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(7, 94, 165, 0.1);
+}
+
+
+.availability-range-field select {
+  cursor: pointer;
+}
+
+
+.availability-range-help {
+  color: #9ca3af;
+
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+
+.availability-range-preview {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 10px 11px;
+
+  background: #f4f8fc;
+
+  border: 1px solid #cfe2f7;
+  border-radius: 8px;
+}
+
+
+.availability-range-preview-icon {
+  width: 28px;
+  height: 28px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #075ea5;
+  background: #eaf3ff;
+
+  border-radius: 7px;
+
+  font-size: 14px;
+}
+
+
+.availability-range-preview > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+
+.availability-range-preview-title {
+  color: #374151;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+
+.availability-range-preview-text {
+  color: #075ea5;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+
+@media (max-width: 640px) {
+
+  .availability-range-setting
+  .duration-heading {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 8px;
+  }
+
+
+  .availability-range-setting
+  .selected-duration {
+    align-self: flex-start;
+  }
+
+
+  .availability-range-fields {
+    grid-template-columns: 1fr;
+  }
+
+}

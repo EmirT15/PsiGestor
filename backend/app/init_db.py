@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 import os
 import sys
@@ -8,8 +8,8 @@ import psycopg
 from dotenv import load_dotenv
 
 from app.services.regular_schedule_service import (
-    AVAILABILITY_GENERATION_DAYS,
     LOCAL_TIMEZONE,
+    calculate_generation_end_date,
     get_regular_schedule_config,
 )
 from app.services.availability_generation_service import (
@@ -53,12 +53,37 @@ def connect_with_retry(max_retries: int = 15, delay_seconds: float = 1.0):
 
 def sync_regular_schedule_availabilities() -> None:
     saved_schedule = get_regular_schedule_config()
+
     if saved_schedule is None:
         return
 
-    today = datetime.now(LOCAL_TIMEZONE).date()
-    start_date = min(today, date(2026, 10, 16))
-    end_date = start_date + timedelta(days=AVAILABILITY_GENERATION_DAYS - 1)
+    range_value = saved_schedule.get(
+        "availabilityRangeValue"
+    )
+
+    range_unit = saved_schedule.get(
+        "availabilityRangeUnit"
+    )
+
+    if (
+        range_value is None
+        or range_unit is None
+    ):
+        print(
+            "[init_db] El horario habitual no tiene "
+            "un rango de disponibilidad configurado."
+        )
+        return
+
+    start_date = datetime.now(
+        LOCAL_TIMEZONE
+    ).date()
+
+    end_date = calculate_generation_end_date(
+        start_date,
+        range_value,
+        range_unit,
+    )
 
     generated_slots = generate_slots_for_range(
         saved_schedule,

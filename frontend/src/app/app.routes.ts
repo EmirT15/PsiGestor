@@ -33,6 +33,12 @@ export const routes: Routes = [
         .then((m) => m.PortalAlumno)
   },
   {
+    path: 'patient/availability',
+    loadComponent: () =>
+      import('./features/patient/pages/availability/availability')
+        .then((m) => m.Availability)
+  },
+  {
     path: '**',
     redirectTo: 'calendar'
   }
