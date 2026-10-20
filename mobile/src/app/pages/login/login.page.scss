@@ -178,12 +178,22 @@ ion-card-subtitle {
 
 /* Form items */
 .form-item {
-  --background: #f8fafc;
+  --background: #ffffff;
+  --color: #0f172a;
   --border-radius: 10px;
   --padding-start: 12px;
   margin-bottom: 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   border-radius: 10px;
+
+  ion-input {
+    --color: #0f172a !important;
+    --placeholder-color: #64748b !important;
+    --highlight-color-focused: #0284c7;
+    color: #0f172a !important;
+    font-size: 15px;
+    font-weight: 500;
+  }
 }
 
 .submit-button {
