@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -24,7 +24,8 @@ import {
   IonTextarea,
   IonRefresher,
   IonRefresherContent,
-  IonSpinner
+  IonSpinner,
+  ToastController
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
@@ -90,6 +91,8 @@ export class PsicologoPage implements OnInit {
   authService = inject(AuthService);
   private calendarService = inject(CalendarService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
+  private toastCtrl = inject(ToastController);
 
   // Fecha seleccionada
   selectedDate: Date = new Date();
@@ -183,16 +186,30 @@ export class PsicologoPage implements OnInit {
     });
   }
 
+  async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success'): Promise<void> {
+    const toast = await this.toastCtrl.create({
+      message,
+      duration: 2500,
+      color,
+      position: 'top',
+      icon: color === 'success' ? 'checkmark-circle-outline' : (color === 'warning' ? 'alert-circle-outline' : 'close-circle-outline')
+    });
+    await toast.present();
+  }
+
   loadData(event?: any): void {
     this.isLoading = true;
+    this.cdr.detectChanges();
     this.calendarService.getAvailabilities().subscribe({
       next: (data) => {
         this.availabilities = data || [];
         this.loadDisabledSchedules(event);
+        this.cdr.detectChanges();
       },
       error: () => {
         this.isLoading = false;
         if (event) event.target.complete();
+        this.cdr.detectChanges();
       }
     });
   }
@@ -203,10 +220,12 @@ export class PsicologoPage implements OnInit {
         this.disabledSchedules = data || [];
         this.isLoading = false;
         if (event) event.target.complete();
+        this.cdr.detectChanges();
       },
       error: () => {
         this.isLoading = false;
         if (event) event.target.complete();
+        this.cdr.detectChanges();
       }
     });
   }
@@ -287,6 +306,7 @@ export class PsicologoPage implements OnInit {
 
   closeModal(): void {
     this.activeModal = 'none';
+    this.cdr.detectChanges();
   }
 
   // 1. Inhabilitar Horario
@@ -303,12 +323,13 @@ export class PsicologoPage implements OnInit {
       reason: this.disableForm.reason,
       observation: this.disableForm.observation
     }).subscribe({
-      next: () => {
+      next: async () => {
         this.closeModal();
         this.loadData();
+        await this.showToast('Horario inhabilitado correctamente.', 'success');
       },
-      error: (err) => {
-        alert(err.error?.error || 'Error al inhabilitar horario.');
+      error: async (err) => {
+        await this.showToast(err.error?.error || 'Error al inhabilitar horario.', 'danger');
       }
     });
   }
@@ -329,18 +350,22 @@ export class PsicologoPage implements OnInit {
     this.bookingForm.studentSearch = value;
     if (!value || value.trim().length < 2) {
       this.studentSearchResults = [];
+      this.cdr.detectChanges();
       return;
     }
 
     this.isSearchingStudents = true;
+    this.cdr.detectChanges();
     this.calendarService.searchStudents(value.trim()).subscribe({
       next: (students) => {
         this.studentSearchResults = students || [];
         this.isSearchingStudents = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.studentSearchResults = [];
         this.isSearchingStudents = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -349,22 +374,25 @@ export class PsicologoPage implements OnInit {
     this.bookingForm.selectedStudent = student;
     this.bookingForm.studentSearch = `${student.name} (${student.studentId})`;
     this.studentSearchResults = [];
+    this.cdr.detectChanges();
   }
 
   saveManualAppointment(): void {
     if (!this.selectedSlot) return;
 
     if (!this.bookingForm.selectedStudent) {
-      alert('Por favor busca y selecciona a un alumno de la lista.');
+      this.showToast('Por favor busca y selecciona a un alumno de la lista.', 'warning');
       return;
     }
 
     if (!this.bookingForm.reason.trim()) {
-      alert('Por favor escribe el motivo de la cita.');
+      this.showToast('Por favor escribe el motivo de la cita.', 'warning');
       return;
     }
 
     this.isSavingAppointment = true;
+    this.cdr.detectChanges();
+
     this.calendarService.createAppointment({
       student_id: this.bookingForm.selectedStudent.id,
       student_name: this.bookingForm.selectedStudent.name,
@@ -376,14 +404,16 @@ export class PsicologoPage implements OnInit {
       location: this.bookingForm.modality === 'In person' ? this.bookingForm.location : undefined,
       reason: this.bookingForm.reason.trim()
     }).subscribe({
-      next: () => {
+      next: async () => {
         this.isSavingAppointment = false;
         this.closeModal();
         this.loadData();
+        await this.showToast('¡Cita agendada exitosamente!', 'success');
       },
-      error: (err) => {
+      error: async (err) => {
         this.isSavingAppointment = false;
-        alert(err.error?.error || 'Error al agendar la cita.');
+        this.cdr.detectChanges();
+        await this.showToast(err.error?.error || 'Error al agendar la cita.', 'danger');
       }
     });
   }
@@ -403,12 +433,13 @@ export class PsicologoPage implements OnInit {
       this.cancelForm.reason,
       this.cancelForm.observation
     ).subscribe({
-      next: () => {
+      next: async () => {
         this.closeModal();
         this.loadData();
+        await this.showToast('Cita cancelada correctamente.', 'warning');
       },
-      error: (err) => {
-        alert(err.error?.error || 'Error al cancelar la cita.');
+      error: async (err) => {
+        await this.showToast(err.error?.error || 'Error al cancelar la cita.', 'danger');
       }
     });
   }
@@ -438,7 +469,7 @@ export class PsicologoPage implements OnInit {
 
   saveReschedule(): void {
     if (!this.selectedSlot || !this.rescheduleForm.selectedNewSlot) {
-      alert('Por favor selecciona el nuevo horario propuesto.');
+      this.showToast('Por favor selecciona el nuevo horario propuesto.', 'warning');
       return;
     }
 
@@ -448,12 +479,13 @@ export class PsicologoPage implements OnInit {
       this.rescheduleForm.selectedNewSlot.startTime,
       this.rescheduleForm.selectedNewSlot.endTime
     ).subscribe({
-      next: () => {
+      next: async () => {
         this.closeModal();
         this.loadData();
+        await this.showToast('Propuesta de reprogramación enviada correctamente.', 'warning');
       },
-      error: (err) => {
-        alert(err.error?.error || 'Error al proponer la reprogramación.');
+      error: async (err) => {
+        await this.showToast(err.error?.error || 'Error al proponer la reprogramación.', 'danger');
       }
     });
   }

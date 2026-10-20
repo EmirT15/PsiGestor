@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -19,7 +19,8 @@ import {
   IonTextarea,
   IonRefresher,
   IonRefresherContent,
-  IonSpinner
+  IonSpinner,
+  ToastController
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
@@ -65,6 +66,8 @@ export class Tab2Page implements OnInit {
   authService = inject(AuthService);
   private calendarService = inject(CalendarService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
+  private toastCtrl = inject(ToastController);
 
   selectedDate: Date = new Date();
   availabilities: Availability[] = [];
@@ -148,6 +151,18 @@ export class Tab2Page implements OnInit {
   closeBookingModal(): void {
     this.isBookingModalOpen = false;
     this.selectedSlot = null;
+    this.cdr.detectChanges();
+  }
+
+  async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success'): Promise<void> {
+    const toast = await this.toastCtrl.create({
+      message,
+      duration: 2500,
+      color,
+      position: 'top',
+      icon: color === 'success' ? 'checkmark-circle-outline' : 'alert-circle-outline'
+    });
+    await toast.present();
   }
 
   confirmBooking(): void {
@@ -156,6 +171,8 @@ export class Tab2Page implements OnInit {
     if (!user) return;
 
     this.isSubmitting = true;
+    this.cdr.detectChanges();
+
     this.calendarService.createAppointment({
       student_id: user.student_id || user.id,
       student_name: user.name,
@@ -166,16 +183,18 @@ export class Tab2Page implements OnInit {
       modality: this.bookingForm.modality,
       reason: this.bookingForm.reason
     }).subscribe({
-      next: () => {
+      next: async () => {
         this.isSubmitting = false;
         this.closeBookingModal();
         this.loadAvailableSlots();
+        await this.showToast('¡Cita reservada con éxito!', 'success');
         // Redirigir a "Mis Citas"
         this.router.navigate(['/tabs/tab1']);
       },
-      error: (err) => {
+      error: async (err) => {
         this.isSubmitting = false;
-        alert(err.error?.error || 'No se pudo reservar la cita.');
+        this.cdr.detectChanges();
+        await this.showToast(err.error?.error || 'No se pudo reservar la cita.', 'danger');
       }
     });
   }
