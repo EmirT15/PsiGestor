@@ -5,38 +5,35 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'login'
+    redirectTo: 'calendar' // TEMPORAL: Redirigir directo al calendario mientras se desarrolla
   },
   {
     path: 'login',
-    canActivate: [guestGuard],
     loadComponent: () =>
       import('./features/auth/login/login')
         .then((m) => m.Login)
   },
   {
     path: 'register',
-    canActivate: [guestGuard],
     loadComponent: () =>
       import('./features/auth/register/register')
         .then((m) => m.Register)
   },
   {
     path: 'calendar',
-    canActivate: [roleGuard(['psicologo'])],
+    // canActivate: [roleGuard(['psicologo'])], // TEMPORAL: Desactivado para entrar directo
     loadComponent: () =>
       import('./features/calendar/components/calendar/calendar')
         .then((m) => m.Calendar)
   },
   {
     path: 'portal-alumno',
-    canActivate: [roleGuard(['alumno'])],
     loadComponent: () =>
       import('./features/student-portal/portal-alumno/portal-alumno')
         .then((m) => m.PortalAlumno)
   },
   {
     path: '**',
-    redirectTo: 'login'
+    redirectTo: 'calendar'
   }
 ];
