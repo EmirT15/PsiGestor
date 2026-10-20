@@ -1,4 +1,5 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { PsychologistHeaderComponent } from '../../../psychologist/components/psychologist-header/psychologist-header.component';
 
 import {
   afterNextRender,
@@ -92,7 +93,8 @@ export interface PatientScheduleSelection {
     RescheduleModal,
     CancelModal,
     CalendarToolbar,
-    ManageScheduleModal
+    ManageScheduleModal,
+    PsychologistHeaderComponent
   ],
 
   styleUrl: './calendar.css',
