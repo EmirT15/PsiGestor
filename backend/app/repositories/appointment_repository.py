@@ -28,7 +28,8 @@ def create_appointment(
     modality,
     location,
     meeting_url,
-    reason
+    reason,
+    user_id=None
 ):
     connection = get_db_connection()
 
@@ -173,11 +174,12 @@ def create_appointment(
                     location,
                     meeting_url,
                     reason,
-                    status
+                    status,
+                    user_id
                 )
                 VALUES (
                     %s, %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s, 'Reserved'
+                    %s, %s, %s, %s, 'Reserved', %s
                 )
                 RETURNING
                     id,
@@ -204,7 +206,8 @@ def create_appointment(
                     modality,
                     location,
                     meeting_url,
-                    reason
+                    reason,
+                    user_id
                 )
             )
 
@@ -335,5 +338,356 @@ def get_appointments(date=None):
                 for appointment in appointments
             ]
 
+    finally:
+        connection.close()
+
+def get_student_appointments_db(student_id):
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            query = """
+                SELECT
+                    a.id,
+                    a.student_id,
+                    a.student_name,
+                    a.date,
+                    a.start_time,
+                    a.end_time,
+                    a.duration,
+                    a.modality,
+                    a.location,
+                    a.meeting_url,
+                    a.reason,
+                    a.status,
+                    a.created_at,
+                    a.cancellation_reason,
+                    a.cancelled_at,
+                    a.reschedule_reason,
+                    a.rescheduled_at,
+                    a.proposed_date,
+                    a.proposed_start_time,
+                    a.proposed_end_time,
+                    a.proposed_availability_id
+                FROM appointments a
+                WHERE a.student_id = %s
+                ORDER BY a.date DESC, a.start_time DESC;
+            """
+            cursor.execute(query, (student_id,))
+            appointments = cursor.fetchall()
+            columns = [description.name for description in cursor.description]
+            return [dict(zip(columns, appointment)) for appointment in appointments]
+    finally:
+        connection.close()
+
+
+def cancel_student_appointment_db(appointment_id, student_id, reason):
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id, date, start_time, end_time, duration, status
+                FROM appointments
+                WHERE id = %s AND student_id = %s
+                FOR UPDATE;
+                """,
+                (appointment_id, student_id)
+            )
+            row = cursor.fetchone()
+            if not row:
+                raise ValueError("No se encontró la cita o no pertenece al alumno autenticado.")
+
+            apt_id, apt_date, apt_start, apt_end, apt_duration, apt_status = row
+
+            if apt_status == 'Cancelled':
+                raise ValueError("La cita ya se encuentra cancelada.")
+
+            cursor.execute(
+                """
+                UPDATE appointments
+                SET status = 'Cancelled',
+                    cancellation_reason = %s,
+                    cancelled_at = CURRENT_TIMESTAMP
+                WHERE id = %s;
+                """,
+                (reason, appointment_id)
+            )
+
+            cursor.execute(
+                """
+                SELECT id, source
+                FROM availabilities
+                WHERE date = %s
+                  AND start_time = %s
+                  AND end_time = %s
+                FOR UPDATE;
+                """,
+                (apt_date, apt_start, apt_end)
+            )
+            avail_row = cursor.fetchone()
+
+            if avail_row:
+                avail_id, avail_source = avail_row
+
+                cursor.execute(
+                    """
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM disabled_schedules
+                        WHERE start_date <= %s
+                          AND end_date >= %s
+                          AND start_time < %s
+                          AND end_time > %s
+                          AND status = 'Inhabilitado'
+                    );
+                    """,
+                    (apt_date, apt_date, apt_end, apt_start)
+                )
+                is_disabled = cursor.fetchone()[0]
+
+                cursor.execute(
+                    """
+                    SELECT
+                        rs.appointment_duration,
+                        rs.break_enabled,
+                        rs.break_start_time,
+                        rs.break_end_time,
+                        rsd.start_time,
+                        rsd.end_time
+                    FROM regular_schedule rs
+                    JOIN regular_schedule_days rsd ON rs.id = rsd.regular_schedule_id
+                    WHERE rsd.day_of_week = EXTRACT(ISODOW FROM %s::DATE);
+                    """,
+                    (apt_date,)
+                )
+                rs_row = cursor.fetchone()
+
+                is_in_regular = False
+                if rs_row and not is_disabled:
+                    rs_duration, break_enabled, b_start, b_end, d_start, d_end = rs_row
+                    if (
+                        apt_start >= d_start
+                        and apt_end <= d_end
+                        and apt_duration == rs_duration
+                    ):
+                        if break_enabled and b_start and b_end:
+                            if not (apt_start < b_end and apt_end > b_start):
+                                is_in_regular = True
+                        else:
+                            is_in_regular = True
+
+                if is_in_regular and not is_disabled:
+                    cursor.execute(
+                        """
+                        UPDATE availabilities
+                        SET status = 'Disponible',
+                            student_name = NULL,
+                            student_initials = NULL,
+                            student_age = NULL,
+                            student_semester = NULL,
+                            student_program = NULL,
+                            consultation_reason = NULL,
+                            modality = NULL,
+                            location = NULL,
+                            folio = NULL,
+                            proposed_date = NULL,
+                            proposed_start_time = NULL,
+                            proposed_end_time = NULL,
+                            cancellation_reason = NULL,
+                            cancellation_observation = NULL
+                        WHERE id = %s;
+                        """,
+                        (avail_id,)
+                    )
+                else:
+                    cursor.execute(
+                        "DELETE FROM availabilities WHERE id = %s;",
+                        (avail_id,)
+                    )
+
+        connection.commit()
+        return True
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
+
+
+def request_student_reschedule_db(appointment_id, student_id, reason, proposed_availability_id):
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id, date, start_time, end_time, duration, status
+                FROM appointments
+                WHERE id = %s AND student_id = %s
+                FOR UPDATE;
+                """,
+                (appointment_id, student_id)
+            )
+            row = cursor.fetchone()
+            if not row:
+                raise ValueError("No se encontró la cita o no pertenece al alumno autenticado.")
+
+            apt_id, apt_date, apt_start, apt_end, apt_duration, apt_status = row
+
+            if apt_status in ('Pending Reschedule', 'Reprogramacion pendiente'):
+                raise ValueError("Ya existe una solicitud de reprogramación pendiente para esta cita.")
+
+            if apt_status != 'Reserved':
+                raise ValueError("Solo se pueden solicitar reprogramaciones para citas con estado Reservada.")
+
+            cursor.execute(
+                """
+                SELECT id, date, start_time, end_time, status
+                FROM availabilities
+                WHERE id = %s
+                FOR UPDATE;
+                """,
+                (proposed_availability_id,)
+            )
+            target_slot = cursor.fetchone()
+            if not target_slot:
+                raise ValueError("El horario propuesto no existe.")
+
+            t_id, t_date, t_start, t_end, t_status = target_slot
+            if t_status != 'Disponible':
+                raise ValueError("El horario propuesto ya no se encuentra Disponible.")
+
+            cursor.execute(
+                """
+                UPDATE appointments
+                SET status = 'Pending Reschedule',
+                    reschedule_reason = %s,
+                    rescheduled_at = CURRENT_TIMESTAMP,
+                    proposed_date = %s,
+                    proposed_start_time = %s,
+                    proposed_end_time = %s,
+                    proposed_availability_id = %s
+                WHERE id = %s;
+                """,
+                (reason, t_date, t_start, t_end, t_id, appointment_id)
+            )
+
+            # Reflejar en la disponibilidad de la psicóloga
+            cursor.execute(
+                """
+                UPDATE availabilities
+                SET status = 'Reprogramacion pendiente',
+                    proposed_date = %s,
+                    proposed_start_time = %s,
+                    proposed_end_time = %s
+                WHERE date = %s
+                  AND start_time = %s
+                  AND end_time = %s;
+                """,
+                (t_date, t_start, t_end, apt_date, apt_start, apt_end)
+            )
+
+        connection.commit()
+        return True
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
+
+
+def approve_student_reschedule_db(appointment_id):
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id, student_id, student_name, date, start_time, end_time, duration,
+                       modality, location, meeting_url, reason, status,
+                       proposed_date, proposed_start_time, proposed_end_time, proposed_availability_id
+                FROM appointments
+                WHERE id = %s
+                FOR UPDATE;
+                """,
+                (appointment_id,)
+            )
+            row = cursor.fetchone()
+            if not row:
+                raise ValueError("No se encontró la cita.")
+
+            (apt_id, student_id, student_name, old_date, old_start, old_end, duration,
+             modality, location, meeting_url, reason, status,
+             prop_date, prop_start, prop_end, prop_avail_id) = row
+
+            if not prop_date or not prop_start or not prop_end:
+                raise ValueError("La cita no tiene un nuevo horario propuesto.")
+
+            cursor.execute(
+                """
+                UPDATE appointments
+                SET date = %s,
+                    start_time = %s,
+                    end_time = %s,
+                    status = 'Reserved',
+                    proposed_date = NULL,
+                    proposed_start_time = NULL,
+                    proposed_end_time = NULL,
+                    proposed_availability_id = NULL
+                WHERE id = %s;
+                """,
+                (prop_date, prop_start, prop_end, appointment_id)
+            )
+
+            if prop_avail_id:
+                folio = f"PSI-{prop_date.year}-{apt_id:04d}"
+                cursor.execute(
+                    """
+                    UPDATE availabilities
+                    SET status = 'Reservado',
+                        student_name = %s,
+                        consultation_reason = %s,
+                        modality = %s,
+                        location = %s,
+                        folio = %s
+                    WHERE id = %s;
+                    """,
+                    (student_name, reason, modality, location, folio, prop_avail_id)
+                )
+
+            cursor.execute(
+                """
+                SELECT id FROM availabilities
+                WHERE date = %s AND start_time = %s AND end_time = %s;
+                """,
+                (old_date, old_start, old_end)
+            )
+            old_avail = cursor.fetchone()
+            if old_avail:
+                old_avail_id = old_avail[0]
+                cursor.execute(
+                    """
+                    UPDATE availabilities
+                    SET status = 'Disponible',
+                        student_name = NULL,
+                        student_initials = NULL,
+                        student_age = NULL,
+                        student_semester = NULL,
+                        student_program = NULL,
+                        consultation_reason = NULL,
+                        modality = NULL,
+                        location = NULL,
+                        folio = NULL,
+                        proposed_date = NULL,
+                        proposed_start_time = NULL,
+                        proposed_end_time = NULL
+                    WHERE id = %s;
+                    """,
+                    (old_avail_id,)
+                )
+
+        connection.commit()
+        return True
+    except Exception:
+        connection.rollback()
+        raise
     finally:
         connection.close()

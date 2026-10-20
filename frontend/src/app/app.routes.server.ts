@@ -5,6 +5,11 @@ import {
 
 export const serverRoutes: ServerRoute[] = [
   {
+    path: 'portal-alumno',
+    renderMode: RenderMode.Client
+  },
+
+  {
     path: 'calendar',
     renderMode: RenderMode.Prerender
   },
@@ -16,6 +21,6 @@ export const serverRoutes: ServerRoute[] = [
 
   {
     path: '**',
-    renderMode: RenderMode.Prerender
+    renderMode: RenderMode.Client
   }
 ];

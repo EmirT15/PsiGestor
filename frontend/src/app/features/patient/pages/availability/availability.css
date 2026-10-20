@@ -1,0 +1,152 @@
+.availability-page-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8fafc;
+  position: relative;
+}
+
+.patient-topbar {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 12px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #334155;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-back:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 28px;
+  background: #cbd5e1;
+}
+
+.topbar-heading {
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin: 0;
+}
+
+.topbar-hint {
+  font-size: 0.75rem;
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.student-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 30px;
+}
+
+.chip-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.chip-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.chip-info strong {
+  font-size: 0.82rem;
+  color: #0f172a;
+}
+
+.chip-info span {
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+.calendar-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.toast-notification {
+  position: fixed;
+  top: 75px;
+  right: 24px;
+  z-index: 1100;
+  padding: 14px 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s ease-out;
+}
+
+.toast-notification.success {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.toast-notification.success svg {
+  color: #059669;
+  flex-shrink: 0;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
