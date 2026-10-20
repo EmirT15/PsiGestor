@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from app.services.auth_service import require_role
 
 from app.services.regular_schedule_service import (
     get_regular_schedule_config,
@@ -29,6 +30,7 @@ def get_regular_schedule_route():
     '/regular-schedule',
     methods=['PUT']
 )
+@require_role('psicologo')
 def save_regular_schedule_route():
     data = request.get_json(
         silent=True

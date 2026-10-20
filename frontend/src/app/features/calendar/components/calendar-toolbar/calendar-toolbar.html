@@ -70,32 +70,42 @@
 
     </div>
 
-    @if (mode === 'psychologist'){
-    <button
-      type="button"
-      class="manage-schedule-button"
-      (click)="manageSchedule.emit()"
+    @if (mode === 'psychologist') {
+      <button
+        type="button"
+        class="manage-schedule-button"
+        (click)="manageSchedule.emit()"
       >
-      <span aria-hidden="true">⚙</span>
-      Gestionar horario
-    </button>
-      }
+        <span aria-hidden="true">⚙</span>
+        Gestionar horario
+      </button>
+
+      <button
+        type="button"
+        class="logout-button"
+        title="Cerrar sesión"
+        (click)="logout.emit()"
+      >
+        <span aria-hidden="true">🚪</span>
+        Salir
+      </button>
+    }
 
   </div>
 
-  @if (mode === 'psychologist'){
+  @if (mode === 'psychologist') {
 
-  <div class="toolbar-divider"></div>
+    <div class="toolbar-divider"></div>
 
-  <div class="toolbar-filters">
+    <div class="toolbar-filters">
 
-    <app-status-filter
-      [selectedStatus]="selectedStatus"
-      (statusChange)="statusChange.emit($event)"
-    />
+      <app-status-filter
+        [selectedStatus]="selectedStatus"
+        (statusChange)="statusChange.emit($event)"
+      />
 
-  </div>
+    </div>
 
-}
+  }
 
 </div>

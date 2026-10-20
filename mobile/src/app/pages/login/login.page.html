@@ -1,0 +1,128 @@
+<ion-content [fullscreen]="true" class="login-content ion-padding">
+  <div class="login-container">
+    
+    <!-- Branding Header -->
+    <div class="brand-header">
+      <div class="brand-badge">
+        <span class="badge-icon">Ψ</span>
+        <span class="badge-text">ITESCAM • PSICOPEDAGOGÍA</span>
+      </div>
+      <h1 class="brand-title">PsiGestor</h1>
+      <p class="brand-subtitle">Atención y Acompañamiento Psicológico</p>
+    </div>
+
+    <!-- Therapeutic Armchair Graphic -->
+    <div class="illustration-container">
+      <div class="armchair-art">
+        <div class="armchair-cushion"></div>
+        <div class="armchair-seat"></div>
+        <div class="armchair-base"></div>
+        <div class="armchair-shadow"></div>
+      </div>
+      <div class="sparkle s1">✨</div>
+      <div class="sparkle s2">🌱</div>
+    </div>
+
+    <!-- Login Card -->
+    <ion-card class="login-card">
+      <ion-card-header class="ion-text-center">
+        <ion-card-title>Iniciar Sesión</ion-card-title>
+        <ion-card-subtitle>Ingresa a tu cuenta institucional</ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+        <!-- Selector de Perfil -->
+        <ion-segment
+          [value]="selectedRole"
+          (ionChange)="onRoleChange($event)"
+          class="role-segment"
+        >
+          <ion-segment-button value="psicologo">
+            <ion-icon name="person-outline"></ion-icon>
+            <ion-label>Psicólogo</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="alumno">
+            <ion-icon name="school-outline"></ion-icon>
+            <ion-label>Alumno</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+
+        <!-- Mensaje de error -->
+        @if (errorMessage) {
+          <div class="error-banner">
+            <span class="error-icon">⚠️</span>
+            <span class="error-text">{{ errorMessage }}</span>
+          </div>
+        }
+
+        <form (ngSubmit)="onSubmit()">
+          <!-- Correo -->
+          <ion-item lines="inset" class="form-item">
+            <ion-icon name="person-outline" slot="start" color="medium"></ion-icon>
+            <ion-input
+              label="Correo institucional"
+              labelPlacement="floating"
+              type="email"
+              placeholder="ejemplo@itescam.edu.mx"
+              [(ngModel)]="email"
+              name="email"
+              required
+              autocomplete="email"
+            ></ion-input>
+          </ion-item>
+
+          <!-- Contraseña -->
+          <ion-item lines="inset" class="form-item">
+            <ion-icon name="lock-closed-outline" slot="start" color="medium"></ion-icon>
+            <ion-input
+              label="Contraseña"
+              labelPlacement="floating"
+              type="password"
+              placeholder="••••••••"
+              [(ngModel)]="password"
+              name="password"
+              required
+            ></ion-input>
+          </ion-item>
+
+          <!-- Botón de Envío -->
+          <ion-button
+            expand="block"
+            type="submit"
+            class="submit-button"
+            [disabled]="isLoading"
+          >
+            @if (isLoading) {
+              <ion-spinner name="crescent" class="btn-spinner"></ion-spinner>
+              <span>Verificando...</span>
+            } @else {
+              <ion-icon name="log-in-outline" slot="start"></ion-icon>
+              <span>Ingresar como {{ selectedRole === 'psicologo' ? 'Psicólogo' : 'Alumno' }}</span>
+            }
+          </ion-button>
+        </form>
+
+        <!-- Registro si es Alumno -->
+        @if (selectedRole === 'alumno') {
+          <div class="register-prompt">
+            <p>¿Eres alumno nuevo?</p>
+            <a routerLink="/register" class="register-link">Regístrate con tu matrícula oficial</a>
+          </div>
+        }
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Security & Ethics Footer -->
+    <div class="security-badges">
+      <div class="badge-item">
+        <ion-icon name="shield-checkmark-outline"></ion-icon>
+        <span>Confidencialidad</span>
+      </div>
+      <div class="badge-item">
+        <ion-icon name="heart-outline"></ion-icon>
+        <span>Acompañamiento Ético</span>
+      </div>
+    </div>
+
+  </div>
+</ion-content>

@@ -129,6 +129,7 @@ def init_database(reset: bool = False) -> None:
                         disabled_schedules,
                         regular_schedule_days,
                         regular_schedule,
+                        users,
                         students
                     RESTART IDENTITY CASCADE;
                     """
@@ -142,7 +143,13 @@ def init_database(reset: bool = False) -> None:
                 cursor.execute(students_seed.read_text(encoding="utf-8"))
                 connection.commit()
 
-            # 4. Verificar si la base de datos ya tiene horario habitual o citas cargadas
+            # 4. Asegurar cuenta oficial del psicólogo (003_psychologist_user.sql)
+            psychologist_seed = seeds_dir / "003_psychologist_user.sql"
+            if psychologist_seed.exists():
+                cursor.execute(psychologist_seed.read_text(encoding="utf-8"))
+                connection.commit()
+
+            # 5. Verificar si la base de datos ya tiene horario habitual o citas cargadas
             cursor.execute("SELECT COUNT(*) FROM regular_schedule;")
             regular_schedule_count = cursor.fetchone()[0]
 
