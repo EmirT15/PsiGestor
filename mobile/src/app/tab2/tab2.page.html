@@ -1,17 +1,133 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Tab 2
-    </ion-title>
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-title>Agendar Cita</ion-title>
+  </ion-toolbar>
+
+  <!-- Selector de Fecha -->
+  <ion-toolbar color="light" class="date-bar">
+    <div class="navigator">
+      <ion-button fill="clear" size="small" (click)="changeDay(-1)">
+        <ion-icon name="chevron-back-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+      <div class="date-label" (click)="goToToday()">
+        <span>{{ formattedSelectedDate }}</span>
+      </div>
+      <ion-button fill="clear" size="small" (click)="changeDay(1)">
+        <ion-icon name="chevron-forward-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+      <ion-button fill="outline" size="small" class="today-btn" (click)="goToToday()">
+        Hoy
+      </ion-button>
+    </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 2</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="ion-padding content-bg">
+  <ion-refresher slot="fixed" (ionRefresh)="loadAvailableSlots($event)">
+    <ion-refresher-content pullingText="Desliza para actualizar" refreshingSpinner="crescent"></ion-refresher-content>
+  </ion-refresher>
 
-  <app-explore-container name="Tab 2 page"></app-explore-container>
+  <div class="slots-container">
+
+    <div class="intro-box">
+      <p>Selecciona un horario disponible para agendar tu sesión con el psicólogo.</p>
+    </div>
+
+    @if (isLoading && availableSlotsForDay.length === 0) {
+      <div class="loading-state">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Buscando horarios disponibles...</p>
+      </div>
+    }
+
+    @for (slot of availableSlotsForDay; track slot.id) {
+      <ion-card class="slot-card" (click)="openBookingModal(slot)">
+        <ion-card-content class="slot-card-content">
+          <div class="slot-time-col">
+            <span class="slot-hours">{{ slot.startTime }} - {{ slot.endTime }}</span>
+            <span class="slot-duration">Sesión de {{ slot.duration }} min</span>
+          </div>
+
+          <ion-button color="success" size="small" class="book-btn">
+            Reservar
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+    }
+
+    @if (!isLoading && availableSlotsForDay.length === 0) {
+      <div class="empty-state">
+        <ion-icon name="calendar-outline" class="empty-icon"></ion-icon>
+        <h3>No hay horarios disponibles</h3>
+        <p>No hay citas libres para este día. Intenta seleccionando otro día con las flechas.</p>
+      </div>
+    }
+
+  </div>
+
+  <!-- Modal Confirmar Reserva -->
+  <ion-modal [isOpen]="isBookingModalOpen" (didDismiss)="closeBookingModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-title>Confirmar Cita</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeBookingModal()">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <div class="booking-summary" *ngIf="selectedSlot">
+          <h4>Detalles del Horario</h4>
+          <p><strong>Fecha:</strong> {{ selectedSlot.date }}</p>
+          <p><strong>Horario:</strong> {{ selectedSlot.startTime }} - {{ selectedSlot.endTime }}</p>
+          <p><strong>Duración:</strong> {{ selectedSlot.duration }} minutos</p>
+        </div>
+
+        <form (ngSubmit)="confirmBooking()">
+          <ion-item lines="inset" class="form-item">
+            <ion-select
+              label="Modalidad"
+              labelPlacement="floating"
+              [(ngModel)]="bookingForm.modality"
+              name="bookingModality"
+              required
+            >
+              <ion-select-option value="In person">Presencial (Consultorio de Psicopedagogía)</ion-select-option>
+              <ion-select-option value="Online">En línea (Videollamada)</ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <ion-item lines="inset" class="form-item">
+            <ion-textarea
+              label="Motivo de consulta"
+              labelPlacement="floating"
+              rows="3"
+              placeholder="Ej. Estrés académico, orientación o asesoría personal"
+              [(ngModel)]="bookingForm.reason"
+              name="bookingReason"
+              required
+            ></ion-textarea>
+          </ion-item>
+
+          <ion-button
+            expand="block"
+            color="success"
+            type="submit"
+            class="ion-margin-top"
+            [disabled]="isSubmitting"
+          >
+            @if (isSubmitting) {
+              <ion-spinner name="crescent"></ion-spinner>
+              <span>Confirmando...</span>
+            } @else {
+              <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+              <span>Confirmar y Agendar</span>
+            }
+          </ion-button>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
 </ion-content>

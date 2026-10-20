@@ -1,60 +1,224 @@
-.content-bg {
+.date-toolbar {
+  --background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.date-navigator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 10px;
+
+  .current-date-info {
+    text-align: center;
+    cursor: pointer;
+
+    .day-text {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      text-transform: capitalize;
+    }
+  }
+
+  .today-btn {
+    --border-radius: 8px;
+    height: 30px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
+
+.filter-toolbar {
   --background: #f8fafc;
+  padding: 2px 8px;
 }
 
-.psicologo-container {
-  max-width: 500px;
+.status-segment {
+  background: transparent;
+
+  ion-segment-button {
+    --indicator-color: #0284c7;
+    --color-checked: #ffffff;
+    --border-radius: 8px;
+    min-height: 32px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
+
+.agenda-content {
+  --background: #f1f5f9;
+}
+
+.agenda-container {
+  max-width: 550px;
   margin: 0 auto;
+  padding-bottom: 70px;
 }
 
-.welcome-card {
-  margin: 0 0 16px;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+/* Slots Cards */
+.slot-card {
+  display: flex;
+  gap: 12px;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border-left: 5px solid transparent;
+  transition: transform 0.15s ease;
 
-  .role-badge-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-
-  ion-card-title {
-    font-size: 20px;
-    font-weight: 700;
-    color: #0f172a;
-  }
-
-  ion-card-subtitle {
-    font-size: 13px;
-    color: #64748b;
-  }
-}
-
-.status-card {
-  margin: 0 0 24px;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-
-  .status-title {
-    font-size: 17px;
-    font-weight: 700;
+  .slot-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    flex-shrink: 0;
   }
 
-  .next-step-box {
-    margin-top: 12px;
-    padding: 10px 12px;
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 8px;
-    font-size: 13px;
-    color: #166534;
+  .slot-details {
+    flex: 1;
+
+    .slot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+
+      .slot-time {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e293b;
+      }
+    }
+
+    .student-name {
+      margin: 2px 0 4px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .slot-info {
+      margin: 0;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .slot-reason {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: #b91c1c;
+      font-weight: 500;
+    }
+
+    .slot-observation {
+      margin: 2px 0 0;
+      font-size: 11px;
+      color: #64748b;
+      font-style: italic;
+    }
+  }
+
+  /* Status Colors */
+  &.available-card {
+    border-left-color: #16a34a;
+    .available-icon {
+      background: #dcfce7;
+      color: #15803d;
+    }
+  }
+
+  &.reserved-card {
+    border-left-color: #2563eb;
+    .reserved-icon {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .slot-actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  &.cancelled-card {
+    border-left-color: #dc2626;
+    background: #fef2f2;
+    .cancelled-icon {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+  }
+
+  &.disabled-card {
+    border-left-color: #64748b;
+    background: #f8fafc;
+    .disabled-icon {
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .slot-reason {
+      color: #475569;
+    }
   }
 }
 
-.logout-btn-container {
-  margin-top: 16px;
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+
+  .empty-icon {
+    font-size: 54px;
+    color: #94a3b8;
+    margin-bottom: 8px;
+  }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #334155;
+    margin: 0 0 6px;
+  }
+
+  p {
+    font-size: 13px;
+    margin: 0;
+  }
+}
+
+.modal-desc {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+.form-item {
+  --background: #f8fafc;
+  --border-radius: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.cancel-summary {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 13px;
+
+  p {
+    margin: 4px 0;
+    color: #7f1d1d;
+  }
 }

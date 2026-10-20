@@ -1,0 +1,91 @@
+.content-bg {
+  --background: #f8fafc;
+}
+
+.citas-container {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.loading-box {
+  text-align: center;
+  padding: 40px;
+  color: #64748b;
+}
+
+.cita-card {
+  margin: 0 0 16px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  border-left: 5px solid #2563eb;
+
+  &.cita-cancelled {
+    border-left-color: #dc2626;
+    background: #fffafb;
+  }
+
+  .badge-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+
+    .cita-modality {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+    }
+  }
+
+  .cita-date {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .cita-time {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0284c7;
+    margin-top: 4px;
+  }
+
+  .cancel-info {
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: #fee2e2;
+    border-radius: 8px;
+    color: #991b1b;
+    font-size: 12px;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 50px 20px;
+  color: #64748b;
+
+  .empty-icon {
+    font-size: 60px;
+    color: #94a3b8;
+    margin-bottom: 12px;
+  }
+
+  h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 6px;
+  }
+
+  p {
+    font-size: 13px;
+  }
+}

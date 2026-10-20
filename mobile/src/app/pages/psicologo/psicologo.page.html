@@ -1,58 +1,314 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar color="primary">
-    <ion-title>PsiGestor • Psicólogo</ion-title>
+    <ion-title>Agenda • Psicólogo</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="onLogout()" title="Cerrar sesión">
         <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
-</ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding content-bg">
-  <div class="psicologo-container">
-    
-    <!-- Header Card -->
-    <ion-card class="welcome-card">
-      <ion-card-header>
-        <div class="role-badge-row">
-          <ion-badge color="success">Sesión Activa</ion-badge>
-          <ion-badge color="light">Rol: Psicólogo Autorizado</ion-badge>
-        </div>
-        <ion-card-title>
-          ¡Hola, {{ authService.currentUser()?.name || 'Psicólogo' }}!
-        </ion-card-title>
-        <ion-card-subtitle>
-          {{ authService.currentUser()?.email }}
-        </ion-card-subtitle>
-      </ion-card-header>
-      <ion-card-content>
-        <p>Tu cuenta cuenta con permisos completos de gestión psicopedagógica.</p>
-      </ion-card-content>
-    </ion-card>
+  <!-- Date Navigation Bar -->
+  <ion-toolbar color="light" class="date-toolbar">
+    <div class="date-navigator">
+      <ion-button fill="clear" size="small" (click)="changeDay(-1)">
+        <ion-icon name="chevron-back-outline" slot="icon-only"></ion-icon>
+      </ion-button>
 
-    <!-- Info Card Paso 1 -->
-    <ion-card class="status-card">
-      <ion-card-header>
-        <ion-card-title class="status-title">
-          <ion-icon name="checkmark-done-circle-outline" color="success"></ion-icon>
-          Paso 1 Completado
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <p>Has iniciado sesión correctamente desde la app móvil. Tu sesión está sincronizada con el backend central.</p>
-        <div class="next-step-box">
-          <strong>Siguiente:</strong> En el Paso 2 conectaremos tu lista de citas del día y el botón para inhabilitar horarios directamente desde aquí.
-        </div>
-      </ion-card-content>
-    </ion-card>
+      <div class="current-date-info" (click)="goToToday()">
+        <span class="day-text">{{ formattedSelectedDate }}</span>
+      </div>
 
-    <div class="logout-btn-container">
-      <ion-button expand="block" color="danger" fill="outline" (click)="onLogout()">
-        <ion-icon name="log-out-outline" slot="start"></ion-icon>
-        Cerrar Sesión
+      <ion-button fill="clear" size="small" (click)="changeDay(1)">
+        <ion-icon name="chevron-forward-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+
+      <ion-button fill="outline" size="small" class="today-btn" (click)="goToToday()">
+        Hoy
       </ion-button>
     </div>
+  </ion-toolbar>
+
+  <!-- Filter Segment -->
+  <ion-toolbar color="light" class="filter-toolbar">
+    <ion-segment
+      [value]="statusFilter"
+      (ionChange)="onFilterChange($event)"
+      scrollable="true"
+      class="status-segment"
+    >
+      <ion-segment-button value="all">
+        <ion-label>Todos</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="Disponible">
+        <ion-label>Disp. ({{ getCount('Disponible') }})</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="Reservado">
+        <ion-label>Res. ({{ getCount('Reservado') }})</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="Cancelado">
+        <ion-label>Canc. ({{ getCount('Cancelado') }})</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="agenda-content ion-padding">
+  <!-- Pull to Refresh -->
+  <ion-refresher slot="fixed" (ionRefresh)="loadData($event)">
+    <ion-refresher-content pullingText="Desliza para actualizar" refreshingSpinner="crescent">
+    </ion-refresher-content>
+  </ion-refresher>
+
+  <div class="agenda-container">
+
+    <!-- Loading State -->
+    @if (isLoading && slotsForDay.length === 0 && disabledSchedulesForDay.length === 0) {
+      <div class="loading-state">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Cargando agenda desde el backend...</p>
+      </div>
+    }
+
+    <!-- Horarios Inhabilitados del Día -->
+    @for (disabled of disabledSchedulesForDay; track disabled.id) {
+      <div class="slot-card disabled-card">
+        <div class="slot-icon disabled-icon">🚫</div>
+        <div class="slot-details">
+          <div class="slot-header">
+            <span class="slot-time">{{ disabled.startTime }} - {{ disabled.endTime }}</span>
+            <ion-badge color="medium">Inhabilitado</ion-badge>
+          </div>
+          <p class="slot-reason">Motivo: {{ disabled.reason }} {{ disabled.observation ? '(' + disabled.observation + ')' : '' }}</p>
+        </div>
+      </div>
+    }
+
+    <!-- Lista de Slots de Atención del Día -->
+    @for (slot of slotsForDay; track slot.id) {
+      
+      <!-- Slot Disponible -->
+      @if (slot.status === 'Disponible') {
+        <div class="slot-card available-card">
+          <div class="slot-icon available-icon">✓</div>
+          <div class="slot-details">
+            <div class="slot-header">
+              <span class="slot-time">{{ slot.startTime }} - {{ slot.endTime }}</span>
+              <ion-badge color="success">Disponible</ion-badge>
+            </div>
+            <p class="slot-info">Espacio libre de atención • {{ slot.duration }} min</p>
+          </div>
+        </div>
+      }
+
+      <!-- Slot Reservado -->
+      @if (slot.status === 'Reservado') {
+        <div class="slot-card reserved-card">
+          <div class="slot-icon reserved-icon">{{ slot.studentInitials || 'AL' }}</div>
+          <div class="slot-details">
+            <div class="slot-header">
+              <span class="slot-time">{{ slot.startTime }} - {{ slot.endTime }}</span>
+              <ion-badge color="primary">Reservado</ion-badge>
+            </div>
+            <h4 class="student-name">{{ slot.studentName || 'Alumno registrado' }}</h4>
+            <p class="slot-info">{{ slot.modality || 'Presencial' }} • {{ slot.duration }} min</p>
+            
+            <div class="slot-actions">
+              <ion-button size="small" color="danger" fill="outline" (click)="openCancelModal(slot)">
+                <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+                Cancelar Cita
+              </ion-button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Slot Cancelado -->
+      @if (slot.status === 'Cancelado') {
+        <div class="slot-card cancelled-card">
+          <div class="slot-icon cancelled-icon">✕</div>
+          <div class="slot-details">
+            <div class="slot-header">
+              <span class="slot-time">{{ slot.startTime }} - {{ slot.endTime }}</span>
+              <ion-badge color="danger">Cancelada</ion-badge>
+            </div>
+            <h4 class="student-name">{{ slot.studentName || 'Alumno' }}</h4>
+            <p class="slot-reason">Motivo de cancelación: {{ slot.cancellationReason || 'No especificado' }}</p>
+            @if (slot.cancellationObservation) {
+              <p class="slot-observation">Nota: {{ slot.cancellationObservation }}</p>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Slot Inhabilitado individual -->
+      @if (slot.status === 'Inhabilitado') {
+        <div class="slot-card disabled-card">
+          <div class="slot-icon disabled-icon">🚫</div>
+          <div class="slot-details">
+            <div class="slot-header">
+              <span class="slot-time">{{ slot.startTime }} - {{ slot.endTime }}</span>
+              <ion-badge color="medium">Inhabilitado</ion-badge>
+            </div>
+            <p class="slot-reason">Bloqueado para atención</p>
+          </div>
+        </div>
+      }
+
+    }
+
+    <!-- Estado vacío -->
+    @if (!isLoading && slotsForDay.length === 0 && disabledSchedulesForDay.length === 0) {
+      <div class="empty-state">
+        <ion-icon name="calendar-outline" class="empty-icon"></ion-icon>
+        <h3>No hay citas programadas</h3>
+        <p>No se encontraron registros ni horarios para este día con el filtro seleccionado.</p>
+      </div>
+    }
 
   </div>
+
+  <!-- Botón Flotante para Inhabilitar Horario Rápido -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button color="primary" (click)="openDisableModal()" title="Inhabilitar horario">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <!-- Modal Inhabilitar Horario -->
+  <ion-modal [isOpen]="isDisableModalOpen" (didDismiss)="closeDisableModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-title>Inhabilitar Horario</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeDisableModal()">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <p class="modal-desc">Bloquea un horario puntual para que los alumnos no puedan agendar en ese lapso.</p>
+
+        <form (ngSubmit)="saveDisabledSchedule()">
+          <ion-item lines="inset" class="form-item">
+            <ion-input
+              label="Fecha"
+              labelPlacement="floating"
+              type="date"
+              [(ngModel)]="disableForm.date"
+              name="disableDate"
+              required
+            ></ion-input>
+          </ion-item>
+
+          <ion-item lines="inset" class="form-item">
+            <ion-input
+              label="Hora Inicio"
+              labelPlacement="floating"
+              type="time"
+              [(ngModel)]="disableForm.startTime"
+              name="disableStartTime"
+              required
+            ></ion-input>
+          </ion-item>
+
+          <ion-item lines="inset" class="form-item">
+            <ion-input
+              label="Hora Fin"
+              labelPlacement="floating"
+              type="time"
+              [(ngModel)]="disableForm.endTime"
+              name="disableEndTime"
+              required
+            ></ion-input>
+          </ion-item>
+
+          <ion-item lines="inset" class="form-item">
+            <ion-select
+              label="Motivo de inhabilitación"
+              labelPlacement="floating"
+              [(ngModel)]="disableForm.reason"
+              name="disableReason"
+              required
+            >
+              @for (r of invalidationReasons; track r) {
+                <ion-select-option [value]="r">{{ r }}</ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+
+          <ion-item lines="inset" class="form-item">
+            <ion-textarea
+              label="Observaciones (opcional)"
+              labelPlacement="floating"
+              rows="3"
+              placeholder="Ej. Junta directiva o emergencia médica"
+              [(ngModel)]="disableForm.observation"
+              name="disableObservation"
+            ></ion-textarea>
+          </ion-item>
+
+          <ion-button expand="block" type="submit" color="primary" class="ion-margin-top">
+            <ion-icon name="ban-outline" slot="start"></ion-icon>
+            Confirmar Inhabilitación
+          </ion-button>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Modal Cancelar Cita -->
+  <ion-modal [isOpen]="isCancelModalOpen" (didDismiss)="closeCancelModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="danger">
+          <ion-title>Cancelar Cita</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeCancelModal()">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <div class="cancel-summary" *ngIf="selectedAvailability">
+          <p><strong>Alumno:</strong> {{ selectedAvailability.studentName }}</p>
+          <p><strong>Fecha:</strong> {{ selectedAvailability.date }} • {{ selectedAvailability.startTime }} - {{ selectedAvailability.endTime }}</p>
+        </div>
+
+        <form (ngSubmit)="confirmCancel()">
+          <ion-item lines="inset" class="form-item">
+            <ion-select
+              label="Motivo de Cancelación"
+              labelPlacement="floating"
+              [(ngModel)]="cancelForm.reason"
+              name="cancelReason"
+              required
+            >
+              <ion-select-option value="Fuerza mayor">Fuerza mayor</ion-select-option>
+              <ion-select-option value="Inasistencia del alumno">Inasistencia del alumno</ion-select-option>
+              <ion-select-option value="Emergencia médica">Emergencia médica</ion-select-option>
+              <ion-select-option value="Actividad académica">Actividad académica</ion-select-option>
+              <ion-select-option value="Otro motivo">Otro motivo</ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <ion-item lines="inset" class="form-item">
+            <ion-textarea
+              label="Observaciones adicionales"
+              labelPlacement="floating"
+              rows="3"
+              placeholder="Detalla la razón de la cancelación..."
+              [(ngModel)]="cancelForm.observation"
+              name="cancelObservation"
+            ></ion-textarea>
+          </ion-item>
+
+          <ion-button expand="block" color="danger" type="submit" class="ion-margin-top">
+            <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+            Confirmar Cancelación
+          </ion-button>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
 </ion-content>

@@ -1,0 +1,134 @@
+.date-bar {
+  --background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.navigator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 10px;
+
+  .date-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    text-transform: capitalize;
+  }
+
+  .today-btn {
+    --border-radius: 8px;
+    height: 30px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
+
+.content-bg {
+  --background: #f8fafc;
+}
+
+.slots-container {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.intro-box {
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  border: 1px solid #bae6fd;
+}
+
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+
+  .empty-icon {
+    font-size: 54px;
+    color: #94a3b8;
+    margin-bottom: 8px;
+  }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #334155;
+    margin: 0 0 6px;
+  }
+
+  p {
+    font-size: 13px;
+  }
+}
+
+.slot-card {
+  margin: 0 0 12px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+
+  .slot-card-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+
+    .slot-time-col {
+      display: flex;
+      flex-direction: column;
+
+      .slot-hours {
+        font-size: 16px;
+        font-weight: 800;
+        color: #0f172a;
+      }
+
+      .slot-duration {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 2px;
+      }
+    }
+
+    .book-btn {
+      --border-radius: 8px;
+      font-weight: 700;
+    }
+  }
+}
+
+.booking-summary {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 14px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+
+  h4 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #166534;
+  }
+
+  p {
+    margin: 4px 0;
+    font-size: 13px;
+    color: #14532d;
+  }
+}
+
+.form-item {
+  --background: #f8fafc;
+  --border-radius: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
