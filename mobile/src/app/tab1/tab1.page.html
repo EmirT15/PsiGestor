@@ -1,0 +1,63 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-title>Mis Citas Psicológicas</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding content-bg">
+  <ion-refresher slot="fixed" (ionRefresh)="loadMyAppointments($event)">
+    <ion-refresher-content pullingText="Desliza para actualizar" refreshingSpinner="crescent"></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="citas-container">
+
+    @if (isLoading && myAppointments.length === 0) {
+      <div class="loading-box">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Consultando tus citas...</p>
+      </div>
+    }
+
+    @for (cita of myAppointments; track cita.id) {
+      <ion-card class="cita-card" [class.cita-cancelled]="cita.status === 'Cancelado'">
+        <ion-card-header>
+          <div class="badge-row">
+            <ion-badge [color]="cita.status === 'Reservado' ? 'primary' : 'danger'">
+              {{ cita.status }}
+            </ion-badge>
+            <span class="cita-modality">{{ cita.modality || 'Presencial' }}</span>
+          </div>
+          <ion-card-title class="cita-date">
+            <ion-icon name="calendar-outline"></ion-icon>
+            {{ cita.date }}
+          </ion-card-title>
+          <ion-card-subtitle class="cita-time">
+            <ion-icon name="time-outline"></ion-icon>
+            {{ cita.startTime }} - {{ cita.endTime }} ({{ cita.duration }} min)
+          </ion-card-subtitle>
+        </ion-card-header>
+
+        <ion-card-content>
+          <p><strong>Atención con:</strong> Psicólogo Institucional</p>
+          @if (cita.status === 'Cancelado') {
+            <div class="cancel-info">
+              <p><strong>Motivo de cancelación:</strong> {{ cita.cancellationReason || 'No especificado' }}</p>
+              @if (cita.cancellationObservation) {
+                <p><em>{{ cita.cancellationObservation }}</em></p>
+              }
+            </div>
+          }
+        </ion-card-content>
+      </ion-card>
+    }
+
+    @if (!isLoading && myAppointments.length === 0) {
+      <div class="empty-state">
+        <ion-icon name="calendar-outline" class="empty-icon"></ion-icon>
+        <h3>No tienes citas registradas</h3>
+        <p>Ve a la pestaña <strong>"Agendar"</strong> para seleccionar un horario disponible con el psicólogo.</p>
+      </div>
+    }
+
+  </div>
+</ion-content>

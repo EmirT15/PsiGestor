@@ -3,13 +3,53 @@ import psycopg
 import os
 from dotenv import load_dotenv
 from flask_cors import CORS
+from flasgger import Swagger
+from app.routes.availability import availability_bp
+from app.routes.regular_schedule import regular_schedule_bp
+from app.routes.appointments import appointments_bp
+from app.routes.students import students_bp
+from app.routes.auth import auth_bp
+from app.init_db import init_database
 
 
 load_dotenv()
 
-app = Flask(__name__)
-CORS(app)
+if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+    try:
+        init_database(reset=False)
+    except Exception as init_error:
+        print(f"[app] Advertencia al inicializar BD: {init_error}")
 
+app = Flask(__name__)
+
+# Configuración de seguridad para sesiones y cookies
+app.secret_key = os.getenv("SECRET_KEY", "psigestor_super_secret_session_key_2026")
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=os.getenv("FLASK_ENV") == "production",
+)
+
+# Permitir credenciales (cookies HttpOnly) para el frontend
+CORS(
+    app,
+    supports_credentials=True,
+    origins=[
+        "http://localhost:4200",
+        "http://127.0.0.1:4200",
+        "http://localhost:8100",
+        "http://127.0.0.1:8100",
+        "capacitor://localhost",
+        "http://localhost",
+    ],
+)
+Swagger(app)
+
+app.register_blueprint(auth_bp)
+app.register_blueprint(availability_bp)
+app.register_blueprint(regular_schedule_bp)
+app.register_blueprint(appointments_bp)
+app.register_blueprint(students_bp)
 
 @app.route("/")
 def inicio():

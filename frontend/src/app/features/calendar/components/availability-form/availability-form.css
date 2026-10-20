@@ -1,0 +1,257 @@
+/* ============================================================
+   VARIABLES GLOBALES Y CONTENEDOR PRINCIPAL
+   ============================================================ */
+:host {
+  --color-primary: #1e3a8a;
+  --color-primary-light: #3b82f6;
+  --color-accent: #8b5cf6;
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #1e293b;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-error: #ef4444;
+  --color-error-bg: #fef2f2;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.15);
+
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  margin: 24px auto 0;
+  padding: 28px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  box-sizing: border-box;
+}
+
+/* ============================================================
+   TÍTULO
+   ============================================================ */
+h2 {
+  margin: 0 0 24px;
+  font-family: 'Poppins', 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+h2::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 20px;
+  background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
+  border-radius: 999px;
+}
+
+/* ============================================================
+   FORMULARIO EN GRID
+   ============================================================ */
+form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 20px;
+}
+
+/* ============================================================
+   LABELS
+   ============================================================ */
+label {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin-bottom: 6px;
+}
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+input {
+  width: 100%;
+  padding: 11px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  box-sizing: border-box;
+  transition: all 0.18s ease;
+  outline: none;
+}
+
+input::placeholder {
+  color: #94a3b8;
+}
+
+input:hover {
+  border-color: #cbd5e1;
+}
+
+input:focus {
+  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-focus);
+  background: #fff;
+}
+
+/* Estado inválido (cuando el usuario ya interactuó) */
+input.ng-invalid.ng-touched {
+  border-color: var(--color-error);
+  background: var(--color-error-bg);
+}
+
+input.ng-invalid.ng-touched:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+/* Estilo para los date/time pickers nativos */
+input[type="date"],
+input[type="time"] {
+  cursor: pointer;
+  color-scheme: light;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Inputs numéricos */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ============================================================
+   MENSAJE DE ERROR
+   ============================================================ */
+p {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 12px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border-left: 3px solid var(--color-error);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: slideIn 0.2s ease;
+}
+
+p::before {
+  content: '⚠';
+  font-size: 0.95rem;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   BOTÓN SUBMIT
+   ============================================================ */
+button[type="submit"] {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  margin-top: 8px;
+  padding: 13px 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+  transition: all 0.18s ease;
+}
+
+button[type="submit"]:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(30, 58, 138, 0.3);
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-accent));
+}
+
+button[type="submit"]:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(30, 58, 138, 0.2);
+}
+
+button[type="submit"]:disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 640px) {
+  :host {
+    padding: 20px;
+    margin: 16px auto 0;
+    border-radius: var(--radius-md);
+  }
+
+  form {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  h2 {
+    font-size: 1rem;
+    margin-bottom: 18px;
+  }
+
+  button[type="submit"] {
+    padding: 12px 16px;
+    font-size: 0.85rem;
+  }
+}
