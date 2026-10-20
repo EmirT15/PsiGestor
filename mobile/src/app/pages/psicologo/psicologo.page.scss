@@ -1,5 +1,6 @@
 .date-toolbar {
-  --background: #ffffff;
+  --background: #ffffff !important;
+  --color: #0f172a !important;
   border-bottom: 1px solid #e2e8f0;
 }
 
@@ -7,31 +8,39 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 10px;
+  padding: 6px 12px;
 
   .current-date-info {
     text-align: center;
     cursor: pointer;
 
     .day-text {
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 700;
-      color: #0f172a;
+      color: #0f172a !important;
       text-transform: capitalize;
     }
   }
 
+  ion-button {
+    --color: #0284c7;
+  }
+
   .today-btn {
     --border-radius: 8px;
+    --border-color: #0284c7;
+    --color: #0284c7;
     height: 30px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
   }
 }
 
 .filter-toolbar {
-  --background: #f8fafc;
-  padding: 2px 8px;
+  --background: #f1f5f9 !important;
+  --color: #0f172a !important;
+  padding: 4px 8px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .status-segment {
@@ -39,11 +48,12 @@
 
   ion-segment-button {
     --indicator-color: #0284c7;
+    --color: #475569;
     --color-checked: #ffffff;
     --border-radius: 8px;
-    min-height: 32px;
+    min-height: 34px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
   }
 }
 

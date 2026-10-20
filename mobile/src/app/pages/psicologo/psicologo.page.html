@@ -9,7 +9,7 @@
   </ion-toolbar>
 
   <!-- Date Navigation Bar -->
-  <ion-toolbar color="light" class="date-toolbar">
+  <ion-toolbar class="date-toolbar">
     <div class="date-navigator">
       <ion-button fill="clear" size="small" (click)="changeDay(-1)">
         <ion-icon name="chevron-back-outline" slot="icon-only"></ion-icon>
@@ -30,7 +30,7 @@
   </ion-toolbar>
 
   <!-- Filter Segment -->
-  <ion-toolbar color="light" class="filter-toolbar">
+  <ion-toolbar class="filter-toolbar">
     <ion-segment
       [value]="statusFilter"
       (ionChange)="onFilterChange($event)"

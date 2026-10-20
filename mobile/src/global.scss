@@ -1,12 +1,7 @@
 /*
  * App Global CSS
  * ----------------------------------------------------------------------------
- * Put style rules here that you want to apply globally. These styles are for
- * the entire app and not just one component. Additionally, this file can be
- * used as an entry point to import other CSS/Sass files to be included in the
- * output CSS.
- * For more information on global stylesheets, visit the documentation:
- * https://ionicframework.com/docs/layout/global-stylesheets
+ * Put style rules here that you want to apply globally.
  */
 
 /* Core CSS required for Ionic components to work properly */
@@ -26,12 +21,53 @@
 @import "@ionic/angular/css/flex-utils.css";
 
 /**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
+ * Ionic Dark Mode desactivado para garantizar legibilidad y contraste institucional
  */
+/* @import '@ionic/angular/css/palettes/dark.system.css'; */
 
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import '@ionic/angular/css/palettes/dark.system.css';
+/* ============================================================
+   REGLAS GLOBALES DE CONTRASTE Y LEGIBILIDAD
+   ============================================================ */
+
+:root {
+  --ion-color-primary: #0284c7;
+  --ion-color-primary-rgb: 2, 132, 199;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-shade: #0369a1;
+  --ion-color-primary-tint: #38bdf8;
+
+  --ion-background-color: #f8fafc;
+  --ion-text-color: #0f172a;
+}
+
+/* Forzar que todos los inputs e items tengan texto nítido y legible */
+ion-item {
+  --color: #0f172a !important;
+  --highlight-color-focused: #0284c7;
+
+  ion-label {
+    color: #475569 !important;
+    font-weight: 600;
+  }
+}
+
+ion-input,
+ion-textarea,
+ion-select {
+  --color: #0f172a !important;
+  --placeholder-color: #94a3b8 !important;
+  --placeholder-opacity: 1;
+  color: #0f172a !important;
+  font-weight: 500;
+
+  input {
+    color: #0f172a !important;
+    caret-color: #0284c7 !important;
+  }
+}
+
+/* Toolbars con fondo blanco/claro siempre deben tener texto oscuro */
+ion-toolbar[color="light"] {
+  --color: #0f172a;
+  color: #0f172a;
+}
