@@ -1,0 +1,58 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>PsiGestor • Psicólogo</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="onLogout()" title="Cerrar sesión">
+        <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding content-bg">
+  <div class="psicologo-container">
+    
+    <!-- Header Card -->
+    <ion-card class="welcome-card">
+      <ion-card-header>
+        <div class="role-badge-row">
+          <ion-badge color="success">Sesión Activa</ion-badge>
+          <ion-badge color="light">Rol: Psicólogo Autorizado</ion-badge>
+        </div>
+        <ion-card-title>
+          ¡Hola, {{ authService.currentUser()?.name || 'Psicólogo' }}!
+        </ion-card-title>
+        <ion-card-subtitle>
+          {{ authService.currentUser()?.email }}
+        </ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <p>Tu cuenta cuenta con permisos completos de gestión psicopedagógica.</p>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Info Card Paso 1 -->
+    <ion-card class="status-card">
+      <ion-card-header>
+        <ion-card-title class="status-title">
+          <ion-icon name="checkmark-done-circle-outline" color="success"></ion-icon>
+          Paso 1 Completado
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>Has iniciado sesión correctamente desde la app móvil. Tu sesión está sincronizada con el backend central.</p>
+        <div class="next-step-box">
+          <strong>Siguiente:</strong> En el Paso 2 conectaremos tu lista de citas del día y el botón para inhabilitar horarios directamente desde aquí.
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <div class="logout-btn-container">
+      <ion-button expand="block" color="danger" fill="outline" (click)="onLogout()">
+        <ion-icon name="log-out-outline" slot="start"></ion-icon>
+        Cerrar Sesión
+      </ion-button>
+    </div>
+
+  </div>
+</ion-content>

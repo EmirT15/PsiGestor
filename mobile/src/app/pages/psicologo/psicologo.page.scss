@@ -1,0 +1,60 @@
+.content-bg {
+  --background: #f8fafc;
+}
+
+.psicologo-container {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.welcome-card {
+  margin: 0 0 16px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+
+  .role-badge-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  ion-card-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  ion-card-subtitle {
+    font-size: 13px;
+    color: #64748b;
+  }
+}
+
+.status-card {
+  margin: 0 0 24px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+
+  .status-title {
+    font-size: 17px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .next-step-box {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #166534;
+  }
+}
+
+.logout-btn-container {
+  margin-top: 16px;
+}
