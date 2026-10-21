@@ -516,7 +516,8 @@ export class PsicologoPage implements OnInit {
       this.selectedSlot.id,
       this.rescheduleForm.newDate,
       this.rescheduleForm.selectedNewSlot.startTime,
-      this.rescheduleForm.selectedNewSlot.endTime
+      this.rescheduleForm.selectedNewSlot.endTime,
+      this.rescheduleForm.reason
     ).subscribe({
       next: async () => {
         this.closeModal();

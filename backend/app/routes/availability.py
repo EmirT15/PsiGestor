@@ -299,7 +299,8 @@ def reschedule_availability_route(id):
             id,
             data.get('date'),
             data.get('startTime'),
-            data.get('endTime')
+            data.get('endTime'),
+            data.get('reason')
         )
 
         if not updated:

@@ -178,14 +178,16 @@ export class CalendarService {
     id: number,
     date: string,
     startTime: string,
-    endTime: string
+    endTime: string,
+    reason?: string
   ): Observable<any> {
     return this.http.post<any>(
       `${this.baseUrl}/availabilities/${id}/reschedule`,
       {
         date,
         startTime,
-        endTime
+        endTime,
+        reason
       }
     ).pipe(
       tap(() => this.notifyScheduleChanged())

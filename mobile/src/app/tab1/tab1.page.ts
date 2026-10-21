@@ -102,7 +102,7 @@ export class Tab1Page implements OnInit {
         // Filtramos las citas que pertenecen a este alumno o citas reservadas
         this.myAppointments = (all || []).filter(item => {
           if (item.status === 'Disponible' || item.status === 'Inhabilitado') return false;
-          if (!studentName) return item.status === 'Reservado' || item.status === 'Cancelado';
+          if (!studentName) return item.status === 'Reservado' || item.status === 'Cancelado' || item.status === 'Reprogramacion pendiente';
           return item.studentName?.toLowerCase().includes(studentName);
         }).sort((a, b) => b.date.localeCompare(a.date));
 

@@ -87,7 +87,8 @@ def reschedule_appointment(
     availability_id,
     date,
     start_time,
-    end_time
+    end_time,
+    reason=None
 ):
     if start_time >= end_time:
         raise ValueError(
@@ -99,7 +100,8 @@ def reschedule_appointment(
         availability_id,
         date,
         start_time,
-        end_time
+        end_time,
+        reason
     )
 
 

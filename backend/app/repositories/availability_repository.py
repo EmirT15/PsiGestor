@@ -224,45 +224,80 @@ def propose_reschedule_repo(
     availability_id,
     date,
     start_time,
-    end_time
+    end_time,
+    reason=None
 ):
-    connection = psycopg.connect(
-        host=os.getenv("DB_HOST"),
-        port=os.getenv("DB_PORT"),
-        dbname=os.getenv("DB_NAME"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD")
-    )
-
+    connection = get_db_connection()
     try:
-        cursor = connection.cursor()
-
-        cursor.execute(
-            """
-            UPDATE availabilities
-            SET status = 'Reprogramacion pendiente',
-                proposed_date = %s,
-                proposed_start_time = %s,
-                proposed_end_time = %s
-            WHERE id = %s
-            RETURNING id;
-            """,
-            (
-                date,
-                start_time,
-                end_time,
-                availability_id
+        with connection.cursor() as cursor:
+            # 1. Actualizar disponibilidad original
+            cursor.execute(
+                """
+                UPDATE availabilities
+                SET status = 'Reprogramacion pendiente',
+                    proposed_date = %s,
+                    proposed_start_time = %s,
+                    proposed_end_time = %s,
+                    reschedule_requested_by = 'psicologo'
+                WHERE id = %s
+                RETURNING id, date, start_time, end_time;
+                """,
+                (
+                    date,
+                    start_time,
+                    end_time,
+                    availability_id
+                )
             )
-        )
+            result = cursor.fetchone()
+            if not result:
+                return None
 
-        result = cursor.fetchone()
+            avail_id, old_date, old_start, old_end = result
 
-        connection.commit()
+            # 2. Buscar id del horario propuesto si existe
+            cursor.execute(
+                """
+                SELECT id FROM availabilities
+                WHERE date = %s AND start_time = %s AND end_time = %s;
+                """,
+                (date, start_time, end_time)
+            )
+            prop_row = cursor.fetchone()
+            prop_avail_id = prop_row[0] if prop_row else None
 
-        return result
+            # 3. Sincronizar la cita correspondiente para que el alumno la vea inmediatamente
+            cursor.execute(
+                """
+                UPDATE appointments
+                SET status = 'Pending Reschedule',
+                    proposed_date = %s,
+                    proposed_start_time = %s,
+                    proposed_end_time = %s,
+                    proposed_availability_id = %s,
+                    rescheduled_at = CURRENT_TIMESTAMP,
+                    reschedule_reason = COALESCE(%s, reschedule_reason),
+                    reschedule_requested_by = 'psicologo'
+                WHERE date = %s
+                  AND start_time = %s
+                  AND end_time = %s
+                  AND status IN ('Reserved', 'Pending Reschedule', 'Reservado');
+                """,
+                (
+                    date,
+                    start_time,
+                    end_time,
+                    prop_avail_id,
+                    reason,
+                    old_date,
+                    old_start,
+                    old_end
+                )
+            )
 
+            connection.commit()
+            return result
     finally:
-        cursor.close()
         connection.close()
 
 
