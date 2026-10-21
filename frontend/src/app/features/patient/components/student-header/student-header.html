@@ -1,0 +1,46 @@
+
+<header class="student-header">
+  <a class="brand" routerLink="/patient/availability">
+    <span class="brand-mark" aria-hidden="true">P</span>
+
+    <span class="brand-text">
+      <strong>PsiGestor</strong>
+      <small>Atención psicopedagógica</small>
+    </span>
+  </a>
+
+  <nav class="student-navigation" aria-label="Navegación del alumno">
+    <a
+      routerLink="/patient/availability"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+    >
+      Disponibilidad
+    </a>
+  </nav>
+
+  <div class="student-profile">
+    @if (student?.photoUrl) {
+      <img
+        class="student-avatar"
+        [src]="student!.photoUrl!"
+        [alt]="'Fotografía de ' + student!.name"
+      />
+    } @else {
+      <div class="student-avatar" aria-hidden="true">
+        {{ initials }}
+      </div>
+    }
+
+    <div class="student-information">
+      @if (student) {
+        <span class="student-name">{{ student.name }}</span>
+        <small>Matrícula: {{ student.studentId }}</small>
+        <small>{{ student.role }}</small>
+      } @else {
+        <span class="student-name">Información no disponible</span>
+        <small>Esperando datos de sesión</small>
+      }
+    </div>
+  </div>
+</header>

@@ -1,14 +1,18 @@
+<app-student-header
+  [student]="studentHeaderData()">
+</app-student-header>
+
 <div class="availability-page-layout">
   
-  <!-- Header de navegación superior -->
-  <header class="patient-topbar">
+  <!-- Sub-barra de navegación con botón volver -->
+  <div class="patient-topbar">
     <div class="topbar-left">
       <a routerLink="/portal-alumno" class="btn-back">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="19" y1="12" x2="5" y2="12"></line>
           <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
-        <span>Volver a Mi Portal</span>
+        <span>Volver a Mi Portal (Mis Citas)</span>
       </a>
       <div class="topbar-divider"></div>
       <div class="topbar-heading">
@@ -16,19 +20,7 @@
         <span class="topbar-hint">Selecciona un bloque en color verde (Disponible) para agendar tu consulta</span>
       </div>
     </div>
-
-    <div class="topbar-right">
-      <div class="student-chip">
-        <div class="chip-avatar">
-          {{ currentUser?.name ? currentUser?.name?.charAt(0)?.toUpperCase() : 'A' }}
-        </div>
-        <div class="chip-info">
-          <strong>{{ currentUser?.name || 'Alumno' }}</strong>
-          <span>Matrícula: {{ currentUser?.studentCode || 'N/A' }}</span>
-        </div>
-      </div>
-    </div>
-  </header>
+  </div>
 
   <!-- Notificación Toast de confirmación -->
   @if (toastMessage) {

@@ -1,4 +1,4 @@
-import { Component, ViewChild, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 
@@ -6,6 +6,7 @@ import {
   Calendar
 } from '../../../calendar/components/calendar/calendar';
 import { BookAppointmentModal } from '../../components/book-appointment-modal/book-appointment-modal';
+import { StudentHeader } from '../../components/student-header/student-header';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CalendarService } from '../../../calendar/services/calendar.service';
 
@@ -16,17 +17,36 @@ import { CalendarService } from '../../../calendar/services/calendar.service';
     CommonModule,
     RouterModule,
     Calendar,
+    StudentHeader,
     BookAppointmentModal
   ],
   templateUrl: './availability.html',
   styleUrl: './availability.css'
 })
-export class Availability {
+export class Availability implements OnInit {
   @ViewChild(Calendar) calendarComponent?: Calendar;
 
   private router = inject(Router);
-  authService = inject(AuthService);
+  readonly authService = inject(AuthService);
   private calendarService = inject(CalendarService);
+
+  readonly studentHeaderData = computed(() => {
+    const user = this.authService.currentUser();
+
+    if (!user || user.role !== 'alumno') {
+      return null;
+    }
+
+    return {
+      name: user.name,
+      studentId:
+        user.studentCode ||
+        (user.studentId != null
+          ? String(user.studentId)
+          : 'No disponible'),
+      role: 'Alumno'
+    };
+  });
 
   isBookingModalOpen = false;
   selectedSlotData: {
@@ -40,6 +60,12 @@ export class Availability {
 
   get currentUser() {
     return this.authService.currentUser();
+  }
+
+  ngOnInit(): void {
+    if (!this.authService.currentUser()) {
+      this.authService.checkSession().subscribe();
+    }
   }
 
   onPatientScheduleSelected(event: any): void {
