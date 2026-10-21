@@ -20,12 +20,20 @@ export interface Appointment {
   start_time: string;
   end_time: string;
   duration: number;
-  modality: 'In person' | 'Online';
+  modality: 'In person' | 'Online' | 'Presencial' | 'En línea' | string;
   location: string | null;
   meeting_url: string | null;
   reason: string;
   status: string;
   created_at: string;
+  cancellation_reason?: string | null;
+  cancelled_at?: string | null;
+  reschedule_reason?: string | null;
+  rescheduled_at?: string | null;
+  proposed_date?: string | null;
+  proposed_start_time?: string | null;
+  proposed_end_time?: string | null;
+  proposed_availability_id?: number | null;
 }
 
 export interface DisableSchedulePayload {
@@ -148,21 +156,22 @@ export class CalendarService {
       data
     );
   }
-    cancelAppointment(
+
+  cancelAppointment(
     id: number,
     reason: string,
     observation: string
   ): Observable<any> {
-
     return this.http.post<any>(
       `${this.baseUrl}/availabilities/${id}/cancel`,
       {
         reason,
         observation
       }
+    ).pipe(
+      tap(() => this.notifyScheduleChanged())
     );
   }
-
 
   rescheduleAppointment(
     id: number,
@@ -170,7 +179,6 @@ export class CalendarService {
     startTime: string,
     endTime: string
   ): Observable<any> {
-
     return this.http.post<any>(
       `${this.baseUrl}/availabilities/${id}/reschedule`,
       {
@@ -178,6 +186,8 @@ export class CalendarService {
         startTime,
         endTime
       }
+    ).pipe(
+      tap(() => this.notifyScheduleChanged())
     );
   }
 
@@ -209,7 +219,75 @@ export class CalendarService {
     return this.http.post<any>(
       `${this.baseUrl}/appointments`,
       data
+    ).pipe(
+      tap(() => this.notifyScheduleChanged())
     );
   }
 
+  // =========================================================
+  // GESTIÓN DE CITAS DEL ALUMNO (SPRINT 2)
+  // =========================================================
+
+  bookStudentAppointment(data: {
+    date: string;
+    start_time: string;
+    end_time: string;
+    duration: number;
+    modality: 'Presencial' | 'En línea' | 'In person' | 'Online' | string;
+    location?: string;
+    meeting_url?: string;
+    reason: string;
+  }): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/appointments/book`,
+      data,
+      { withCredentials: true }
+    ).pipe(
+      tap(() => this.notifyScheduleChanged())
+    );
+  }
+
+  getStudentMyAppointments(): Observable<{ appointments: Appointment[] }> {
+    return this.http.get<{ appointments: Appointment[] }>(
+      `${this.baseUrl}/appointments/my`,
+      { withCredentials: true }
+    );
+  }
+
+  cancelStudentAppointment(appointmentId: number, reason: string): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/appointments/${appointmentId}/cancel`,
+      { reason },
+      { withCredentials: true }
+    ).pipe(
+      tap(() => this.notifyScheduleChanged())
+    );
+  }
+
+  requestStudentReschedule(
+    appointmentId: number,
+    proposedAvailabilityId: number,
+    reason: string
+  ): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/appointments/${appointmentId}/reschedule-request`,
+      {
+        proposed_availability_id: proposedAvailabilityId,
+        reason
+      },
+      { withCredentials: true }
+    ).pipe(
+      tap(() => this.notifyScheduleChanged())
+    );
+  }
+
+  approveReschedule(appointmentId: number): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/appointments/${appointmentId}/approve-reschedule`,
+      {},
+      { withCredentials: true }
+    ).pipe(
+      tap(() => this.notifyScheduleChanged())
+    );
+  }
 }

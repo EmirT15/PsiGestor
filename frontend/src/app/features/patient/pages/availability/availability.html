@@ -1,6 +1,53 @@
-
 <app-student-header
   [student]="studentHeaderData()">
 </app-student-header>
 
-<app-calendar mode="patient"></app-calendar>
+<div class="availability-page-layout">
+  
+  <!-- Sub-barra de navegación con botón volver -->
+  <div class="patient-topbar">
+    <div class="topbar-left">
+      <a routerLink="/portal-alumno" class="btn-back">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Volver a Mi Portal (Mis Citas)</span>
+      </a>
+      <div class="topbar-divider"></div>
+      <div class="topbar-heading">
+        <h1 class="topbar-title">Agendar Cita Psicológica</h1>
+        <span class="topbar-hint">Selecciona un bloque en color verde (Disponible) para agendar tu consulta</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notificación Toast de confirmación -->
+  @if (toastMessage) {
+    <div class="toast-notification success">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <span>{{ toastMessage }}</span>
+    </div>
+  }
+
+  <!-- Calendario en modo paciente -->
+  <main class="calendar-wrapper">
+    <app-calendar
+      mode="patient"
+      (patientScheduleSelected)="onPatientScheduleSelected($event)"
+    ></app-calendar>
+  </main>
+
+  <!-- Modal para confirmar y agendar cita -->
+  @if (isBookingModalOpen && selectedSlotData) {
+    <app-book-appointment-modal
+      [slotData]="selectedSlotData"
+      (close)="closeBookingModal()"
+      (appointmentBooked)="onAppointmentBooked($event)"
+    ></app-book-appointment-modal>
+  }
+
+</div>

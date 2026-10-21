@@ -304,9 +304,11 @@ export class PsicologoPage implements OnInit {
     }
   }
 
-  closeModal(): void {
-    this.activeModal = 'none';
-    this.cdr.detectChanges();
+  closeModal(modalName?: string): void {
+    if (!modalName || this.activeModal === modalName) {
+      this.activeModal = 'none';
+      this.cdr.detectChanges();
+    }
   }
 
   // 1. Inhabilitar Horario
@@ -497,3 +499,4 @@ export class PsicologoPage implements OnInit {
     });
   }
 }
+

@@ -195,7 +195,7 @@
   <!-- ============================================================
        MODAL 1: DETALLE DE LA CITA RESERVADA (HU-03)
        ============================================================ -->
-  <ion-modal [isOpen]="activeModal === 'details'" (didDismiss)="closeModal()">
+  <ion-modal [isOpen]="activeModal === 'details'" (didDismiss)="closeModal('details')">
     <ng-template>
       <ion-header>
         <ion-toolbar color="primary">
@@ -286,7 +286,7 @@
   <!-- ============================================================
        MODAL 2: AGENDAR CITA MANUALMENTE (ESPACIO DISPONIBLE)
        ============================================================ -->
-  <ion-modal [isOpen]="activeModal === 'booking'" (didDismiss)="closeModal()">
+  <ion-modal [isOpen]="activeModal === 'booking'" (didDismiss)="closeModal('booking')">
     <ng-template>
       <ion-header>
         <ion-toolbar color="primary">
@@ -412,7 +412,7 @@
   <!-- ============================================================
        MODAL 3: DETALLE DE CANCELACIÓN (CITA CANCELADA)
        ============================================================ -->
-  <ion-modal [isOpen]="activeModal === 'cancelDetails'" (didDismiss)="closeModal()">
+  <ion-modal [isOpen]="activeModal === 'cancelDetails'" (didDismiss)="closeModal('cancelDetails')">
     <ng-template>
       <ion-header>
         <ion-toolbar color="danger">
@@ -470,7 +470,7 @@
   <!-- ============================================================
        MODAL 4: PROPONER REPROGRAMACIÓN
        ============================================================ -->
-  <ion-modal [isOpen]="activeModal === 'reschedule'" (didDismiss)="closeModal()">
+  <ion-modal [isOpen]="activeModal === 'reschedule'" (didDismiss)="closeModal('reschedule')">
     <ng-template>
       <ion-header>
         <ion-toolbar color="warning">
@@ -557,7 +557,7 @@
   <!-- ============================================================
        MODAL 5: DETALLE DE REPROGRAMACIÓN (PENDIENTE)
        ============================================================ -->
-  <ion-modal [isOpen]="activeModal === 'rescheduleDetails'" (didDismiss)="closeModal()">
+  <ion-modal [isOpen]="activeModal === 'rescheduleDetails'" (didDismiss)="closeModal('rescheduleDetails')">
     <ng-template>
       <ion-header>
         <ion-toolbar color="warning">
@@ -625,7 +625,7 @@
   <!-- ============================================================
        MODAL 6: CANCELAR CITA
        ============================================================ -->
-  <ion-modal [isOpen]="activeModal === 'cancel'" (didDismiss)="closeModal()">
+  <ion-modal [isOpen]="activeModal === 'cancel'" (didDismiss)="closeModal('cancel')">
     <ng-template>
       <ion-header>
         <ion-toolbar color="danger">
@@ -683,7 +683,7 @@
   <!-- ============================================================
        MODAL 7: INHABILITAR HORARIO PUNTUAL
        ============================================================ -->
-  <ion-modal [isOpen]="activeModal === 'disable'" (didDismiss)="closeModal()">
+  <ion-modal [isOpen]="activeModal === 'disable'" (didDismiss)="closeModal('disable')">
     <ng-template>
       <ion-header>
         <ion-toolbar color="primary">
@@ -765,3 +765,4 @@
   </ion-modal>
 
 </ion-content>
+
