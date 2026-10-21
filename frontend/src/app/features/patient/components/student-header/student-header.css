@@ -1,0 +1,162 @@
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.student-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 16px 28px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #172554;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #1d4ed8;
+  color: #ffffff;
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.brand-text,
+.student-information {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.brand-text strong {
+  font-size: 17px;
+}
+
+.brand-text small,
+.student-information small {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.student-navigation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.student-navigation a {
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.student-navigation a:hover {
+  background: #f1f5f9;
+  color: #1d4ed8;
+}
+
+.student-navigation a.active {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.student-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.student-avatar {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 700;
+  object-fit: cover;
+}
+
+
+.student-name {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .student-header {
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 14px 16px;
+  }
+
+  .student-navigation {
+    order: 3;
+    width: 100%;
+  }
+
+  .student-profile {
+    margin-left: auto;
+  }
+
+  .brand-text small {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .student-information {
+    display: none;
+  }
+}
+
+
+.student-information {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.student-name {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.student-information small {
+  color: #64748b;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 380px) {
+  .student-information {
+    display: none;
+  }
+}
