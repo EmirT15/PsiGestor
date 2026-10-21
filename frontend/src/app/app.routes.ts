@@ -39,6 +39,26 @@ export const routes: Routes = [
         .then((m) => m.Availability)
   },
   {
+    path: 'psychologist',
+    loadComponent: () => 
+      import('./features/psychologist/psychologist-layout.component')
+        .then(m => m.PsychologistLayoutComponent),
+    children: [
+      {
+        path: '',
+        redirectTo: 'calendar',
+        pathMatch: 'full'
+      },
+      {
+        path: 'calendar',
+        loadComponent: () =>
+          import('./features/calendar/components/calendar/calendar')
+            .then((m) => m.Calendar)
+      }
+      
+    ]
+  },
+  {
     path: '**',
     redirectTo: 'calendar'
   }
