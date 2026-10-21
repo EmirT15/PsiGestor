@@ -14,6 +14,8 @@ export interface RescheduleDetailsMock {
   proposedDetails: string;
   sentAtStr: string;
   reason: string;
+  rescheduleRequestedBy?: 'psicologo' | 'alumno';
+  reschedule_requested_by?: 'psicologo' | 'alumno';
 }
 
 @Component({
@@ -28,6 +30,8 @@ export class RescheduleDetails {
   @Output() modify = new EventEmitter<void>();
   @Output() remind = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
+  @Output() accept = new EventEmitter<void>();
+  @Output() reject = new EventEmitter<void>();
 
   defaultMock: RescheduleDetailsMock = {
     id: 2,
@@ -46,5 +50,12 @@ export class RescheduleDetails {
 
   get displayData(): RescheduleDetailsMock {
     return this.data || this.defaultMock;
+  }
+
+  get isStudentRequest(): boolean {
+    return (
+      this.displayData.rescheduleRequestedBy === 'alumno' ||
+      this.displayData.reschedule_requested_by === 'alumno'
+    );
   }
 }

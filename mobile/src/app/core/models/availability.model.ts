@@ -46,6 +46,7 @@ export interface Availability {
   proposedEndTime?: string;
   cancellationReason?: string;
   cancellationObservation?: string;
+  rescheduleRequestedBy?: 'psicologo' | 'alumno';
 }
 
 export interface Student {
@@ -70,4 +71,10 @@ export interface Appointment {
   reason: string;
   status: string;
   created_at: string;
+  reschedule_requested_by?: 'psicologo' | 'alumno' | null;
+  proposed_date?: string;
+  proposed_start_time?: string;
+  proposed_end_time?: string;
+  reschedule_reason?: string;
+  cancellation_reason?: string;
 }

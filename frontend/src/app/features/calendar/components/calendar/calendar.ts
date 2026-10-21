@@ -723,13 +723,17 @@ private toastTimeout:
       endTime: appointment.end_time,
       duration: appointment.duration,
       breakTime: 0,
-      status: appointment.status === 'Cancelled' ? 'Cancelado' : 'Reservado',
+      status: appointment.status === 'Cancelled'
+        ? 'Cancelado'
+        : (appointment.status === 'Pending Reschedule' || appointment.status === 'Reprogramacion pendiente'
+          ? 'Reprogramacion pendiente'
+          : 'Reservado'),
       studentName: appointment.student_name,
       studentInitials: initials || 'AL',
       studentAge: 20,
       studentSemester: '',
       studentProgram: '',
-      consultationReason: appointment.reason,
+      consultationReason: appointment.reason || (appointment as any).reschedule_reason,
       modality:
         appointment.modality === 'In person'
           ? 'Presencial'
@@ -740,7 +744,11 @@ private toastTimeout:
         'Cubículo',
       folio: `PSI-${appointment.date.slice(0, 4)}-${String(
         appointment.id
-      ).padStart(4, '0')}`
+      ).padStart(4, '0')}`,
+      proposedDate: appointment.proposed_date || undefined,
+      proposedStartTime: appointment.proposed_start_time || undefined,
+      proposedEndTime: appointment.proposed_end_time || undefined,
+      rescheduleRequestedBy: appointment.reschedule_requested_by || 'psicologo'
     };
   }
 
@@ -762,16 +770,30 @@ private toastTimeout:
       const appStart = this.timeToMinutes(appointment.start_time);
       const appEnd = this.timeToMinutes(appointment.end_time);
 
-      const alreadyInAvailabilities = dateAvailabilities.some(
+      const matchingAvail = dateAvailabilities.find(
         (avail) =>
-          (avail.status === 'Reservado' ||
-            avail.status === 'Reprogramacion pendiente' ||
-            avail.status === 'Cancelado') &&
           this.timeToMinutes(avail.startTime) === appStart &&
           this.timeToMinutes(avail.endTime) === appEnd
       );
 
-      if (!alreadyInAvailabilities) {
+      if (matchingAvail) {
+        // Enriquecer el bloque existente para que mantenga su ID real positivo
+        if (matchingAvail.status === 'Disponible' || matchingAvail.status === 'Reservado') {
+          matchingAvail.status = appointment.status === 'Cancelled'
+            ? 'Cancelado'
+            : (appointment.status === 'Pending Reschedule' || appointment.status === 'Reprogramacion pendiente'
+              ? 'Reprogramacion pendiente'
+              : 'Reservado');
+          matchingAvail.studentName = appointment.student_name;
+          matchingAvail.consultationReason = appointment.reason || (appointment as any).reschedule_reason;
+          matchingAvail.modality = appointment.modality === 'In person' ? 'Presencial' : 'En línea';
+          matchingAvail.location = appointment.location || appointment.meeting_url || 'Cubículo';
+          matchingAvail.proposedDate = appointment.proposed_date || undefined;
+          matchingAvail.proposedStartTime = appointment.proposed_start_time || undefined;
+          matchingAvail.proposedEndTime = appointment.proposed_end_time || undefined;
+          matchingAvail.rescheduleRequestedBy = appointment.reschedule_requested_by || 'psicologo';
+        }
+      } else {
         fallbackBooked.push(
           this.mapAppointmentToAvailability(appointment)
         );
@@ -1054,7 +1076,12 @@ private toastTimeout:
 
       reason:
         availability.consultationReason ||
-        ''
+        '',
+
+      rescheduleRequestedBy:
+        availability.rescheduleRequestedBy ||
+        (availability as any).reschedule_requested_by ||
+        'psicologo'
     };
 
 
@@ -1412,37 +1439,39 @@ selectAvailableSlot(
       return;
     }
 
+    let targetId = this.selectedAvailabilityId;
+    if (targetId < 0 && this.selectedSlotDate) {
+      const matched = this.availabilities.find(a =>
+        a.date === this.selectedSlotDate &&
+        a.id > 0 &&
+        (this.selectedSlot ? this.getFormattedRange12h(a) === this.selectedSlot : true)
+      );
+      if (matched) {
+        targetId = matched.id;
+      }
+    }
 
     this.calendarService
       .rescheduleAppointment(
-
-        this.selectedAvailabilityId,
-
+        targetId,
         data.date,
-
         data.startTime,
-
         data.endTime
       )
       .subscribe({
-
         next: () => {
-
           this.closeRescheduleModal();
-
           this.closeSidebar();
-
           this.loadAvailabilities();
+          this.showToast('Propuesta de reprogramación enviada correctamente.', 'success');
         },
-
         error: (error) => {
-
           console.error(
             'Error al reprogramar:',
             error
           );
+          alert(error.error?.error || 'Error al enviar propuesta de reprogramación.');
         }
-
       });
   }
 
@@ -1502,6 +1531,60 @@ selectAvailableSlot(
         }
 
       });
+  }
+
+  onApproveReschedule(): void {
+    if (this.selectedAvailabilityId === null) return;
+
+    const req$ = this.selectedAvailabilityId < 0
+      ? this.calendarService.approveReschedule(-this.selectedAvailabilityId)
+      : this.calendarService.approveAvailabilityReschedule(this.selectedAvailabilityId);
+
+    req$.subscribe({
+      next: () => {
+        this.closeSidebar();
+        this.loadAvailabilities();
+        this.showToast('Reprogramación aceptada con éxito', 'success');
+      },
+      error: (error) => {
+        console.error('Error al aprobar reprogramación:', error);
+        alert(error.error?.error || 'No se pudo aprobar la reprogramación.');
+      }
+    });
+  }
+
+  onRejectReschedule(): void {
+    if (this.selectedAvailabilityId === null) return;
+
+    const isAlumno =
+      this.selectedRescheduleDetails?.rescheduleRequestedBy === 'alumno' ||
+      this.selectedRescheduleDetails?.reschedule_requested_by === 'alumno';
+
+    const confirmMsg = isAlumno
+      ? '¿Rechazar la solicitud de cambio del alumno? La cita se mantendrá en su horario original.'
+      : '¿Deseas cancelar esta propuesta de reprogramación?';
+
+    if (!confirm(confirmMsg)) return;
+
+    const req$ = this.selectedAvailabilityId < 0
+      ? this.calendarService.rejectReschedule(-this.selectedAvailabilityId)
+      : this.calendarService.rejectAvailabilityReschedule(this.selectedAvailabilityId);
+
+    req$.subscribe({
+      next: (res) => {
+        this.closeSidebar();
+        this.loadAvailabilities();
+        if (res?.action === 'cancelled') {
+          this.showToast('Propuesta cancelada. La cita ha sido cancelada.', 'warning');
+        } else {
+          this.showToast('Solicitud rechazada. La cita se mantiene en su horario original.', 'success');
+        }
+      },
+      error: (error) => {
+        console.error('Error al rechazar reprogramación:', error);
+        alert(error.error?.error || 'No se pudo rechazar la reprogramación.');
+      }
+    });
   }
 
 

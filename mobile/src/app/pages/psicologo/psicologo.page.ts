@@ -469,6 +469,43 @@ export class PsicologoPage implements OnInit {
     this.rescheduleForm.selectedNewSlot = slot;
   }
 
+  approveReschedule(slot: Availability): void {
+    this.calendarService.approveReschedule(slot.id).subscribe({
+      next: async () => {
+        this.closeModal();
+        this.loadData();
+        await this.showToast('Reprogramación aprobada correctamente. La cita ha sido confirmada en el nuevo horario.', 'success');
+      },
+      error: async (err) => {
+        await this.showToast(err.error?.error || 'Error al aprobar la reprogramación.', 'danger');
+      }
+    });
+  }
+
+  rejectReschedule(slot: Availability): void {
+    const isAlumno = slot.rescheduleRequestedBy === 'alumno';
+    const confirmMsg = isAlumno
+      ? '¿Rechazar la solicitud de cambio del alumno? La cita se mantendrá en su horario original.'
+      : '¿Deseas cancelar la propuesta de reprogramación?';
+
+    if (!confirm(confirmMsg)) return;
+
+    this.calendarService.rejectReschedule(slot.id).subscribe({
+      next: async (res) => {
+        this.closeModal();
+        this.loadData();
+        if (res.action === 'cancelled') {
+          await this.showToast('Propuesta cancelada. La cita ha sido cancelada.', 'warning');
+        } else {
+          await this.showToast('Solicitud rechazada. La cita se mantiene en su horario original.', 'success');
+        }
+      },
+      error: async (err) => {
+        await this.showToast(err.error?.error || 'Error al rechazar la reprogramación.', 'danger');
+      }
+    });
+  }
+
   saveReschedule(): void {
     if (!this.selectedSlot || !this.rescheduleForm.selectedNewSlot) {
       this.showToast('Por favor selecciona el nuevo horario propuesto.', 'warning');
@@ -479,7 +516,8 @@ export class PsicologoPage implements OnInit {
       this.selectedSlot.id,
       this.rescheduleForm.newDate,
       this.rescheduleForm.selectedNewSlot.startTime,
-      this.rescheduleForm.selectedNewSlot.endTime
+      this.rescheduleForm.selectedNewSlot.endTime,
+      this.rescheduleForm.reason
     ).subscribe({
       next: async () => {
         this.closeModal();

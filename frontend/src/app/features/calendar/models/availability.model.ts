@@ -46,4 +46,5 @@ export interface Availability {
   proposedEndTime?: string;
   cancellationReason?: string;
   cancellationObservation?: string;
+  rescheduleRequestedBy?: 'psicologo' | 'alumno';
 }

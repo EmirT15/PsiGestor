@@ -19,10 +19,10 @@
     }
 
     @for (cita of myAppointments; track cita.id) {
-      <ion-card class="cita-card" [class.cita-cancelled]="cita.status === 'Cancelado'">
+      <ion-card class="cita-card" [class.cita-cancelled]="cita.status === 'Cancelado'" [class.cita-reschedule]="cita.status === 'Reprogramacion pendiente'">
         <ion-card-header>
           <div class="badge-row">
-            <ion-badge [color]="cita.status === 'Reservado' ? 'primary' : 'danger'">
+            <ion-badge [color]="cita.status === 'Reservado' ? 'primary' : (cita.status === 'Reprogramacion pendiente' ? 'warning' : 'danger')">
               {{ cita.status }}
             </ion-badge>
             <span class="cita-modality">{{ cita.modality || 'Presencial' }}</span>
@@ -39,6 +39,38 @@
 
         <ion-card-content>
           <p><strong>Atención con:</strong> Psicólogo Institucional</p>
+          @if (cita.status === 'Reprogramacion pendiente') {
+            <div class="reschedule-banner">
+              @if (cita.rescheduleRequestedBy === 'psicologo') {
+                <p><strong>La psicóloga propuso un nuevo horario:</strong></p>
+                <p class="text-proposed">{{ cita.proposedDate }} • {{ cita.proposedStartTime }} - {{ cita.proposedEndTime }}</p>
+                @if (cita.consultationReason) {
+                  <p class="reschedule-reason">Motivo: "{{ cita.consultationReason }}"</p>
+                }
+                <div class="btn-actions-reschedule">
+                  <ion-button expand="block" color="success" size="small" (click)="acceptReschedule(cita)">
+                    <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+                    Aceptar Nuevo Horario
+                  </ion-button>
+                  <ion-button expand="block" color="danger" fill="outline" size="small" (click)="rejectReschedule(cita)">
+                    <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+                    Rechazar (Cancelar Cita)
+                  </ion-button>
+                </div>
+              } @else {
+                <p><strong>Solicitud enviada a la psicóloga:</strong></p>
+                <p class="text-proposed">{{ cita.proposedDate }} • {{ cita.proposedStartTime }} - {{ cita.proposedEndTime }}</p>
+                @if (cita.consultationReason) {
+                  <p class="reschedule-reason">Motivo: "{{ cita.consultationReason }}"</p>
+                }
+                <div class="btn-actions-reschedule">
+                  <ion-button expand="block" color="danger" fill="outline" size="small" (click)="rejectReschedule(cita)">
+                    Descartar Solicitud de Cambio
+                  </ion-button>
+                </div>
+              }
+            </div>
+          }
           @if (cita.status === 'Cancelado') {
             <div class="cancel-info">
               <p><strong>Motivo de cancelación:</strong> {{ cita.cancellationReason || 'No especificado' }}</p>
