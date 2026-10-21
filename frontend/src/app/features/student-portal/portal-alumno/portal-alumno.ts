@@ -27,6 +27,7 @@ export class PortalAlumno implements OnInit {
 
   appointments: Appointment[] = [];
   isLoadingAppointments = false;
+  isProcessing = false;
   toastMessage: string | null = null;
 
   // Modales
@@ -119,6 +120,57 @@ export class PortalAlumno implements OnInit {
     this.reschedulingAppointment = null;
     this.showToast('Solicitud de reprogramación enviada correctamente. Queda a la espera de aprobación.');
     this.loadMyAppointments();
+  }
+
+  acceptReschedule(apt: Appointment): void {
+    if (this.isProcessing) return;
+    this.isProcessing = true;
+    this.cdr.detectChanges();
+
+    this.calendarService.approveReschedule(apt.id).subscribe({
+      next: () => {
+        this.isProcessing = false;
+        this.showToast('¡Has aceptado la reprogramación! La cita ha sido confirmada en el nuevo horario.');
+        this.loadMyAppointments();
+      },
+      error: (err) => {
+        this.isProcessing = false;
+        this.showToast(err.error?.error || 'No se pudo aceptar la reprogramación.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  rejectReschedule(apt: Appointment): void {
+    if (this.isProcessing) return;
+    const isPsicologo = apt.reschedule_requested_by === 'psicologo';
+    const confirmMsg = isPsicologo
+      ? '¿Estás seguro de que deseas rechazar la propuesta de la psicóloga? Al rechazarla, tu cita se cancelará definitivamente ya que la psicóloga no cuenta con disponibilidad en el horario original.'
+      : '¿Deseas descartar tu solicitud de cambio de horario? Tu cita continuará agendada en el horario original.';
+
+    if (!confirm(confirmMsg)) {
+      return;
+    }
+
+    this.isProcessing = true;
+    this.cdr.detectChanges();
+
+    this.calendarService.rejectReschedule(apt.id).subscribe({
+      next: (res) => {
+        this.isProcessing = false;
+        if (res.action === 'cancelled') {
+          this.showToast('Propuesta rechazada. La cita ha sido cancelada definitivamente.');
+        } else {
+          this.showToast('Solicitud de cambio descartada. Se conserva el horario original.');
+        }
+        this.loadMyAppointments();
+      },
+      error: (err) => {
+        this.isProcessing = false;
+        this.showToast(err.error?.error || 'No se pudo rechazar la reprogramación.');
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   openCancelModal(appointment: Appointment): void {

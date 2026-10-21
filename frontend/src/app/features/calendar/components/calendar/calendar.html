@@ -1519,6 +1519,8 @@
           (modify)="
             openRescheduleModal()
           "
+          (accept)="onApproveReschedule()"
+          (reject)="onRejectReschedule()"
         />
 
       } @else if (

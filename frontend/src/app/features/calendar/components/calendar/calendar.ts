@@ -1054,7 +1054,11 @@ private toastTimeout:
 
       reason:
         availability.consultationReason ||
-        ''
+        '',
+
+      rescheduleRequestedBy:
+        availability.rescheduleRequestedBy ||
+        'psicologo'
     };
 
 
@@ -1501,6 +1505,47 @@ selectAvailableSlot(
           );
         }
 
+      });
+  }
+
+  onApproveReschedule(): void {
+    if (this.selectedAvailabilityId === null) return;
+
+    this.calendarService
+      .approveAvailabilityReschedule(this.selectedAvailabilityId)
+      .subscribe({
+        next: () => {
+          this.closeSidebar();
+          this.loadAvailabilities();
+        },
+        error: (error) => {
+          console.error('Error al aprobar reprogramación:', error);
+          alert(error.error?.error || 'No se pudo aprobar la reprogramación.');
+        }
+      });
+  }
+
+  onRejectReschedule(): void {
+    if (this.selectedAvailabilityId === null) return;
+
+    const isAlumno = this.selectedRescheduleDetails?.rescheduleRequestedBy === 'alumno';
+    const confirmMsg = isAlumno
+      ? '¿Rechazar la solicitud de cambio del alumno? La cita se mantendrá en su horario original.'
+      : '¿Deseas cancelar esta propuesta de reprogramación?';
+
+    if (!confirm(confirmMsg)) return;
+
+    this.calendarService
+      .rejectAvailabilityReschedule(this.selectedAvailabilityId)
+      .subscribe({
+        next: () => {
+          this.closeSidebar();
+          this.loadAvailabilities();
+        },
+        error: (error) => {
+          console.error('Error al rechazar reprogramación:', error);
+          alert(error.error?.error || 'No se pudo rechazar la reprogramación.');
+        }
       });
   }
 

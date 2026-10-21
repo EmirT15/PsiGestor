@@ -173,3 +173,10 @@ def remove_disabled_schedule(
     return delete_disabled_schedule_db(
         schedule_id
     )
+def approve_availability_reschedule(availability_id):
+    from app.repositories.availability_repository import approve_availability_reschedule_repo
+    return approve_availability_reschedule_repo(availability_id)
+
+def reject_availability_reschedule(availability_id):
+    from app.repositories.availability_repository import reject_availability_reschedule_repo
+    return reject_availability_reschedule_repo(availability_id)

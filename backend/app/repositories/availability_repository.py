@@ -101,7 +101,8 @@ def get_availabilities():
                 proposed_start_time,
                 proposed_end_time,
                 cancellation_reason,
-                cancellation_observation
+                cancellation_observation,
+                reschedule_requested_by
             FROM availabilities
             ORDER BY date, start_time;
             """
@@ -543,3 +544,92 @@ def delete_disabled_schedule_db(
     finally:
         cursor.close()
         conn.close()
+
+def approve_availability_reschedule_repo(availability_id):
+    connection = psycopg.connect(
+        host=os.getenv("DB_HOST"),
+        port=os.getenv("DB_PORT"),
+        dbname=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD")
+    )
+    try:
+        with connection.cursor() as cursor:
+            # Find matching appointment
+            cursor.execute(
+                """
+                SELECT id FROM appointments
+                WHERE (date, start_time, end_time) = (SELECT date, start_time, end_time FROM availabilities WHERE id = %s)
+                ORDER BY id DESC LIMIT 1;
+                """,
+                (availability_id,)
+            )
+            row = cursor.fetchone()
+            if row:
+                apt_id = row[0]
+                from app.repositories.appointment_repository import approve_student_reschedule_db
+                return approve_student_reschedule_db(apt_id)
+
+            # Fallback if only availability exists
+            cursor.execute(
+                """
+                UPDATE availabilities
+                SET date = proposed_date,
+                    start_time = proposed_start_time,
+                    end_time = proposed_end_time,
+                    status = 'Reservado',
+                    proposed_date = NULL,
+                    proposed_start_time = NULL,
+                    proposed_end_time = NULL,
+                    reschedule_requested_by = NULL
+                WHERE id = %s;
+                """,
+                (availability_id,)
+            )
+            connection.commit()
+            return True
+    finally:
+        connection.close()
+
+
+def reject_availability_reschedule_repo(availability_id):
+    connection = psycopg.connect(
+        host=os.getenv("DB_HOST"),
+        port=os.getenv("DB_PORT"),
+        dbname=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD")
+    )
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id FROM appointments
+                WHERE (date, start_time, end_time) = (SELECT date, start_time, end_time FROM availabilities WHERE id = %s)
+                ORDER BY id DESC LIMIT 1;
+                """,
+                (availability_id,)
+            )
+            row = cursor.fetchone()
+            if row:
+                apt_id = row[0]
+                from app.repositories.appointment_repository import reject_student_reschedule_db
+                return reject_student_reschedule_db(apt_id)
+
+            # Fallback if only availability exists
+            cursor.execute(
+                """
+                UPDATE availabilities
+                SET status = 'Reservado',
+                    proposed_date = NULL,
+                    proposed_start_time = NULL,
+                    proposed_end_time = NULL,
+                    reschedule_requested_by = NULL
+                WHERE id = %s;
+                """,
+                (availability_id,)
+            )
+            connection.commit()
+            return True
+    finally:
+        connection.close()

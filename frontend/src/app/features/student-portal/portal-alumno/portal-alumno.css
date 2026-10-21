@@ -592,6 +592,35 @@
   width: 100%;
 }
 
+.pending-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.btn-confirm-reschedule {
+  background: #059669;
+  border: 1px solid #059669;
+  color: #ffffff;
+}
+
+.btn-confirm-reschedule:hover:not(:disabled) {
+  background: #047857;
+}
+
+.btn-reject-reschedule {
+  background: #ffffff;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+}
+
+.btn-reject-reschedule:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
 .pill-disabled {
   font-size: 0.78rem;
   color: #b45309;

@@ -14,6 +14,7 @@ export interface RescheduleDetailsMock {
   proposedDetails: string;
   sentAtStr: string;
   reason: string;
+  rescheduleRequestedBy?: 'psicologo' | 'alumno';
 }
 
 @Component({
@@ -28,6 +29,8 @@ export class RescheduleDetails {
   @Output() modify = new EventEmitter<void>();
   @Output() remind = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
+  @Output() accept = new EventEmitter<void>();
+  @Output() reject = new EventEmitter<void>();
 
   defaultMock: RescheduleDetailsMock = {
     id: 2,

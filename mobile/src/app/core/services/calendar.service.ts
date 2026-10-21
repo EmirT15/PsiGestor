@@ -137,6 +137,42 @@ export class CalendarService {
     return this.http.get<{ appointments: Appointment[] }>(url);
   }
 
+  approveReschedule(id: number): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/availabilities/${id}/approve-reschedule`,
+      {}
+    ).pipe(
+      tap(() => this.notifyScheduleChanged())
+    );
+  }
+
+  rejectReschedule(id: number): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/availabilities/${id}/reject-reschedule`,
+      {}
+    ).pipe(
+      tap(() => this.notifyScheduleChanged())
+    );
+  }
+
+  approveAppointmentReschedule(appointmentId: number): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/appointments/${appointmentId}/approve-reschedule`,
+      {}
+    ).pipe(
+      tap(() => this.notifyScheduleChanged())
+    );
+  }
+
+  rejectAppointmentReschedule(appointmentId: number): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/appointments/${appointmentId}/reject-reschedule`,
+      {}
+    ).pipe(
+      tap(() => this.notifyScheduleChanged())
+    );
+  }
+
   createAppointment(data: {
     student_id: number;
     student_name: string;

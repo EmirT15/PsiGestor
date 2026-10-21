@@ -34,6 +34,7 @@ export interface Appointment {
   proposed_start_time?: string | null;
   proposed_end_time?: string | null;
   proposed_availability_id?: number | null;
+  reschedule_requested_by?: 'psicologo' | 'alumno' | null;
 }
 
 export interface DisableSchedulePayload {
@@ -284,6 +285,36 @@ export class CalendarService {
   approveReschedule(appointmentId: number): Observable<any> {
     return this.http.post<any>(
       `${this.baseUrl}/appointments/${appointmentId}/approve-reschedule`,
+      {},
+      { withCredentials: true }
+    ).pipe(
+      tap(() => this.notifyScheduleChanged())
+    );
+  }
+
+  rejectReschedule(appointmentId: number): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/appointments/${appointmentId}/reject-reschedule`,
+      {},
+      { withCredentials: true }
+    ).pipe(
+      tap(() => this.notifyScheduleChanged())
+    );
+  }
+
+  approveAvailabilityReschedule(availabilityId: number): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/availabilities/${availabilityId}/approve-reschedule`,
+      {},
+      { withCredentials: true }
+    ).pipe(
+      tap(() => this.notifyScheduleChanged())
+    );
+  }
+
+  rejectAvailabilityReschedule(availabilityId: number): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/availabilities/${availabilityId}/reject-reschedule`,
       {},
       { withCredentials: true }
     ).pipe(

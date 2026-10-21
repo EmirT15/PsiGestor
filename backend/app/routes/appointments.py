@@ -7,6 +7,7 @@ from app.services.appointment_service import (
     cancel_student_appointment,
     request_student_reschedule,
     approve_student_reschedule,
+    reject_student_reschedule,
 )
 from app.services.auth_service import get_current_user, require_auth
 from app.repositories.appointment_repository import get_appointments
@@ -212,3 +213,14 @@ def approve_reschedule_route(appointment_id):
         return jsonify({"error": str(error)}), 400
     except Exception as error:
         return jsonify({"error": f"No fue posible aprobar la reprogramación: {error}"}), 500
+
+
+@appointments_bp.route("/<int:appointment_id>/reject-reschedule", methods=["POST"])
+def reject_reschedule_route(appointment_id):
+    try:
+        result = reject_student_reschedule(appointment_id)
+        return jsonify(result), 200
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+    except Exception as error:
+        return jsonify({"error": f"No fue posible rechazar la reprogramación: {error}"}), 500

@@ -231,6 +231,26 @@
   color: white;
 }
 
+.btn-success {
+  background-color: #059669;
+  border-color: #059669;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #047857;
+}
+
+.btn-outline-danger {
+  border-color: #EF4444;
+  color: #EF4444;
+  background-color: transparent;
+}
+
+.btn-outline-danger:hover {
+  background-color: #FEE2E2;
+}
+
 .actions-bottom {
   margin-top: 16px;
   display: flex;
