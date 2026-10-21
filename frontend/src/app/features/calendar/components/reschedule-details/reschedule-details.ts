@@ -15,6 +15,7 @@ export interface RescheduleDetailsMock {
   sentAtStr: string;
   reason: string;
   rescheduleRequestedBy?: 'psicologo' | 'alumno';
+  reschedule_requested_by?: 'psicologo' | 'alumno';
 }
 
 @Component({
@@ -49,5 +50,12 @@ export class RescheduleDetails {
 
   get displayData(): RescheduleDetailsMock {
     return this.data || this.defaultMock;
+  }
+
+  get isStudentRequest(): boolean {
+    return (
+      this.displayData.rescheduleRequestedBy === 'alumno' ||
+      this.displayData.reschedule_requested_by === 'alumno'
+    );
   }
 }

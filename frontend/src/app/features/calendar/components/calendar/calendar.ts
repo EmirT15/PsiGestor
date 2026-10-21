@@ -723,13 +723,17 @@ private toastTimeout:
       endTime: appointment.end_time,
       duration: appointment.duration,
       breakTime: 0,
-      status: appointment.status === 'Cancelled' ? 'Cancelado' : 'Reservado',
+      status: appointment.status === 'Cancelled'
+        ? 'Cancelado'
+        : (appointment.status === 'Pending Reschedule' || appointment.status === 'Reprogramacion pendiente'
+          ? 'Reprogramacion pendiente'
+          : 'Reservado'),
       studentName: appointment.student_name,
       studentInitials: initials || 'AL',
       studentAge: 20,
       studentSemester: '',
       studentProgram: '',
-      consultationReason: appointment.reason,
+      consultationReason: appointment.reason || (appointment as any).reschedule_reason,
       modality:
         appointment.modality === 'In person'
           ? 'Presencial'
@@ -740,7 +744,11 @@ private toastTimeout:
         'Cubículo',
       folio: `PSI-${appointment.date.slice(0, 4)}-${String(
         appointment.id
-      ).padStart(4, '0')}`
+      ).padStart(4, '0')}`,
+      proposedDate: appointment.proposed_date || undefined,
+      proposedStartTime: appointment.proposed_start_time || undefined,
+      proposedEndTime: appointment.proposed_end_time || undefined,
+      rescheduleRequestedBy: appointment.reschedule_requested_by || 'psicologo'
     };
   }
 
@@ -1058,6 +1066,7 @@ private toastTimeout:
 
       rescheduleRequestedBy:
         availability.rescheduleRequestedBy ||
+        (availability as any).reschedule_requested_by ||
         'psicologo'
     };
 
@@ -1511,42 +1520,55 @@ selectAvailableSlot(
   onApproveReschedule(): void {
     if (this.selectedAvailabilityId === null) return;
 
-    this.calendarService
-      .approveAvailabilityReschedule(this.selectedAvailabilityId)
-      .subscribe({
-        next: () => {
-          this.closeSidebar();
-          this.loadAvailabilities();
-        },
-        error: (error) => {
-          console.error('Error al aprobar reprogramación:', error);
-          alert(error.error?.error || 'No se pudo aprobar la reprogramación.');
-        }
-      });
+    const req$ = this.selectedAvailabilityId < 0
+      ? this.calendarService.approveReschedule(-this.selectedAvailabilityId)
+      : this.calendarService.approveAvailabilityReschedule(this.selectedAvailabilityId);
+
+    req$.subscribe({
+      next: () => {
+        this.closeSidebar();
+        this.loadAvailabilities();
+        this.showToast('Reprogramación aceptada con éxito', 'success');
+      },
+      error: (error) => {
+        console.error('Error al aprobar reprogramación:', error);
+        alert(error.error?.error || 'No se pudo aprobar la reprogramación.');
+      }
+    });
   }
 
   onRejectReschedule(): void {
     if (this.selectedAvailabilityId === null) return;
 
-    const isAlumno = this.selectedRescheduleDetails?.rescheduleRequestedBy === 'alumno';
+    const isAlumno =
+      this.selectedRescheduleDetails?.rescheduleRequestedBy === 'alumno' ||
+      this.selectedRescheduleDetails?.reschedule_requested_by === 'alumno';
+
     const confirmMsg = isAlumno
       ? '¿Rechazar la solicitud de cambio del alumno? La cita se mantendrá en su horario original.'
       : '¿Deseas cancelar esta propuesta de reprogramación?';
 
     if (!confirm(confirmMsg)) return;
 
-    this.calendarService
-      .rejectAvailabilityReschedule(this.selectedAvailabilityId)
-      .subscribe({
-        next: () => {
-          this.closeSidebar();
-          this.loadAvailabilities();
-        },
-        error: (error) => {
-          console.error('Error al rechazar reprogramación:', error);
-          alert(error.error?.error || 'No se pudo rechazar la reprogramación.');
+    const req$ = this.selectedAvailabilityId < 0
+      ? this.calendarService.rejectReschedule(-this.selectedAvailabilityId)
+      : this.calendarService.rejectAvailabilityReschedule(this.selectedAvailabilityId);
+
+    req$.subscribe({
+      next: (res) => {
+        this.closeSidebar();
+        this.loadAvailabilities();
+        if (res?.action === 'cancelled') {
+          this.showToast('Propuesta cancelada. La cita ha sido cancelada.', 'warning');
+        } else {
+          this.showToast('Solicitud rechazada. La cita se mantiene en su horario original.', 'success');
         }
-      });
+      },
+      error: (error) => {
+        console.error('Error al rechazar reprogramación:', error);
+        alert(error.error?.error || 'No se pudo rechazar la reprogramación.');
+      }
+    });
   }
 
 
