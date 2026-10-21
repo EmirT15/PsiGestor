@@ -149,6 +149,11 @@ def init_database(reset: bool = False) -> None:
                 cursor.execute(psychologist_seed.read_text(encoding="utf-8"))
                 connection.commit()
 
+            # Asegurar cuentas oficiales de alumnos de prueba (004_student_user.sql)
+            student_seed = seeds_dir / "004_student_user.sql"
+            if student_seed.exists():
+                cursor.execute(student_seed.read_text(encoding="utf-8"))
+                connection.commit()
             # 5. Verificar si la base de datos ya tiene horario habitual o citas cargadas
             cursor.execute("SELECT COUNT(*) FROM regular_schedule;")
             regular_schedule_count = cursor.fetchone()[0]
@@ -188,3 +193,4 @@ if __name__ == "__main__":
         print("[init_db] ¡Base de datos sincronizada al 100% con los datos semilla del equipo!")
     else:
         print("[init_db] Verificación de migraciones y semillas completada.")
+
