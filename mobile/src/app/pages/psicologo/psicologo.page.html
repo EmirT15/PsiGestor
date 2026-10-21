@@ -608,11 +608,26 @@
             </div>
 
             <div class="detail-actions">
-              <ion-button expand="block" color="warning" (click)="openRescheduleModal(selectedSlot)">
-                <ion-icon name="sync-outline" slot="start"></ion-icon>
-                Modificar Propuesta
-              </ion-button>
-              <ion-button expand="block" color="medium" fill="outline" (click)="closeModal()">
+              @if (selectedSlot.rescheduleRequestedBy === 'alumno') {
+                <ion-button expand="block" color="success" (click)="approveReschedule(selectedSlot)">
+                  <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+                  Aceptar Reprogramación
+                </ion-button>
+                <ion-button expand="block" color="danger" fill="outline" (click)="rejectReschedule(selectedSlot)">
+                  <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+                  Rechazar Solicitud
+                </ion-button>
+              } @else {
+                <ion-button expand="block" color="warning" (click)="openRescheduleModal(selectedSlot)">
+                  <ion-icon name="sync-outline" slot="start"></ion-icon>
+                  Modificar Propuesta
+                </ion-button>
+                <ion-button expand="block" color="danger" fill="outline" (click)="rejectReschedule(selectedSlot)">
+                  <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+                  Cancelar Propuesta de Cambio
+                </ion-button>
+              }
+              <ion-button expand="block" color="medium" fill="clear" (click)="closeModal()">
                 Cerrar
               </ion-button>
             </div>

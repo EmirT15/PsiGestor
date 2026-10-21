@@ -235,7 +235,13 @@ def get_availabilities():
                 availability[20],
 
             'cancellationObservation':
-                availability[21]
+                availability[21],
+
+            'rescheduleRequestedBy': (
+                availability[22]
+                if len(availability) > 22 and availability[22]
+                else 'psicologo'
+            )
         }
 
         for availability
@@ -248,7 +254,7 @@ def get_availabilities():
 # =========================================================
 
 @availability_bp.route(
-    '/availabilities/<int:id>/cancel',
+    '/availabilities/<int(signed=True):id>/cancel',
     methods=['POST']
 )
 def cancel_availability_route(id):
@@ -282,7 +288,7 @@ def cancel_availability_route(id):
 # =========================================================
 
 @availability_bp.route(
-    '/availabilities/<int:id>/reschedule',
+    '/availabilities/<int(signed=True):id>/reschedule',
     methods=['POST']
 )
 def reschedule_availability_route(id):
@@ -293,7 +299,8 @@ def reschedule_availability_route(id):
             id,
             data.get('date'),
             data.get('startTime'),
-            data.get('endTime')
+            data.get('endTime'),
+            data.get('reason')
         )
 
         if not updated:
@@ -645,3 +652,26 @@ def handle_disabled_schedule_by_id(
             return jsonify({
                 'error': str(error)
             }), 500
+
+@availability_bp.route('/availabilities/<int(signed=True):id>/approve-reschedule', methods=['POST'])
+def approve_availability_reschedule_route(id):
+    try:
+        from app.services.availability_service import approve_availability_reschedule
+        approve_availability_reschedule(id)
+        return jsonify({'message': 'Reprogramación aprobada correctamente.'}), 200
+    except ValueError as error:
+        return jsonify({'error': str(error)}), 400
+    except Exception as error:
+        return jsonify({'error': f'No fue posible aprobar la reprogramación: {error}'}), 500
+
+
+@availability_bp.route('/availabilities/<int(signed=True):id>/reject-reschedule', methods=['POST'])
+def reject_availability_reschedule_route(id):
+    try:
+        from app.services.availability_service import reject_availability_reschedule
+        result = reject_availability_reschedule(id)
+        return jsonify(result if isinstance(result, dict) else {'message': 'Reprogramación rechazada.'}), 200
+    except ValueError as error:
+        return jsonify({'error': str(error)}), 400
+    except Exception as error:
+        return jsonify({'error': f'No fue posible rechazar la reprogramación: {error}'}), 500

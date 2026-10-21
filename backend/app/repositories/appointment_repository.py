@@ -367,7 +367,8 @@ def get_student_appointments_db(student_id):
                     a.proposed_date,
                     a.proposed_start_time,
                     a.proposed_end_time,
-                    a.proposed_availability_id
+                    a.proposed_availability_id,
+                    a.reschedule_requested_by
                 FROM appointments a
                 WHERE a.student_id = %s
                 ORDER BY a.date DESC, a.start_time DESC;
@@ -565,7 +566,8 @@ def request_student_reschedule_db(appointment_id, student_id, reason, proposed_a
                     proposed_date = %s,
                     proposed_start_time = %s,
                     proposed_end_time = %s,
-                    proposed_availability_id = %s
+                    proposed_availability_id = %s,
+                    reschedule_requested_by = 'alumno'
                 WHERE id = %s;
                 """,
                 (reason, t_date, t_start, t_end, t_id, appointment_id)
@@ -578,7 +580,8 @@ def request_student_reschedule_db(appointment_id, student_id, reason, proposed_a
                 SET status = 'Reprogramacion pendiente',
                     proposed_date = %s,
                     proposed_start_time = %s,
-                    proposed_end_time = %s
+                    proposed_end_time = %s,
+                    reschedule_requested_by = 'alumno'
                 WHERE date = %s
                   AND start_time = %s
                   AND end_time = %s;
@@ -631,11 +634,25 @@ def approve_student_reschedule_db(appointment_id):
                     proposed_date = NULL,
                     proposed_start_time = NULL,
                     proposed_end_time = NULL,
-                    proposed_availability_id = NULL
+                    proposed_availability_id = NULL,
+                    reschedule_reason = NULL,
+                    reschedule_requested_by = NULL
                 WHERE id = %s;
                 """,
                 (prop_date, prop_start, prop_end, appointment_id)
             )
+
+            if not prop_avail_id:
+                cursor.execute(
+                    """
+                    SELECT id FROM availabilities
+                    WHERE date = %s AND start_time = %s AND end_time = %s;
+                    """,
+                    (prop_date, prop_start, prop_end)
+                )
+                prop_row = cursor.fetchone()
+                if prop_row:
+                    prop_avail_id = prop_row[0]
 
             if prop_avail_id:
                 folio = f"PSI-{prop_date.year}-{apt_id:04d}"
@@ -686,6 +703,146 @@ def approve_student_reschedule_db(appointment_id):
 
         connection.commit()
         return True
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
+
+
+def reject_student_reschedule_db(appointment_id):
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id, student_id, student_name, date, start_time, end_time, duration,
+                       modality, location, meeting_url, reason, status,
+                       proposed_date, proposed_start_time, proposed_end_time, proposed_availability_id,
+                       reschedule_requested_by
+                FROM appointments
+                WHERE id = %s
+                FOR UPDATE;
+                """,
+                (appointment_id,)
+            )
+            row = cursor.fetchone()
+            if not row:
+                raise ValueError("No se encontró la cita.")
+
+            (apt_id, student_id, student_name, old_date, old_start, old_end, duration,
+             modality, location, meeting_url, reason, status,
+             prop_date, prop_start, prop_end, prop_avail_id,
+             reschedule_requested_by) = row
+
+            if status not in ('Pending Reschedule', 'Reprogramacion pendiente'):
+                raise ValueError("La cita no tiene una reprogramación pendiente.")
+
+            # ESCENARIO B: La psicóloga propuso el cambio (reschedule_requested_by == 'psicologo')
+            # y el alumno rechaza la propuesta -> La cita se CANCELA automáticamente.
+            if reschedule_requested_by == 'psicologo':
+                cancel_reason = "Cancelada: El alumno no pudo aceptar la propuesta de reprogramación de la psicóloga."
+                cursor.execute(
+                    """
+                    UPDATE appointments
+                    SET status = 'Cancelled',
+                        cancellation_reason = %s,
+                        cancelled_at = CURRENT_TIMESTAMP,
+                        proposed_date = NULL,
+                        proposed_start_time = NULL,
+                        proposed_end_time = NULL,
+                        proposed_availability_id = NULL,
+                        reschedule_requested_by = NULL
+                    WHERE id = %s;
+                    """,
+                    (cancel_reason, appointment_id)
+                )
+
+                cursor.execute(
+                    """
+                    UPDATE availabilities
+                    SET status = 'Cancelado',
+                        cancellation_reason = %s,
+                        cancellation_observation = 'Rechazo de reprogramación por parte del alumno.',
+                        proposed_date = NULL,
+                        proposed_start_time = NULL,
+                        proposed_end_time = NULL,
+                        reschedule_requested_by = NULL
+                    WHERE date = %s AND start_time = %s AND end_time = %s;
+                    """,
+                    (cancel_reason, old_date, old_start, old_end)
+                )
+
+                if prop_avail_id:
+                    cursor.execute(
+                        """
+                        UPDATE availabilities
+                        SET status = 'Disponible',
+                            proposed_date = NULL,
+                            proposed_start_time = NULL,
+                            proposed_end_time = NULL,
+                            reschedule_requested_by = NULL
+                        WHERE id = %s;
+                        """,
+                        (prop_avail_id,)
+                    )
+
+                connection.commit()
+                return {
+                    "action": "cancelled",
+                    "message": "La propuesta fue rechazada y la cita ha sido cancelada definitivamente."
+                }
+
+            # ESCENARIO A: El alumno solicitó la reprogramación (reschedule_requested_by == 'alumno')
+            # y la psicóloga lo rechaza -> Se mantiene el horario original de la cita.
+            else:
+                cursor.execute(
+                    """
+                    UPDATE appointments
+                    SET status = 'Reserved',
+                        proposed_date = NULL,
+                        proposed_start_time = NULL,
+                        proposed_end_time = NULL,
+                        proposed_availability_id = NULL,
+                        reschedule_reason = NULL,
+                        reschedule_requested_by = NULL
+                    WHERE id = %s;
+                    """,
+                    (appointment_id,)
+                )
+
+                cursor.execute(
+                    """
+                    UPDATE availabilities
+                    SET status = 'Reservado',
+                        proposed_date = NULL,
+                        proposed_start_time = NULL,
+                        proposed_end_time = NULL,
+                        reschedule_requested_by = NULL
+                    WHERE date = %s AND start_time = %s AND end_time = %s;
+                    """,
+                    (old_date, old_start, old_end)
+                )
+
+                if prop_avail_id:
+                    cursor.execute(
+                        """
+                        UPDATE availabilities
+                        SET status = 'Disponible',
+                            proposed_date = NULL,
+                            proposed_start_time = NULL,
+                            proposed_end_time = NULL,
+                            reschedule_requested_by = NULL
+                        WHERE id = %s;
+                        """,
+                        (prop_avail_id,)
+                    )
+
+                connection.commit()
+                return {
+                    "action": "reverted_to_original",
+                    "message": "La solicitud fue rechazada. La cita se mantendrá en su horario original."
+                }
     except Exception:
         connection.rollback()
         raise

@@ -7,6 +7,7 @@ from app.repositories.appointment_repository import (
     cancel_student_appointment_db,
     request_student_reschedule_db,
     approve_student_reschedule_db,
+    reject_student_reschedule_db,
 )
 
 
@@ -196,3 +197,7 @@ def request_student_reschedule(user, appointment_id, data):
 
 def approve_student_reschedule(appointment_id):
     return approve_student_reschedule_db(appointment_id)
+
+
+def reject_student_reschedule(appointment_id):
+    return reject_student_reschedule_db(appointment_id)

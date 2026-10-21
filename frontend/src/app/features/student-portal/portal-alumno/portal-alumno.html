@@ -212,12 +212,21 @@
                           </svg>
                         </div>
                         <div class="banner-text">
-                          <strong>Nuevo horario propuesto a la psicóloga:</strong>
-                          <span>{{ formatDate(apt.proposed_date || '') }} • {{ apt.proposed_start_time }} - {{ apt.proposed_end_time }} hrs</span>
-                          @if (apt.reschedule_reason) {
-                            <p class="sub-reason">Motivo: "{{ apt.reschedule_reason }}"</p>
+                          @if (apt.reschedule_requested_by === 'psicologo') {
+                            <strong>La psicóloga propone una nueva fecha para tu atención:</strong>
+                            <span>{{ formatDate(apt.proposed_date || '') }} • {{ apt.proposed_start_time }} - {{ apt.proposed_end_time }} hrs</span>
+                            @if (apt.reschedule_reason) {
+                              <p class="sub-reason">Motivo: "{{ apt.reschedule_reason }}"</p>
+                            }
+                            <p class="legend">Por favor confirma si puedes asistir en el nuevo horario. Si no te es posible y rechazas la propuesta, la cita se cancelará definitivamente.</p>
+                          } @else {
+                            <strong>Nuevo horario propuesto a la psicóloga:</strong>
+                            <span>{{ formatDate(apt.proposed_date || '') }} • {{ apt.proposed_start_time }} - {{ apt.proposed_end_time }} hrs</span>
+                            @if (apt.reschedule_reason) {
+                              <p class="sub-reason">Motivo: "{{ apt.reschedule_reason }}"</p>
+                            }
+                            <p class="legend">Tu horario actual se mantiene reservado mientras la solicitud es atendida.</p>
                           }
-                          <p class="legend">Tu horario actual se mantiene reservado mientras la solicitud es atendida.</p>
                         </div>
                       </div>
                     }
@@ -250,16 +259,46 @@
                         <span>Cancelar cita</span>
                       </button>
                     } @else if (apt.status === 'Pending Reschedule' || apt.status === 'Reprogramacion pendiente') {
-                      <div class="pending-notice">
-                        <span class="pill-disabled">Solicitud en revisión</span>
-                        <button
-                          type="button"
-                          class="btn-text-danger"
-                          (click)="openCancelModal(apt)"
-                        >
-                          Cancelar cita definitivamente
-                        </button>
-                      </div>
+                      @if (apt.reschedule_requested_by === 'psicologo') {
+                        <div class="pending-actions-row">
+                          <button
+                            type="button"
+                            class="btn-action btn-confirm-reschedule"
+                            (click)="acceptReschedule(apt)"
+                            [disabled]="isProcessing"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <span>Aceptar nueva fecha</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            class="btn-action btn-reject-reschedule"
+                            (click)="rejectReschedule(apt)"
+                            [disabled]="isProcessing"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <line x1="18" y1="6" x2="6" y2="18"></line>
+                              <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                            <span>Rechazar propuesta (Cancelar cita)</span>
+                          </button>
+                        </div>
+                      } @else {
+                        <div class="pending-notice">
+                          <span class="pill-disabled">Solicitud enviada a la psicóloga</span>
+                          <button
+                            type="button"
+                            class="btn-text-danger"
+                            (click)="rejectReschedule(apt)"
+                            [disabled]="isProcessing"
+                          >
+                            Descartar solicitud de cambio
+                          </button>
+                        </div>
+                      }
                     }
                   </div>
 

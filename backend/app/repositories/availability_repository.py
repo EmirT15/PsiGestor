@@ -101,7 +101,8 @@ def get_availabilities():
                 proposed_start_time,
                 proposed_end_time,
                 cancellation_reason,
-                cancellation_observation
+                cancellation_observation,
+                reschedule_requested_by
             FROM availabilities
             ORDER BY date, start_time;
             """
@@ -223,45 +224,103 @@ def propose_reschedule_repo(
     availability_id,
     date,
     start_time,
-    end_time
+    end_time,
+    reason=None
 ):
-    connection = psycopg.connect(
-        host=os.getenv("DB_HOST"),
-        port=os.getenv("DB_PORT"),
-        dbname=os.getenv("DB_NAME"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD")
-    )
-
+    connection = get_db_connection()
     try:
-        cursor = connection.cursor()
+        with connection.cursor() as cursor:
+            # Si availability_id es negativo, proviene de una cita creada como fallback
+            if availability_id < 0:
+                apt_id = -availability_id
+                cursor.execute("SELECT date, start_time, end_time FROM appointments WHERE id = %s;", (apt_id,))
+                apt_row = cursor.fetchone()
+                if apt_row:
+                    a_date, a_start, a_end = apt_row
+                    cursor.execute("SELECT id FROM availabilities WHERE date = %s AND start_time = %s AND end_time = %s;", (a_date, a_start, a_end))
+                    a_slot = cursor.fetchone()
+                    if a_slot:
+                        availability_id = a_slot[0]
+                    else:
+                        # Crear el slot de disponibilidad para mantener consistencia
+                        cursor.execute(
+                            """
+                            INSERT INTO availabilities (date, start_time, end_time, duration, break_time, status)
+                            VALUES (%s, %s, %s, 60, 0, 'Reprogramacion pendiente')
+                            RETURNING id;
+                            """,
+                            (a_date, a_start, a_end)
+                        )
+                        availability_id = cursor.fetchone()[0]
 
-        cursor.execute(
-            """
-            UPDATE availabilities
-            SET status = 'Reprogramacion pendiente',
-                proposed_date = %s,
-                proposed_start_time = %s,
-                proposed_end_time = %s
-            WHERE id = %s
-            RETURNING id;
-            """,
-            (
-                date,
-                start_time,
-                end_time,
-                availability_id
+            # 1. Actualizar disponibilidad original
+            cursor.execute(
+                """
+                UPDATE availabilities
+                SET status = 'Reprogramacion pendiente',
+                    proposed_date = %s,
+                    proposed_start_time = %s,
+                    proposed_end_time = %s,
+                    reschedule_requested_by = 'psicologo'
+                WHERE id = %s
+                RETURNING id, date, start_time, end_time;
+                """,
+                (
+                    date,
+                    start_time,
+                    end_time,
+                    availability_id
+                )
             )
-        )
+            result = cursor.fetchone()
+            if not result:
+                return None
 
-        result = cursor.fetchone()
+            avail_id, old_date, old_start, old_end = result
 
-        connection.commit()
+            # 2. Buscar id del horario propuesto si existe
+            cursor.execute(
+                """
+                SELECT id FROM availabilities
+                WHERE date = %s AND start_time = %s AND end_time = %s;
+                """,
+                (date, start_time, end_time)
+            )
+            prop_row = cursor.fetchone()
+            prop_avail_id = prop_row[0] if prop_row else None
 
-        return result
+            # 3. Sincronizar la cita correspondiente para que el alumno la vea inmediatamente
+            cursor.execute(
+                """
+                UPDATE appointments
+                SET status = 'Pending Reschedule',
+                    proposed_date = %s,
+                    proposed_start_time = %s,
+                    proposed_end_time = %s,
+                    proposed_availability_id = %s,
+                    rescheduled_at = CURRENT_TIMESTAMP,
+                    reschedule_reason = COALESCE(%s, reschedule_reason),
+                    reschedule_requested_by = 'psicologo'
+                WHERE date = %s
+                  AND start_time = %s
+                  AND end_time = %s
+                  AND status IN ('Reserved', 'Pending Reschedule', 'Reservado');
+                """,
+                (
+                    date,
+                    start_time,
+                    end_time,
+                    prop_avail_id,
+                    reason,
+                    old_date,
+                    old_start,
+                    old_end
+                )
+            )
 
+            connection.commit()
+            return result
     finally:
-        cursor.close()
         connection.close()
 
 
@@ -543,3 +602,92 @@ def delete_disabled_schedule_db(
     finally:
         cursor.close()
         conn.close()
+
+def approve_availability_reschedule_repo(availability_id):
+    connection = psycopg.connect(
+        host=os.getenv("DB_HOST"),
+        port=os.getenv("DB_PORT"),
+        dbname=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD")
+    )
+    try:
+        with connection.cursor() as cursor:
+            # Find matching appointment
+            cursor.execute(
+                """
+                SELECT id FROM appointments
+                WHERE (date, start_time, end_time) = (SELECT date, start_time, end_time FROM availabilities WHERE id = %s)
+                ORDER BY id DESC LIMIT 1;
+                """,
+                (availability_id,)
+            )
+            row = cursor.fetchone()
+            if row:
+                apt_id = row[0]
+                from app.repositories.appointment_repository import approve_student_reschedule_db
+                return approve_student_reschedule_db(apt_id)
+
+            # Fallback if only availability exists
+            cursor.execute(
+                """
+                UPDATE availabilities
+                SET date = proposed_date,
+                    start_time = proposed_start_time,
+                    end_time = proposed_end_time,
+                    status = 'Reservado',
+                    proposed_date = NULL,
+                    proposed_start_time = NULL,
+                    proposed_end_time = NULL,
+                    reschedule_requested_by = NULL
+                WHERE id = %s;
+                """,
+                (availability_id,)
+            )
+            connection.commit()
+            return True
+    finally:
+        connection.close()
+
+
+def reject_availability_reschedule_repo(availability_id):
+    connection = psycopg.connect(
+        host=os.getenv("DB_HOST"),
+        port=os.getenv("DB_PORT"),
+        dbname=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD")
+    )
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id FROM appointments
+                WHERE (date, start_time, end_time) = (SELECT date, start_time, end_time FROM availabilities WHERE id = %s)
+                ORDER BY id DESC LIMIT 1;
+                """,
+                (availability_id,)
+            )
+            row = cursor.fetchone()
+            if row:
+                apt_id = row[0]
+                from app.repositories.appointment_repository import reject_student_reschedule_db
+                return reject_student_reschedule_db(apt_id)
+
+            # Fallback if only availability exists
+            cursor.execute(
+                """
+                UPDATE availabilities
+                SET status = 'Reservado',
+                    proposed_date = NULL,
+                    proposed_start_time = NULL,
+                    proposed_end_time = NULL,
+                    reschedule_requested_by = NULL
+                WHERE id = %s;
+                """,
+                (availability_id,)
+            )
+            connection.commit()
+            return True
+    finally:
+        connection.close()
