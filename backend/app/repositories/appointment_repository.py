@@ -642,6 +642,18 @@ def approve_student_reschedule_db(appointment_id):
                 (prop_date, prop_start, prop_end, appointment_id)
             )
 
+            if not prop_avail_id:
+                cursor.execute(
+                    """
+                    SELECT id FROM availabilities
+                    WHERE date = %s AND start_time = %s AND end_time = %s;
+                    """,
+                    (prop_date, prop_start, prop_end)
+                )
+                prop_row = cursor.fetchone()
+                if prop_row:
+                    prop_avail_id = prop_row[0]
+
             if prop_avail_id:
                 folio = f"PSI-{prop_date.year}-{apt_id:04d}"
                 cursor.execute(

@@ -770,16 +770,30 @@ private toastTimeout:
       const appStart = this.timeToMinutes(appointment.start_time);
       const appEnd = this.timeToMinutes(appointment.end_time);
 
-      const alreadyInAvailabilities = dateAvailabilities.some(
+      const matchingAvail = dateAvailabilities.find(
         (avail) =>
-          (avail.status === 'Reservado' ||
-            avail.status === 'Reprogramacion pendiente' ||
-            avail.status === 'Cancelado') &&
           this.timeToMinutes(avail.startTime) === appStart &&
           this.timeToMinutes(avail.endTime) === appEnd
       );
 
-      if (!alreadyInAvailabilities) {
+      if (matchingAvail) {
+        // Enriquecer el bloque existente para que mantenga su ID real positivo
+        if (matchingAvail.status === 'Disponible' || matchingAvail.status === 'Reservado') {
+          matchingAvail.status = appointment.status === 'Cancelled'
+            ? 'Cancelado'
+            : (appointment.status === 'Pending Reschedule' || appointment.status === 'Reprogramacion pendiente'
+              ? 'Reprogramacion pendiente'
+              : 'Reservado');
+          matchingAvail.studentName = appointment.student_name;
+          matchingAvail.consultationReason = appointment.reason || (appointment as any).reschedule_reason;
+          matchingAvail.modality = appointment.modality === 'In person' ? 'Presencial' : 'En línea';
+          matchingAvail.location = appointment.location || appointment.meeting_url || 'Cubículo';
+          matchingAvail.proposedDate = appointment.proposed_date || undefined;
+          matchingAvail.proposedStartTime = appointment.proposed_start_time || undefined;
+          matchingAvail.proposedEndTime = appointment.proposed_end_time || undefined;
+          matchingAvail.rescheduleRequestedBy = appointment.reschedule_requested_by || 'psicologo';
+        }
+      } else {
         fallbackBooked.push(
           this.mapAppointmentToAvailability(appointment)
         );
@@ -1425,37 +1439,39 @@ selectAvailableSlot(
       return;
     }
 
+    let targetId = this.selectedAvailabilityId;
+    if (targetId < 0 && this.selectedSlotDate) {
+      const matched = this.availabilities.find(a =>
+        a.date === this.selectedSlotDate &&
+        a.id > 0 &&
+        (this.selectedSlot ? this.getFormattedRange12h(a) === this.selectedSlot : true)
+      );
+      if (matched) {
+        targetId = matched.id;
+      }
+    }
 
     this.calendarService
       .rescheduleAppointment(
-
-        this.selectedAvailabilityId,
-
+        targetId,
         data.date,
-
         data.startTime,
-
         data.endTime
       )
       .subscribe({
-
         next: () => {
-
           this.closeRescheduleModal();
-
           this.closeSidebar();
-
           this.loadAvailabilities();
+          this.showToast('Propuesta de reprogramación enviada correctamente.', 'success');
         },
-
         error: (error) => {
-
           console.error(
             'Error al reprogramar:',
             error
           );
+          alert(error.error?.error || 'Error al enviar propuesta de reprogramación.');
         }
-
       });
   }
 

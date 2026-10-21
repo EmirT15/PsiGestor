@@ -230,6 +230,29 @@ def propose_reschedule_repo(
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
+            # Si availability_id es negativo, proviene de una cita creada como fallback
+            if availability_id < 0:
+                apt_id = -availability_id
+                cursor.execute("SELECT date, start_time, end_time FROM appointments WHERE id = %s;", (apt_id,))
+                apt_row = cursor.fetchone()
+                if apt_row:
+                    a_date, a_start, a_end = apt_row
+                    cursor.execute("SELECT id FROM availabilities WHERE date = %s AND start_time = %s AND end_time = %s;", (a_date, a_start, a_end))
+                    a_slot = cursor.fetchone()
+                    if a_slot:
+                        availability_id = a_slot[0]
+                    else:
+                        # Crear el slot de disponibilidad para mantener consistencia
+                        cursor.execute(
+                            """
+                            INSERT INTO availabilities (date, start_time, end_time, duration, break_time, status)
+                            VALUES (%s, %s, %s, 60, 0, 'Reprogramacion pendiente')
+                            RETURNING id;
+                            """,
+                            (a_date, a_start, a_end)
+                        )
+                        availability_id = cursor.fetchone()[0]
+
             # 1. Actualizar disponibilidad original
             cursor.execute(
                 """
