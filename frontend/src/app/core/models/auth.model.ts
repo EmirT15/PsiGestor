@@ -3,6 +3,7 @@ export interface User {
   email: string;
   name: string;
   role: 'psicologo' | 'alumno';
+  avatarUrl?: string;
   studentId?: number | null;
   studentCode?: string | null;
   program?: string | null;
@@ -19,4 +20,11 @@ export interface AuthResponse {
 export interface MeResponse {
   authenticated: boolean;
   user: User | null;
+}
+
+
+
+export interface NavOption {
+  label: string;
+  route: string;
 }
