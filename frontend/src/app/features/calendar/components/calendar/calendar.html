@@ -1,4 +1,6 @@
-<app-psychologist-header></app-psychologist-header>
+@if (mode === 'psychologist') {
+  <app-psychologist-header></app-psychologist-header>
+}
 
 <div
   class="calendar-layout"
@@ -974,17 +976,8 @@
                         week-disabled-card
                         week-positioned-block
                       "
-                      [style.top.%]="
-                        getWeekBlockTopPercent(
-                          disabled.startTime
-                        )
-                      "
-                      [style.height.%]="
-                        getWeekBlockHeightPercent(
-                          disabled.startTime,
-                          disabled.endTime
-                        )
-                      "
+                      [style.top]="'calc(' + getWeekBlockTopPercent(disabled.startTime) + '% + 2px)'"
+                      [style.height]="'calc(' + getWeekBlockHeightPercent(disabled.startTime, disabled.endTime) + '% - 4px)'"
                     >
 
                       <span class="week-availability-time">
@@ -1044,17 +1037,8 @@
                         week-habitual-break-inline
                         week-positioned-block
                       "
-                      [style.top.%]="
-                        getWeekBlockTopPercent(
-                          getHabitualBreakStartTime()
-                        )
-                      "
-                      [style.height.%]="
-                        getWeekBlockHeightPercent(
-                          getHabitualBreakStartTime(),
-                          getHabitualBreakEndTime()
-                        )
-                      "
+                      [style.top]="'calc(' + getWeekBlockTopPercent(getHabitualBreakStartTime()) + '% + 2px)'"
+                      [style.height]="'calc(' + getWeekBlockHeightPercent(getHabitualBreakStartTime(), getHabitualBreakEndTime()) + '% - 4px)'"
                     >
 
                       <div
@@ -1122,16 +1106,8 @@
                             selectedSlot ===
                               slot
                           "
-                          [style.top.%]="
-                            getWeekSlotTopPercent(
-                              slot
-                            )
-                          "
-                          [style.height.%]="
-                            getWeekSlotHeightPercent(
-                              slot
-                            )
-                          "
+                          [style.top]="'calc(' + getWeekSlotTopPercent(slot) + '% + 2px)'"
+                          [style.height]="'calc(' + getWeekSlotHeightPercent(slot) + '% - 4px)'"
                         >
 
                           <button
@@ -1233,17 +1209,8 @@
                         selectedAvailabilityId ===
                           booked.id
                       "
-                      [style.top.%]="
-                        getWeekBlockTopPercent(
-                          booked.startTime
-                        )
-                      "
-                      [style.height.%]="
-                        getWeekBlockHeightPercent(
-                          booked.startTime,
-                          booked.endTime
-                        )
-                      "
+                      [style.top]="'calc(' + getWeekBlockTopPercent(booked.startTime) + '% + 2px)'"
+                      [style.height]="'calc(' + getWeekBlockHeightPercent(booked.startTime, booked.endTime) + '% - 4px)'"
                       (click)="
                         selectSlot(
                           getFormattedRange12h(
@@ -1277,9 +1244,7 @@
                               } @else {
 
                                 {{
-                                  booked.status ===
-                                    'Reprogramacion pendiente'
-                                    ? 'Reprogramación pendiente'
+                                  booked.status === 'Reprogramacion pendiente' ? 'Reprog. pendiente'
                                     : booked.status
                                 }}
 
@@ -1292,14 +1257,7 @@
                           @if (mode === 'patient') {
                             {{ booked.duration }} min
                           } @else {
-                            
-                            {{
-                              booked.studentName
-                                ? booked.studentName + ' • '
-                                : ''
-                            }}
-
-                            {{ booked.duration }} min
+                            {{ booked.studentName || (booked.duration + ' min') }}
                           }
                       </span>
 

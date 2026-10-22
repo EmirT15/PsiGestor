@@ -56,9 +56,20 @@ def replace_generated_availabilities(
                     WHERE date = %s
                       AND start_time < %s
                       AND end_time > %s
+                ) OR EXISTS (
+                    SELECT 1
+                    FROM disabled_schedules
+                    WHERE %s >= start_date
+                      AND %s <= end_date
+                      AND start_time < %s
+                      AND end_time > %s
                 );
                 """,
                 (
+                    slot['date'],
+                    slot['endTime'],
+                    slot['startTime'],
+                    slot['date'],
                     slot['date'],
                     slot['endTime'],
                     slot['startTime']
