@@ -1,46 +1,66 @@
+<header class="header-container">
+  <div class="header-content">
 
-<header class="student-header">
-  <a class="brand" routerLink="/patient/availability">
-    <span class="brand-mark" aria-hidden="true">P</span>
+    <!-- BRANDING / IDENTIDAD DEL SISTEMA -->
+    <div class="brand-zone" routerLink="/portal-alumno">
+      <img src="favicon.ico" alt="PsiGestor Logo" class="brand-logo" />
+      <span class="brand-title">PsiGestor</span>
+    </div>
 
-    <span class="brand-text">
-      <strong>PsiGestor</strong>
-      <small>Atención psicopedagógica</small>
-    </span>
-  </a>
-
-  <nav class="student-navigation" aria-label="Navegación del alumno">
-    <a
-      routerLink="/patient/availability"
-      routerLinkActive="active"
-      [routerLinkActiveOptions]="{ exact: true }"
+    <!-- BOTÓN MENÚ MÓVIL -->
+    <button 
+      class="mobile-toggle" 
+      (click)="toggleMenu()" 
+      aria-label="Toggle navigation menu"
     >
-      Disponibilidad
-    </a>
-  </nav>
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
 
-  <div class="student-profile">
-    @if (student?.photoUrl) {
-      <img
-        class="student-avatar"
-        [src]="student!.photoUrl!"
-        [alt]="'Fotografía de ' + student!.name"
-      />
-    } @else {
-      <div class="student-avatar" aria-hidden="true">
-        {{ initials }}
+    <!-- OPCIONES DE NAVEGACIÓN PERMITIDAS -->
+    <nav class="nav-zone" [class.is-open]="isMobileMenuOpen()">
+      <ul class="nav-list">
+        @for (option of navOptions; track option.route) {
+          <li class="nav-item">
+            <a 
+              [routerLink]="option.route" 
+              routerLinkActive="active-link"
+              class="nav-link"
+              (click)="isMobileMenuOpen.set(false)"
+            >
+              {{ option.label }}
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <!-- DATOS DEL ALUMNO AUTENTICADO (SOLO LECTURA) -->
+    @if (displayStudent; as currentStudent) {
+      <div class="user-zone">
+        <div class="user-info">
+          <span class="user-name">{{ currentStudent.name }}</span>
+          <span class="user-role">
+            @if (currentStudent.studentId) {
+              Matrícula: {{ currentStudent.studentId }} • {{ currentStudent.role }}
+            } @else {
+              {{ currentStudent.role }}
+            }
+          </span>
+        </div>
+
+        <div class="avatar-container">
+          @if (currentStudent.photoUrl) {
+            <img [src]="currentStudent.photoUrl" [alt]="currentStudent.name" class="avatar-img" />
+          } @else {
+            <div class="avatar-fallback">
+              {{ getInitials(currentStudent.name) }}
+            </div>
+          }
+        </div>
       </div>
     }
 
-    <div class="student-information">
-      @if (student) {
-        <span class="student-name">{{ student.name }}</span>
-        <small>Matrícula: {{ student.studentId }}</small>
-        <small>{{ student.role }}</small>
-      } @else {
-        <span class="student-name">Información no disponible</span>
-        <small>Esperando datos de sesión</small>
-      }
-    </div>
   </div>
 </header>

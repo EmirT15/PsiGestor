@@ -1,3 +1,4 @@
+from datetime import datetime, date, timedelta
 import os
 
 import psycopg
@@ -358,7 +359,8 @@ def create_disabled_schedule_db(
             WHERE date >= %s
               AND date <= %s
               AND start_time < %s
-              AND end_time > %s;
+              AND end_time > %s
+              AND status = 'Disponible';
         """
 
         cursor.execute(
@@ -585,17 +587,98 @@ def delete_disabled_schedule_db(
     cursor = conn.cursor()
 
     try:
-        query = """
+        # 1. Recuperar los datos del horario inhabilitado antes de eliminarlo
+        cursor.execute(
+            """
+            SELECT start_date, end_date, start_time, end_time
+            FROM disabled_schedules
+            WHERE id = %s;
+            """,
+            (schedule_id,)
+        )
+        disabled_info = cursor.fetchone()
+
+        # 2. Eliminar el registro de inhabilitación
+        cursor.execute(
+            """
             DELETE FROM disabled_schedules
             WHERE id = %s;
-        """
-
-        cursor.execute(
-            query,
+            """,
             (schedule_id,)
         )
 
+        # 3. Restaurar la disponibilidad para el periodo rehabilitado
+        if disabled_info:
+            start_date, end_date, start_time, end_time = disabled_info
+            curr_date = start_date
+            while curr_date <= end_date:
+                cursor.execute(
+                    """
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM availabilities
+                        WHERE date = %s
+                          AND start_time < %s
+                          AND end_time > %s
+                    ) OR EXISTS (
+                        SELECT 1
+                        FROM disabled_schedules
+                        WHERE %s >= start_date
+                          AND %s <= end_date
+                          AND start_time < %s
+                          AND end_time > %s
+                    );
+                    """,
+                    (
+                        curr_date,
+                        end_time,
+                        start_time,
+                        curr_date,
+                        curr_date,
+                        end_time,
+                        start_time
+                    )
+                )
+                conflict = cursor.fetchone()[0]
+
+                if not conflict:
+                    dt_start = datetime.combine(date.min, start_time)
+                    dt_end = datetime.combine(date.min, end_time)
+                    duration_minutes = int((dt_end - dt_start).total_seconds() / 60)
+                    if duration_minutes <= 0:
+                        duration_minutes = 60
+
+                    cursor.execute(
+                        """
+                        INSERT INTO availabilities (
+                            date,
+                            start_time,
+                            end_time,
+                            duration,
+                            break_time,
+                            status,
+                            source
+                        )
+                        VALUES (%s, %s, %s, %s, 0, 'Disponible', 'regular_schedule');
+                        """,
+                        (
+                            curr_date,
+                            start_time,
+                            end_time,
+                            duration_minutes
+                        )
+                    )
+
+                curr_date += timedelta(days=1)
+
         conn.commit()
+
+        # 4. Sincronizar con el horario habitual si existe
+        try:
+            from app.init_db import sync_regular_schedule_availabilities
+            sync_regular_schedule_availabilities()
+        except Exception as sync_err:
+            print("Error sincronizando horario habitual al rehabilitar:", sync_err)
 
         return True
 
