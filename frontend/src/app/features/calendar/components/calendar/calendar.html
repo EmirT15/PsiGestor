@@ -1455,6 +1455,100 @@
   </div>
 
 
+  @if (
+    mode === 'patient' &&
+    currentView === 'month' &&
+    selectedDate &&
+    isPatientDateModalOpen
+  ) {
+    <div
+      class="patient-date-modal-overlay"
+      (click)="closePatientDateModal()"
+    >
+      <section
+        class="patient-date-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="patient-date-modal-title"
+        (click)="$event.stopPropagation()"
+      >
+        <header class="patient-date-modal-header">
+          <div>
+            <h2 id="patient-date-modal-title">
+              Horarios disponibles
+            </h2>
+            <p>Fecha seleccionada: {{ selectedDate }}</p>
+          </div>
+
+          <button
+            type="button"
+            class="patient-date-modal-close"
+            aria-label="Cerrar ventana"
+            (click)="closePatientDateModal()"
+          >
+            &times;
+          </button>
+        </header>
+
+        @if (hasPatientAvailableSchedules()) {
+          <p class="patient-date-modal-description">
+            Selecciona el horario que mejor te convenga.
+          </p>
+
+          <div class="patient-date-modal-list">
+            @for (
+              availability of getAvailabilitiesForDate(getSelectedDate());
+              track availability.id
+            ) {
+              @if (availability.status === 'Disponible') {
+                <button
+                  type="button"
+                  class="day-availability-card patient-date-modal-slot"
+                  (click)="selectAvailableSlot(availability)"
+                >
+                  <span class="day-availability-icon">✓</span>
+
+                  <span class="day-availability-content">
+                    <span class="day-availability-header">
+                      <span class="day-availability-time">
+                        {{ getAvailabilityTimeRange(availability) }}
+                      </span>
+
+                      <span class="day-availability-badge">
+                        <span class="day-availability-dot"></span>
+                        Disponible
+                      </span>
+
+                      <span class="day-availability-duration">
+                        Duración: {{ availability.duration }} min
+                      </span>
+                    </span>
+                  </span>
+                </button>
+              }
+            }
+          </div>
+        } @else {
+          <div class="patient-date-modal-empty">
+            <p>No hay horarios disponibles para este día.</p>
+            <p>Prueba seleccionando otra fecha del calendario.</p>
+          </div>
+        }
+
+        <footer class="patient-date-modal-footer">
+          <button
+            type="button"
+            class="patient-date-modal-cancel"
+            (click)="closePatientDateModal()"
+          >
+            Cerrar
+          </button>
+        </footer>
+      </section>
+    </div>
+  }
+
+
   <!-- ========================================= -->
   <!-- SIDEBAR DE HU-03                         -->
   <!-- ========================================= -->
