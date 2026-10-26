@@ -40,8 +40,24 @@ export class PortalAlumno implements OnInit {
 
   get pendingAppointments(): Appointment[] {
     return this.appointments.filter(
-      (apt) => apt.status === 'Reserved' || apt.status === 'Pending Reschedule' || apt.status === 'Reprogramacion pendiente'
+      (apt) =>
+        (apt.status === 'Reserved' || apt.status === 'Pending Reschedule' || apt.status === 'Reprogramacion pendiente') &&
+        this.isTodayOrFuture(apt)
     );
+  }
+
+  // Fecha local actual en formato YYYY-MM-DD
+  private getTodayString(): string {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${now.getFullYear()}-${month}-${day}`;
+  }
+
+  // Solo citas del día actual o posteriores
+  private isTodayOrFuture(appointment: Appointment): boolean {
+    const date = String(appointment.date ?? '').substring(0, 10);
+    return date >= this.getTodayString();
   }
 
   get historyAppointments(): Appointment[] {

@@ -163,8 +163,23 @@ export class Availability implements OnInit {
         'Reserved',
         'Pending Reschedule',
         'Reprogramacion pendiente'
-      ].includes(appointment.status)
+      ].includes(appointment.status) &&
+      this.isTodayOrFuture(appointment)
     );
+  }
+
+  // Fecha local actual en formato YYYY-MM-DD
+  private getTodayString(): string {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${now.getFullYear()}-${month}-${day}`;
+  }
+
+  // Solo citas del día actual o posteriores
+  private isTodayOrFuture(appointment: Appointment): boolean {
+    const date = String(appointment.date ?? '').substring(0, 10);
+    return date >= this.getTodayString();
   }
 
   selectAppointment(appointment: Appointment): void {
