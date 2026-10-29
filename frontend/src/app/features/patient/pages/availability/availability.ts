@@ -1,11 +1,10 @@
-﻿import { ChangeDetectorRef, Component, OnInit, ViewChild, computed, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 
 import {
   Calendar
 } from '../../../calendar/components/calendar/calendar';
-import { BookAppointmentModal } from '../../components/book-appointment-modal/book-appointment-modal';
 import { StudentHeader } from '../../components/student-header/student-header';
 import { AuthService } from '../../../../core/services/auth.service';
 import {
@@ -23,7 +22,6 @@ import { CancelAppointmentModal } from '../../components/cancel-appointment-moda
     RouterModule,
     Calendar,
     StudentHeader,
-    BookAppointmentModal,
     RescheduleAppointmentModal,
     CancelAppointmentModal
   ],
@@ -277,18 +275,11 @@ export class Availability implements OnInit {
     this.selectedSlotData = null;
     this.loadMyAppointments();
 
-    this.showToast('Â¡Cita registrada correctamente! Se ha reflejado en tu agenda y en la de la psicÃ³loga.');
+    this.showToast('¡Cita registrada correctamente! Se ha reflejado en tu agenda y en la de la psicóloga.');
 
-    // Recargar disponibilidades en el calendario
     if (this.calendarComponent) {
       this.calendarComponent.loadAvailabilities();
     }
-    this.calendarService.notifyScheduleChanged();
-
-    // Redirigir a 'Mis Citas' en el portal del alumno tras breve pausa
-    setTimeout(() => {
-      this.router.navigate(['/portal-alumno']);
-    }, 2200);
   }
 
   closeBookingModal(): void {

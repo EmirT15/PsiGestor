@@ -104,6 +104,11 @@ def register_appointment(data, user=None):
             "La hora de inicio debe ser anterior a la hora de fin."
         )
 
+    if datetime.combine(appointment_date, start_time) <= datetime.now():
+        raise ValueError(
+            "No es posible reservar un horario cuya hora de inicio ya ha transcurrido."
+        )
+
     elapsed_minutes = (
         end_time.hour * 60 + end_time.minute
         - start_time.hour * 60 - start_time.minute

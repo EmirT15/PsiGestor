@@ -60,6 +60,43 @@ def create_appointment(
                     "El horario seleccionado ya está ocupado."
                 )
 
+            cursor.execute(
+                """
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM appointments
+                    WHERE proposed_date = %s
+                      AND status IN ('Pending Reschedule', 'Reprogramacion pendiente')
+                      AND proposed_start_time < %s
+                      AND proposed_end_time > %s
+                );
+                """,
+                (date, end_time, start_time)
+            )
+            if cursor.fetchone()[0]:
+                raise ValueError(
+                    "El horario seleccionado se encuentra comprometido por una reprogramación pendiente."
+                )
+
+            cursor.execute(
+                """
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM disabled_schedules
+                    WHERE start_date <= %s
+                      AND end_date >= %s
+                      AND start_time < %s
+                      AND end_time > %s
+                      AND status = 'Inhabilitado'
+                );
+                """,
+                (date, date, end_time, start_time)
+            )
+            if cursor.fetchone()[0]:
+                raise ValueError(
+                    "El horario seleccionado no se encuentra disponible."
+                )
+
 
             cursor.execute(
                 """

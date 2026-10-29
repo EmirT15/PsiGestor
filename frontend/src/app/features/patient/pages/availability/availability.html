@@ -1,4 +1,4 @@
-﻿<app-student-header
+<app-student-header
   [student]="studentHeaderData()">
 </app-student-header>
 
@@ -49,17 +49,9 @@
   <main class="calendar-wrapper">
     <app-calendar
       mode="patient"
-      (patientScheduleSelected)="onPatientScheduleSelected($event)">
+      (patientAppointmentBooked)="onAppointmentBooked($event)">
     </app-calendar>
   </main>
-
-  @if (isBookingModalOpen && selectedSlotData) {
-    <app-book-appointment-modal
-      [slotData]="selectedSlotData"
-      (close)="closeBookingModal()"
-      (appointmentBooked)="onAppointmentBooked($event)">
-    </app-book-appointment-modal>
-  }
 
   @if (isAppointmentsPanelOpen) {
     <div

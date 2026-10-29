@@ -570,7 +570,7 @@
             item.type === 'habitualBreak'
           ) {
 
-            <div class="day-habitual-break-card">
+            <div class="day-habitual-break-card" style="cursor: pointer;" (click)="selectHabitualBreak(getCurrentViewDate())">
 
               <div class="day-habitual-break-main">
 
@@ -696,8 +696,6 @@
               <button
                 type="button"
                 class="day-availability-card"
-
-                [disabled]="mode === 'patient'"
 
                 [class.day-reserved-card]="
                   item.availability.status === 'Reservado'
@@ -970,6 +968,8 @@
                         week-disabled-card
                         week-positioned-block
                       "
+                      style="cursor: pointer;"
+                      (click)="selectDisabledSchedule(disabled)"
                       [style.top]="'calc(' + getWeekBlockTopPercent(disabled.startTime) + '% + 2px)'"
                       [style.height]="'calc(' + getWeekBlockHeightPercent(disabled.startTime, disabled.endTime) + '% - 4px)'"
                     >
@@ -1031,6 +1031,8 @@
                         week-habitual-break-inline
                         week-positioned-block
                       "
+                      style="cursor: pointer;"
+                      (click)="selectHabitualBreak(day)"
                       [style.top]="'calc(' + getWeekBlockTopPercent(getHabitualBreakStartTime()) + '% + 2px)'"
                       [style.height]="'calc(' + getWeekBlockHeightPercent(getHabitualBreakStartTime(), getHabitualBreakEndTime()) + '% - 4px)'"
                     >
@@ -1184,8 +1186,6 @@
                         week-availability-card
                         week-positioned-block
                       "
-                      
-                      [disabled]="mode === 'patient'"
 
                       [class.week-reserved-card]="
                         booked.status ===
@@ -1273,485 +1273,647 @@
 
     }
     
-    <!-- ========================================= -->
-    <!-- FECHA SELECCIONADA                       -->
-    <!-- ========================================= -->
-
-    @if (mode === 'psychologist' && selectedDate && currentView === 'month') {
-
-      <div class="selected-date">
-
-        <h3>
-          Detalle del
-          {{ selectedDate }}
-        </h3>
-
-
-        @if (selectedSlot) {
-
-          <p>
-            Horario seleccionado:
-            <strong>
-              {{ selectedSlot }}
-            </strong>
-          </p>
-
-        }
-
-        @for (
-          disabled of getDisabledSchedulesForDate(
-            getSelectedDate()
-          );
-          track disabled.id
-        ) {
-
-          <!-- Reemplazar la tarjeta inhabilitada en Detalle del Mes por: -->
-          <div 
-            class="day-availability-card day-disabled-card" 
-            style="margin-bottom: 10px; cursor: pointer;"
-            (click)="selectDisabledSchedule(disabled)"
-          >
-            <div class="day-availability-icon day-disabled-icon">
-              🚫
-            </div>
-            <div class="day-availability-content">
-              <div class="day-availability-header">
-                <span class="day-availability-time">
-                  {{ formatAvailabilityTime(disabled.startTime) }} - {{ formatAvailabilityTime(disabled.endTime) }}
-                </span>
-                <span class="day-availability-badge day-disabled-badge">
-                  <span class="day-availability-dot"></span>
-                  Inhabilitado
-                </span>
-                <span class="day-availability-duration">
-
-                  @if (mode === 'psychologist') {
-
-                    Motivo:
-                    {{ disabled.reason }}
-
-                    @if (disabled.observation) {
-                      ({{ disabled.observation }})
-                    }
-
-                  } @else {
-
-                    Horario no disponible
-
-                  }
-
-                </span>
-              </div>
-            </div>
-          </div>
-
-        }
-
-
-        @for (
-          availability of
-            getAvailabilitiesForDate(
-              getSelectedDate()
-            );
-          track availability.id
-        ) {
-
-          @if (availability.status === 'Disponible') {
-            <button
-              type="button"
-              class="day-availability-card"
-              style="margin-bottom: 10px;"
-              [class.day-availability-card-selected]="
-                selectedAvailabilityId === availability.id
-              "
-              (click)="selectAvailableSlot(availability)"
-            >
-              <div class="day-availability-icon">✓</div>
-              <div class="day-availability-content">
-                <div class="day-availability-header">
-                  <span class="day-availability-time">
-                    {{ getAvailabilityTimeRange(availability) }}
-                  </span>
-
-                  <span class="day-availability-badge">
-                    <span class="day-availability-dot"></span>
-                    Disponible
-                  </span>
-                  <span class="day-availability-duration">
-                    Duración: {{ availability.duration }} min
-                  </span>
-                </div>
-              </div>
-            </button>
-          } @else {
-            <button
-              type="button"
-              class="day-availability-card"
-              style="margin-bottom: 10px;"
-              [class.day-reserved-card]="availability.status === 'Reservado'"
-              [class.day-reschedule-card]="availability.status === 'Reprogramacion pendiente'"
-              [class.day-cancelled-card]="availability.status === 'Cancelado'"
-              [class.day-availability-card-selected]="
-                selectedAvailabilityId === availability.id
-              "
-              (click)="selectSlot(getFormattedRange12h(availability), availability)"
-            >
-              <div
-                class="day-availability-icon"
-                [class.day-reserved-icon]="availability.status === 'Reservado'"
-                [class.day-reschedule-icon]="availability.status === 'Reprogramacion pendiente'"
-                [class.day-cancelled-icon]="availability.status === 'Cancelado'"
-              >
-                {{ availability.studentInitials || 'AL' }}
-              </div>
-              <div class="day-availability-content">
-                <div class="day-availability-header">
-                  <span class="day-availability-time">
-                    {{ getAvailabilityTimeRange(availability) }}
-                  </span>
-                  <span
-                    class="day-availability-badge"
-                    [class.day-reserved-badge]="availability.status === 'Reservado'"
-                    [class.day-reschedule-badge]="availability.status === 'Reprogramacion pendiente'"
-                    [class.day-cancelled-badge]="availability.status === 'Cancelado'"
-                  >
-                    <span class="day-availability-dot"></span>
-                    {{
-                      availability.status === 'Reprogramacion pendiente'
-                        ? 'Reprogramación pendiente'
-                        : availability.status
-                    }}
-                  </span>
-                  <span class="day-availability-duration">
-                    {{ availability.studentName || 'Cita' }}
-                    •
-                    {{ availability.modality || 'Presencial' }}
-                    •
-                    Duración: {{ availability.duration }} min
-                  </span>
-                </div>
-              </div>
-            </button>
-          }
-
-        }
-
-      </div>
-
-    }
-
   </div>
 
 
-  @if (
-    mode === 'patient' &&
-    currentView === 'month' &&
-    selectedDate &&
-    isPatientDateModalOpen
-  ) {
+  <!-- ========================================= -->
+  <!-- SIDEBAR LATERAL UNIFICADO (PSICÓLOGA / ALUMNO) -->
+  <!-- ========================================= -->
+  @if (isSidebarOpen) {
     <div
-      class="patient-date-modal-overlay"
-      (click)="closePatientDateModal()"
-    >
-      <section
-        class="patient-date-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="patient-date-modal-title"
-        (click)="$event.stopPropagation()"
-      >
-        <header class="patient-date-modal-header">
-          <div>
-            <h2 id="patient-date-modal-title">
-              Horarios disponibles
-            </h2>
-            <p>Fecha seleccionada: {{ selectedDate }}</p>
-          </div>
-
-          <button
-            type="button"
-            class="patient-date-modal-close"
-            aria-label="Cerrar ventana"
-            (click)="closePatientDateModal()"
-          >
-            &times;
-          </button>
-        </header>
-
-        @if (hasPatientAvailableSchedules()) {
-          <p class="patient-date-modal-description">
-            Selecciona el horario que mejor te convenga.
-          </p>
-
-          <div class="patient-date-modal-list">
-            @for (
-              availability of getAvailabilitiesForDate(getSelectedDate());
-              track availability.id
-            ) {
-              @if (availability.status === 'Disponible') {
-                <button
-                  type="button"
-                  class="day-availability-card patient-date-modal-slot"
-                  (click)="selectAvailableSlot(availability)"
-                >
-                  <span class="day-availability-icon">✓</span>
-
-                  <span class="day-availability-content">
-                    <span class="day-availability-header">
-                      <span class="day-availability-time">
-                        {{ getAvailabilityTimeRange(availability) }}
-                      </span>
-
-                      <span class="day-availability-badge">
-                        <span class="day-availability-dot"></span>
-                        Disponible
-                      </span>
-
-                      <span class="day-availability-duration">
-                        Duración: {{ availability.duration }} min
-                      </span>
-                    </span>
-                  </span>
-                </button>
-              }
-            }
-          </div>
-        } @else {
-          <div class="patient-date-modal-empty">
-            <p>No hay horarios disponibles para este día.</p>
-            <p>Prueba seleccionando otra fecha del calendario.</p>
-          </div>
-        }
-
-        <footer class="patient-date-modal-footer">
-          <button
-            type="button"
-            class="patient-date-modal-cancel"
-            (click)="closePatientDateModal()"
-          >
-            Cerrar
-          </button>
-        </footer>
-      </section>
-    </div>
+      class="calendar-sidebar-backdrop"
+      (click)="closeSidebar()"
+      aria-hidden="true"
+    ></div>
   }
 
-
-  <!-- ========================================= -->
-  <!-- SIDEBAR DE HU-03                         -->
-  <!-- ========================================= -->
-@if (mode === 'psychologist') {
-  <div
+  <aside
     class="calendar-sidebar-wrapper"
     [class.open]="isSidebarOpen"
+    role="complementary"
+    aria-label="Panel lateral de agenda"
   >
 
     @if (isSidebarOpen) {
 
-      @if (
-        selectedAvailabilityStatus ===
-        'Reprogramacion pendiente'
-      ) {
+      <!-- 1. RESUMEN DEL DÍA EN VISTA MES (AMBOS ROLES) -->
+      @if (currentView === 'month' && sidebarView === 'day-summary' && selectedDate) {
 
-        <app-reschedule-details
-          [data]="selectedRescheduleDetails"
-
-          (close)="closeSidebar()"
-
-          (modify)="
-            openRescheduleModal()
-          "
-          (accept)="onApproveReschedule()"
-          (reject)="onRejectReschedule()"
-          (cancel)="onRejectReschedule()"
-        />
-
-      } @else if (
-        selectedAvailabilityStatus ===
-        'Disponible'
-      ) {
-
-        <div class="appointment-booking-panel">
-
-          <div class="booking-header">
-            <div>
-              <span class="booking-eyebrow">Registro de cita • HU-04</span>
-              <h2>Agendar cita</h2>
+        <div class="month-day-sidebar-panel">
+          <header class="month-day-sidebar-header">
+            <div class="month-day-sidebar-title-group">
+              <span class="month-day-sidebar-eyebrow">
+                {{ getSelectedDateFormatted() }}
+              </span>
+              <h3>Detalle del {{ selectedDate }}</h3>
             </div>
 
             <button
               type="button"
               class="icon-btn"
-              aria-label="Cerrar formulario"
+              aria-label="Cerrar panel del día"
+              title="Cerrar"
               (click)="closeSidebar()"
             >
               &times;
             </button>
-          </div>
+          </header>
 
-          <div class="booking-schedule-summary">
-            <div class="booking-summary-icon">▦</div>
-
-            <div class="booking-summary-info">
-              <strong>{{ selectedSlotDate }}</strong>
-              <span>{{ selectedSlot }}</span>
-              <small>
-                Duración:
-                {{ selectedAvailability?.duration || 0 }}
-                minutos
-              </small>
-            </div>
-
-            <span class="booking-status">Disponible</span>
-          </div>
-
-          <form class="booking-form" (submit)="onAppointmentSubmit($event)" >
-            <div class="booking-field">
-              <label for="studentName">
-                Buscar alumno <span>*</span>
-              </label>
-
-              <input
-                id="studentName"
-                name="studentName"
-                type="text"
-                placeholder="Escribe el nombre o matrícula"
-                autocomplete="off"
-                [value]="studentSearchText"
-                (input)="onStudentSearchChange($any($event.target).value)"
-              />
-
-              <small>
-                Escribe el nombre o matrícula y selecciona al alumno.
-              </small>
-
-              <div
-                class="student-search-results"
-                *ngIf="studentSearchResults.length > 0"
-              >
+          @if (!hasMonthDayItems()) {
+            <div class="day-empty-state">
+              <p>No hay citas ni horarios registrados para esta fecha.</p>
+              @if (mode === 'psychologist') {
                 <button
                   type="button"
-                  class="student-result"
-                  *ngFor="let student of studentSearchResults"
-                  (click)="selectStudent(student)"
+                  class="month-sidebar-empty-btn"
+                  (click)="openManageSchedule()"
                 >
-                  <strong>{{ student.name }}</strong>
-                  <span>{{ student.program }} · Semestre {{ student.semester }}</span>
-                  <small>Matrícula: {{ student.studentId }}</small>
+                  Gestionar horarios
                 </button>
+              } @else {
+                <p>Selecciona otra fecha del calendario para consultar horarios.</p>
+              }
+            </div>
+          } @else {
+            <div class="month-day-sidebar-list">
+
+              @for (
+                disabled of getDisabledSchedulesForDate(getSelectedDate());
+                track disabled.id
+              ) {
+                <button
+                  type="button"
+                  class="day-availability-card day-disabled-card month-sidebar-card"
+                  (click)="selectDisabledSchedule(disabled)"
+                >
+                  <div class="day-availability-icon day-disabled-icon">
+                    🚫
+                  </div>
+                  <div class="day-availability-content">
+                    <div class="day-availability-header">
+                      <span class="day-availability-time">
+                        {{ formatAvailabilityTime(disabled.startTime) }} - {{ formatAvailabilityTime(disabled.endTime) }}
+                      </span>
+                      <span class="day-availability-badge day-disabled-badge">
+                        <span class="day-availability-dot"></span>
+                        {{ mode === 'patient' ? 'No disponible' : 'Inhabilitado' }}
+                      </span>
+                    </div>
+                    <span class="day-availability-duration">
+                      @if (mode === 'psychologist') {
+                        Motivo: {{ disabled.reason }}
+                        @if (disabled.observation) {
+                          ({{ disabled.observation }})
+                        }
+                      } @else {
+                        Horario no disponible
+                      }
+                    </span>
+                  </div>
+                </button>
+              }
+
+              @for (
+                item of getDayTimelineItems(getSelectedDate());
+                track item.type === 'availability' ? item.availability.id : 'habitual-break'
+              ) {
+                @if (item.type === 'habitualBreak') {
+                  <button
+                    type="button"
+                    class="day-habitual-break-card month-sidebar-card month-sidebar-break-btn"
+                    (click)="selectHabitualBreak(getSelectedDate())"
+                  >
+                    <div class="day-habitual-break-main">
+                      <span class="day-habitual-break-time">
+                        {{ getHabitualBreakRange() }}
+                      </span>
+                      <span class="day-habitual-break-badge">
+                        {{ mode === 'patient' ? 'Descanso' : 'Descanso habitual' }}
+                      </span>
+                    </div>
+                    <div class="day-habitual-break-secondary">
+                      <span>
+                        {{ mode === 'patient' ? 'No habilitado para reservar' : 'Pausa dentro del horario habitual' }}
+                      </span>
+                      <span class="day-habitual-break-duration">
+                        {{ getHabitualBreakDuration() }} min
+                      </span>
+                    </div>
+                  </button>
+                } @else if (item.availability.status === 'Disponible') {
+                  <button
+                    type="button"
+                    class="day-availability-card month-sidebar-card"
+                    [class.day-disabled-card]="mode === 'patient' && isSlotExpired(item.availability.date, item.availability.startTime)"
+                    [class.day-availability-card-selected]="selectedAvailabilityId === item.availability.id"
+                    (click)="selectAvailableSlot(item.availability)"
+                  >
+                    <div
+                      class="day-availability-icon"
+                      [class.day-disabled-icon]="mode === 'patient' && isSlotExpired(item.availability.date, item.availability.startTime)"
+                    >
+                      {{ mode === 'patient' && isSlotExpired(item.availability.date, item.availability.startTime) ? '⌛' : '✓' }}
+                    </div>
+                    <div class="day-availability-content">
+                      <div class="day-availability-header">
+                        <span class="day-availability-time">
+                          {{ getAvailabilityTimeRange(item.availability) }}
+                        </span>
+                        <span
+                          class="day-availability-badge"
+                          [class.day-disabled-badge]="mode === 'patient' && isSlotExpired(item.availability.date, item.availability.startTime)"
+                        >
+                          <span class="day-availability-dot"></span>
+                          {{
+                            mode === 'patient' && isSlotExpired(item.availability.date, item.availability.startTime)
+                              ? 'Horario vencido'
+                              : 'Disponible'
+                          }}
+                        </span>
+                      </div>
+                      <div class="month-sidebar-available-footer">
+                        <span class="day-availability-duration">
+                          Duración: {{ item.availability.duration }} min
+                        </span>
+                        @if (!(mode === 'patient' && isSlotExpired(item.availability.date, item.availability.startTime))) {
+                          <span class="month-sidebar-action-pill">
+                            {{ mode === 'patient' ? 'Ver detalle →' : 'Agendar →' }}
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="day-availability-card month-sidebar-card"
+                    [class.day-reserved-card]="mode === 'patient' || item.availability.status === 'Reservado'"
+                    [class.day-reschedule-card]="mode === 'psychologist' && item.availability.status === 'Reprogramacion pendiente'"
+                    [class.day-cancelled-card]="mode === 'psychologist' && item.availability.status === 'Cancelado'"
+                    [class.day-availability-card-selected]="selectedAvailabilityId === item.availability.id"
+                    (click)="selectSlot(getFormattedRange12h(item.availability), item.availability)"
+                  >
+                    <div
+                      class="day-availability-icon"
+                      [class.day-reserved-icon]="mode === 'patient' || item.availability.status === 'Reservado'"
+                      [class.day-reschedule-icon]="mode === 'psychologist' && item.availability.status === 'Reprogramacion pendiente'"
+                      [class.day-cancelled-icon]="mode === 'psychologist' && item.availability.status === 'Cancelado'"
+                    >
+                      @if (mode === 'patient') {
+                        <span aria-hidden="true">•</span>
+                      } @else {
+                        {{ item.availability.studentInitials || 'AL' }}
+                      }
+                    </div>
+                    <div class="day-availability-content">
+                      <div class="day-availability-header">
+                        <span class="day-availability-time">
+                          {{ getAvailabilityTimeRange(item.availability) }}
+                        </span>
+                        <span
+                          class="day-availability-badge"
+                          [class.day-reserved-badge]="mode === 'patient' || item.availability.status === 'Reservado'"
+                          [class.day-reschedule-badge]="mode === 'psychologist' && item.availability.status === 'Reprogramacion pendiente'"
+                          [class.day-cancelled-badge]="mode === 'psychologist' && item.availability.status === 'Cancelado'"
+                        >
+                          <span class="day-availability-dot"></span>
+                          @if (mode === 'patient') {
+                            Ocupado
+                          } @else {
+                            {{
+                              item.availability.status === 'Reprogramacion pendiente'
+                                ? 'Reprogramación pendiente'
+                                : item.availability.status
+                            }}
+                          }
+                        </span>
+                      </div>
+                      <span class="day-availability-duration">
+                        @if (mode === 'patient') {
+                          No disponible para reservar • {{ item.availability.duration }} min
+                        } @else {
+                          {{ item.availability.studentName || 'Cita' }}
+                          •
+                          {{ item.availability.modality || 'Presencial' }}
+                          •
+                          {{ item.availability.duration }} min
+                        }
+                      </span>
+                    </div>
+                  </button>
+                }
+              }
+
+            </div>
+          }
+        </div>
+
+      } @else if (mode === 'patient') {
+
+        <!-- 2. FLUJO DE PANEL LATERAL DEL ALUMNO (DETALLE -> FORMULARIO -> CONFIRMACIÓN) -->
+        @if (sidebarView === 'patient-booking-form' && patientSlotData) {
+
+          <div class="sidebar-back-bar">
+            <button
+              type="button"
+              class="sidebar-back-btn"
+              (click)="backToPatientSlotDetail()"
+            >
+              ← Volver al detalle del horario
+            </button>
+          </div>
+
+          <app-book-appointment-modal
+            [inline]="true"
+            [slotData]="patientSlotData"
+            (cancel)="backToPatientSlotDetail()"
+            (close)="closeSidebar()"
+            (appointmentBooked)="onPatientBookingConfirmed($event)"
+          />
+
+        } @else if (sidebarView === 'patient-booking-success') {
+
+          <div class="month-day-sidebar-panel patient-slot-detail-panel">
+            <header class="month-day-sidebar-header">
+              <div class="month-day-sidebar-title-group">
+                <span class="day-availability-badge">
+                  <span class="day-availability-dot"></span>
+                  Cita confirmada
+                </span>
+                <h3 style="margin-top: 8px;">¡Reserva registrada!</h3>
               </div>
-            </div>
 
-
-            <fieldset class="booking-field">
-              <legend>Modalidad <span>*</span></legend>
-
-              <div class="booking-modality-options">
-                <label class="booking-modality-option">
-                  <input
-                    type="radio"
-                    name="modality"
-                    value="In person"
-                    checked
-                  />
-                  <span>♙ Presencial</span>
-                </label>
-
-                <label class="booking-modality-option">
-                  <input
-                    type="radio"
-                    name="modality"
-                    value="Online"
-                  />
-                  <span>▣ En línea</span>
-                </label>
-              </div>
-            </fieldset>
-
-            <div class="booking-field">
-              <label for="appointmentLocation">Ubicación de atención <span>*</span></label>
-              <input
-                id="appointmentLocation"
-                name="location"
-                type="text"
-                placeholder="Escribe el lugar de atención"
-              />
-              <small>Solo para modalidad presencial.</small>
-            </div>
-
-            <div class="booking-field">
-              <label for="appointmentReason">Motivo de la cita <span>*</span></label>
-              <textarea
-                id="appointmentReason"
-                name="reason"
-                rows="4"
-                placeholder="Describe brevemente el motivo de la atención..."
-              ></textarea>
-            </div>
-
-            <div class="booking-actions">
               <button
                 type="button"
-                class="booking-cancel-button"
+                class="icon-btn"
+                aria-label="Cerrar panel"
+                title="Cerrar"
                 (click)="closeSidebar()"
               >
-                Cancelar
+                &times;
               </button>
+            </header>
+
+            <div class="patient-detail-card patient-success-card">
+              <strong>Tu cita ha sido agendada correctamente</strong>
+              <p>El horario seleccionado ya quedó reservado a tu nombre y se actualizó en el calendario.</p>
+              @if (bookedAppointmentResult) {
+                <div class="patient-detail-meta">
+                  <span><strong>Fecha:</strong> {{ bookedAppointmentResult.date || patientSlotData?.date }}</span>
+                  <span><strong>Horario:</strong> {{ (bookedAppointmentResult.start_time || patientSlotData?.startTime) }} - {{ (bookedAppointmentResult.end_time || patientSlotData?.endTime) }} hrs</span>
+                  <span><strong>Duración:</strong> {{ bookedAppointmentResult.duration || patientSlotData?.duration }} minutos</span>
+                </div>
+              }
+            </div>
+
+            <div class="patient-detail-actions">
+              @if (currentView === 'month' && selectedDate) {
+                <button
+                  type="button"
+                  class="month-sidebar-empty-btn"
+                  style="width: 100%;"
+                  (click)="backToDaySummary()"
+                >
+                  ← Volver al resumen del día
+                </button>
+              }
+              <button
+                type="button"
+                class="booking-submit-button"
+                style="width: 100%; padding: 11px 16px; border-radius: 10px; font-weight: 600; cursor: pointer;"
+                (click)="closeSidebar()"
+              >
+                Cerrar panel
+              </button>
+            </div>
+          </div>
+
+        } @else if (patientSlotData) {
+
+          @if (currentView === 'month' && selectedDate) {
+            <div class="sidebar-back-bar">
+              <button
+                type="button"
+                class="sidebar-back-btn"
+                (click)="backToDaySummary()"
+              >
+                ← Volver al resumen del {{ selectedDate }}
+              </button>
+            </div>
+          }
+
+          <div class="month-day-sidebar-panel patient-slot-detail-panel">
+            <header class="month-day-sidebar-header">
+              <div class="month-day-sidebar-title-group">
+                <span
+                  class="day-availability-badge"
+                  [class.day-reserved-badge]="patientSlotData.status === 'Ocupado'"
+                  [class.day-disabled-badge]="patientSlotData.status === 'No disponible' || patientSlotData.status === 'Descanso' || patientSlotData.isExpired"
+                >
+                  <span class="day-availability-dot"></span>
+                  {{ patientSlotData.status }}
+                </span>
+                <h3 style="margin-top: 8px;">Detalle del Horario</h3>
+              </div>
 
               <button
                 type="button"
-                class="booking-cancel-button"
-                style="background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;"
-                (click)="handleDisableSelectedSlot()"
+                class="icon-btn"
+                aria-label="Cerrar panel"
+                title="Cerrar"
+                (click)="closeSidebar()"
               >
-                🚫 Inhabilitar horario
+                &times;
               </button>
+            </header>
 
-              <button
-                type="submit"
-                class="booking-submit-button"
-              >
-                Agendar cita
-              </button>
+            <div class="patient-detail-card">
+              <div class="patient-detail-row">
+                <span class="patient-detail-label">Fecha</span>
+                <strong class="patient-detail-value">{{ patientSlotData.date }}</strong>
+              </div>
+              <div class="patient-detail-row">
+                <span class="patient-detail-label">Hora de inicio y finalización</span>
+                <strong class="patient-detail-value">{{ patientSlotData.startTime }} - {{ patientSlotData.endTime }} hrs</strong>
+              </div>
+              @if (patientSlotData.duration > 0) {
+                <div class="patient-detail-row">
+                  <span class="patient-detail-label">Duración</span>
+                  <strong class="patient-detail-value">{{ patientSlotData.duration }} minutos</strong>
+                </div>
+              }
+              <div class="patient-detail-row">
+                <span class="patient-detail-label">Disponibilidad del espacio</span>
+                <strong class="patient-detail-value">
+                  @if (patientSlotData.status === 'Disponible' && !patientSlotData.isExpired) {
+                    Disponible para reservar
+                  } @else if (patientSlotData.isExpired || patientSlotData.status === 'Horario vencido') {
+                    No disponible (Horario vencido)
+                  } @else if (patientSlotData.status === 'Ocupado') {
+                    Ocupado — No disponible
+                  } @else if (patientSlotData.status === 'Descanso') {
+                    Descanso — No habilitado para reservar
+                  } @else {
+                    No disponible
+                  }
+                </strong>
+              </div>
             </div>
 
-          </form>
-        </div>
+            <div class="patient-detail-notice">
+              @if (patientSlotData.status === 'Disponible' && !patientSlotData.isExpired) {
+                <p>Este horario se encuentra disponible. Haz clic en <strong>Agendar cita</strong> para completar tu solicitud de atención psicológica.</p>
+              } @else if (patientSlotData.isExpired || patientSlotData.status === 'Horario vencido') {
+                <p>La hora de inicio de este horario ya ha transcurrido, por lo que no permite registrar nuevas reservas.</p>
+              } @else if (patientSlotData.status === 'Ocupado') {
+                <p>Este horario ya se encuentra ocupado. Por favor selecciona otro bloque disponible en el calendario.</p>
+              } @else if (patientSlotData.status === 'Descanso') {
+                <p>Este horario corresponde a un periodo de descanso habitual y no se encuentra habilitado para reservar.</p>
+              } @else {
+                <p>Este horario no se encuentra disponible para agendar citas.</p>
+              }
+            </div>
+
+            @if (patientSlotData.status === 'Disponible' && !patientSlotData.isExpired) {
+              <div class="patient-detail-actions">
+                <button
+                  type="button"
+                  class="booking-submit-button"
+                  style="width: 100%; padding: 12px 16px; border-radius: 10px; font-weight: 700; cursor: pointer;"
+                  (click)="openPatientBookingForm()"
+                >
+                  Agendar cita
+                </button>
+              </div>
+            }
+          </div>
+
+        }
 
       } @else {
 
-        <app-appointment-details
-          [appointment]="
-            selectedAppointmentData
-          "
+        <!-- 3. DETALLE DE HORARIO / CITA DE LA PSICÓLOGA -->
+        @if (currentView === 'month' && selectedDate) {
+          <div class="sidebar-back-bar">
+            <button
+              type="button"
+              class="sidebar-back-btn"
+              (click)="backToDaySummary()"
+            >
+              ← Volver al detalle del {{ selectedDate }}
+            </button>
+          </div>
+        }
 
-          (close)="closeSidebar()"
+        @if (
+          selectedAvailabilityStatus ===
+          'Reprogramacion pendiente'
+        ) {
 
-          (reschedule)="
-            openRescheduleModal()
-          "
+          <app-reschedule-details
+            [data]="selectedRescheduleDetails"
 
-          (rehabilitate)="onRehabilitate()"
+            (close)="closeSidebar()"
 
-          (cancel)="
-            openCancelModal()
-          "
+            (modify)="
+              openRescheduleModal()
+            "
+            (accept)="onApproveReschedule()"
+            (reject)="onRejectReschedule()"
+            (cancel)="onRejectReschedule()"
+          />
 
-          (disable)="
-            openDisableModalFromPanel($event)
-          "
+        } @else if (
+          selectedAvailabilityStatus ===
+          'Disponible'
+        ) {
 
-          (enable)="
-            rehabilitateFromPanel($event)
-          "
-        />
+          <div class="appointment-booking-panel">
+
+            <div class="booking-header">
+              <div>
+                <span class="booking-eyebrow">Registro de cita • HU-04</span>
+                <h2>Agendar cita</h2>
+              </div>
+
+              <button
+                type="button"
+                class="icon-btn"
+                aria-label="Cerrar formulario"
+                (click)="closeSidebar()"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div class="booking-schedule-summary">
+              <div class="booking-summary-icon">▦</div>
+
+              <div class="booking-summary-info">
+                <strong>{{ selectedSlotDate }}</strong>
+                <span>{{ selectedSlot }}</span>
+                <small>
+                  Duración:
+                  {{ selectedAvailability?.duration || 0 }}
+                  minutos
+                </small>
+              </div>
+
+              <span class="booking-status">Disponible</span>
+            </div>
+
+            <form class="booking-form" (submit)="onAppointmentSubmit($event)" >
+              <div class="booking-field">
+                <label for="studentName">
+                  Buscar alumno <span>*</span>
+                </label>
+
+                <input
+                  id="studentName"
+                  name="studentName"
+                  type="text"
+                  placeholder="Escribe el nombre o matrícula"
+                  autocomplete="off"
+                  [value]="studentSearchText"
+                  (input)="onStudentSearchChange($any($event.target).value)"
+                />
+
+                <small>
+                  Escribe el nombre o matrícula y selecciona al alumno.
+                </small>
+
+                <div
+                  class="student-search-results"
+                  *ngIf="studentSearchResults.length > 0"
+                >
+                  <button
+                    type="button"
+                    class="student-result"
+                    *ngFor="let student of studentSearchResults"
+                    (click)="selectStudent(student)"
+                  >
+                    <strong>{{ student.name }}</strong>
+                    <span>{{ student.program }} · Semestre {{ student.semester }}</span>
+                    <small>Matrícula: {{ student.studentId }}</small>
+                  </button>
+                </div>
+              </div>
+
+
+              <fieldset class="booking-field">
+                <legend>Modalidad <span>*</span></legend>
+
+                <div class="booking-modality-options">
+                  <label class="booking-modality-option">
+                    <input
+                      type="radio"
+                      name="modality"
+                      value="In person"
+                      checked
+                    />
+                    <span>♙ Presencial</span>
+                  </label>
+
+                  <label class="booking-modality-option">
+                    <input
+                      type="radio"
+                      name="modality"
+                      value="Online"
+                    />
+                    <span>▣ En línea</span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <div class="booking-field">
+                <label for="appointmentLocation">Ubicación de atención <span>*</span></label>
+                <input
+                  id="appointmentLocation"
+                  name="location"
+                  type="text"
+                  placeholder="Escribe el lugar de atención"
+                />
+                <small>Solo para modalidad presencial.</small>
+              </div>
+
+              <div class="booking-field">
+                <label for="appointmentReason">Motivo de la cita <span>*</span></label>
+                <textarea
+                  id="appointmentReason"
+                  name="reason"
+                  rows="4"
+                  placeholder="Describe brevemente el motivo de la atención..."
+                ></textarea>
+              </div>
+
+              <div class="booking-actions">
+                <button
+                  type="button"
+                  class="booking-cancel-button"
+                  (click)="currentView === 'month' && selectedDate ? backToDaySummary() : closeSidebar()"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="button"
+                  class="booking-cancel-button"
+                  style="background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;"
+                  (click)="handleDisableSelectedSlot()"
+                >
+                  🚫 Inhabilitar horario
+                </button>
+
+                <button
+                  type="submit"
+                  class="booking-submit-button"
+                >
+                  Agendar cita
+                </button>
+              </div>
+
+            </form>
+          </div>
+
+        } @else {
+
+          <app-appointment-details
+            [appointment]="
+              selectedAppointmentData
+            "
+
+            (close)="closeSidebar()"
+
+            (reschedule)="
+              openRescheduleModal()
+            "
+
+            (rehabilitate)="onRehabilitate()"
+
+            (cancel)="
+              openCancelModal()
+            "
+
+            (disable)="
+              openDisableModalFromPanel($event)
+            "
+
+            (enable)="
+              rehabilitateFromPanel($event)
+            "
+
+            (manageSchedule)="
+              openManageSchedule()
+            "
+          />
+
+        }
 
       }
 
     }
 
-    </div>
-  }
+  </aside>
 </div>
 
 <!-- ========================================= -->
