@@ -1,0 +1,160 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="light">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/login" text="Atrás"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Registro de Alumnos</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="register-content ion-padding">
+  <div class="register-container">
+    
+    <div class="header-intro">
+      <span class="intro-badge">VINCULACIÓN INSTITUCIONAL</span>
+      <h2>Crear Cuenta de Alumno</h2>
+      <p>Ingresa tu matrícula para validar tu expediente en el sistema escolar.</p>
+    </div>
+
+    <ion-card class="register-card">
+      <ion-card-content>
+
+        @if (errorMessage) {
+          <div class="alert-box error">
+            <span class="icon">⚠️</span>
+            <span>{{ errorMessage }}</span>
+          </div>
+        }
+
+        @if (successMessage) {
+          <div class="alert-box success">
+            <span class="icon">✅</span>
+            <span>{{ successMessage }}</span>
+          </div>
+        }
+
+        <form (ngSubmit)="onSubmit()">
+
+          <!-- Nombre Completo -->
+          <ion-item lines="inset" class="form-item">
+            <ion-icon name="person-outline" slot="start" color="medium"></ion-icon>
+            <ion-input
+              label="Nombre completo"
+              labelPlacement="floating"
+              placeholder="Juan Pérez Gómez"
+              [(ngModel)]="name"
+              name="name"
+              required
+            ></ion-input>
+          </ion-item>
+
+          <!-- Matrícula -->
+          <ion-item lines="inset" class="form-item">
+            <ion-icon name="id-card-outline" slot="start" color="medium"></ion-icon>
+            <ion-input
+              label="Matrícula escolar oficial"
+              labelPlacement="floating"
+              placeholder="Ej. TEST2026002"
+              [(ngModel)]="studentCode"
+              name="studentCode"
+              required
+            ></ion-input>
+          </ion-item>
+
+          <!-- Carrera -->
+          <ion-item lines="inset" class="form-item">
+            <ion-icon name="school-outline" slot="start" color="medium"></ion-icon>
+            <ion-select
+              label="Carrera / Programa"
+              labelPlacement="floating"
+              placeholder="Selecciona tu carrera"
+              [(ngModel)]="program"
+              name="program"
+            >
+              @for (prog of academicPrograms; track prog) {
+                <ion-select-option [value]="prog">{{ prog }}</ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+
+          <!-- Semestre -->
+          <ion-item lines="inset" class="form-item">
+            <ion-input
+              label="Semestre actual (1 al 12)"
+              labelPlacement="floating"
+              type="number"
+              min="1"
+              max="12"
+              placeholder="Ej. 4"
+              [(ngModel)]="semester"
+              name="semester"
+            ></ion-input>
+          </ion-item>
+
+          <!-- Correo Institucional -->
+          <ion-item lines="inset" class="form-item">
+            <ion-icon name="mail-outline" slot="start" color="medium"></ion-icon>
+            <ion-input
+              label="Correo institucional"
+              labelPlacement="floating"
+              type="email"
+              placeholder="alumno@itescam.edu.mx"
+              [(ngModel)]="email"
+              name="email"
+              required
+            ></ion-input>
+          </ion-item>
+
+          <!-- Contraseña -->
+          <ion-item lines="inset" class="form-item">
+            <ion-icon name="lock-closed-outline" slot="start" color="medium"></ion-icon>
+            <ion-input
+              label="Contraseña (mínimo 6 caracteres)"
+              labelPlacement="floating"
+              type="password"
+              [(ngModel)]="password"
+              name="password"
+              required
+            ></ion-input>
+          </ion-item>
+
+          <!-- Confirmar Contraseña -->
+          <ion-item lines="inset" class="form-item">
+            <ion-icon name="lock-closed-outline" slot="start" color="medium"></ion-icon>
+            <ion-input
+              label="Confirmar contraseña"
+              labelPlacement="floating"
+              type="password"
+              [(ngModel)]="confirmPassword"
+              name="confirmPassword"
+              required
+            ></ion-input>
+          </ion-item>
+
+          <!-- Botón de Registro -->
+          <ion-button
+            expand="block"
+            type="submit"
+            class="submit-button"
+            [disabled]="isLoading || successMessage !== ''"
+          >
+            @if (isLoading) {
+              <ion-spinner name="crescent"></ion-spinner>
+              <span>Validando matrícula...</span>
+            } @else {
+              <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+              <span>Completar Registro</span>
+            }
+          </ion-button>
+        </form>
+
+        <div class="login-prompt">
+          <p>¿Ya tienes cuenta?</p>
+          <a routerLink="/login" class="login-link">Inicia sesión aquí</a>
+        </div>
+
+      </ion-card-content>
+    </ion-card>
+
+  </div>
+</ion-content>

@@ -1,0 +1,303 @@
+<div class="modal-backdrop" (click)="close()">
+  <section
+    class="schedule-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="schedule-modal-title"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Encabezado Principal -->
+    <header class="modal-header">
+      <div class="modal-heading">
+        <div class="modal-icon">◷</div>
+        <div>
+          <h2 id="schedule-modal-title">Gestionar Horarios de Atención</h2>
+          <p>Configura tus rangos de atención y administra los cambios de tu agenda</p>
+        </div>
+      </div>
+
+      <button type="button" class="close-button" aria-label="Cerrar" (click)="close()">
+        ×
+      </button>
+    </header>
+
+    <!-- Pestañas -->
+    <nav class="schedule-tabs" aria-label="Opciones de gestión de horario">
+      <button
+        type="button"
+        [class.active]="activeTab === 'regular'"
+        (click)="selectTab('regular')"
+      >
+        Horario habitual
+      </button>
+
+      <button
+        type="button"
+        [class.active]="activeTab === 'disabled'"
+        (click)="selectTab('disabled')"
+      >
+        Horarios inhabilitados
+      </button>
+    </nav>
+
+    <!-- Área de Contenido -->
+    <main class="modal-content">
+      <!-- PESTAÑA 1: HORARIO HABITUAL -->
+      @if (activeTab === 'regular') {
+        <section class="tab-workspace">
+          @if (isLoadingRegularSchedule) {
+            <p class="status-loading">Cargando horario habitual...</p>
+          } @else if (loadError) {
+            <p class="status-error">{{ loadError }}</p>
+          } @else {
+            <app-regular-schedule
+              [initialConfig]="regularScheduleConfig"
+              (scheduleSaved)="handleRegularScheduleSaved($event)"
+              (cancelRequested)="close()"
+            />
+          }
+        </section>
+      }
+
+      <!-- PESTAÑA 2: INHABILITAR HORARIOS (#48) -->
+      @if (activeTab === 'disabled') {
+        <section class="tab-workspace disable-workspace">
+          
+          <!-- SECCIÓN 1: FORMULARIO PRINCIPAL DE INHABILITACIÓN -->
+          <div class="disable-form-card">
+            <header class="form-card-header">
+              <div class="header-title-row">
+                <span class="card-icon">🚫</span>
+                <div>
+                  <h3>Inhabilitar nuevo horario</h3>
+                  <p>Bloquea un día puntual o un rango de fechas en tu agenda para evitar el registro de citas.</p>
+                </div>
+              </div>
+            </header>
+
+            @if (!showImpactPreview) {
+              <form (ngSubmit)="validateAndCalculateImpact()" class="disable-form-body">
+                
+                <!-- Selector: Día específico vs Rango de fechas -->
+                <div class="form-group">
+                  <label class="form-label">Tipo de inhabilitación</label>
+                  <div class="mode-toggle">
+                    <button
+                      type="button"
+                      class="toggle-btn"
+                      [class.selected]="!disableForm.isRange"
+                      (click)="setDisableMode(false)"
+                    >
+                      Día específico
+                    </button>
+                    <button
+                      type="button"
+                      class="toggle-btn"
+                      [class.selected]="disableForm.isRange"
+                      (click)="setDisableMode(true)"
+                    >
+                      Rango de fechas
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Campos de fecha -->
+                <div class="form-row">
+                  @if (!disableForm.isRange) {
+                    <div class="form-group flex-1">
+                      <label for="disable-date" class="form-label">Fecha *</label>
+                      <input
+                        id="disable-date"
+                        type="date"
+                        class="form-control"
+                        [(ngModel)]="disableForm.date"
+                        name="disableDate"
+                        required
+                      />
+                    </div>
+                  } @else {
+                    <div class="form-group flex-1">
+                      <label for="disable-start-date" class="form-label">Fecha inicio *</label>
+                      <input
+                        id="disable-start-date"
+                        type="date"
+                        class="form-control"
+                        [(ngModel)]="disableForm.startDate"
+                        name="startDate"
+                        required
+                      />
+                    </div>
+                    <div class="form-group flex-1">
+                      <label for="disable-end-date" class="form-label">Fecha fin *</label>
+                      <input
+                        id="disable-end-date"
+                        type="date"
+                        class="form-control"
+                        [(ngModel)]="disableForm.endDate"
+                        name="endDate"
+                        required
+                      />
+                    </div>
+                  }
+                </div>
+
+                <!-- Días aplicables cuando es rango -->
+                @if (disableForm.isRange) {
+                  <div class="form-group">
+                    <label class="form-label">Días aplicables de la semana</label>
+                    <div class="days-checkbox-group">
+                      @for (day of availableDays; track day.id) {
+                        <button
+                          type="button"
+                          class="day-chip"
+                          [class.active]="isDaySelected(day.id)"
+                          (click)="toggleDaySelection(day.id)"
+                        >
+                          ✓ {{ day.shortName }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- Campos de Hora -->
+                <div class="form-row">
+                  <div class="form-group flex-1">
+                    <label for="disable-start-time" class="form-label">Hora inicio *</label>
+                    <input
+                      id="disable-start-time"
+                      type="time"
+                      class="form-control"
+                      [(ngModel)]="disableForm.startTime"
+                      name="startTime"
+                      required
+                    />
+                  </div>
+                  <div class="form-group flex-1">
+                    <label for="disable-end-time" class="form-label">Hora fin *</label>
+                    <input
+                      id="disable-end-time"
+                      type="time"
+                      class="form-control"
+                      [(ngModel)]="disableForm.endTime"
+                      name="endTime"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <!-- Motivo -->
+                <div class="form-group">
+                  <label for="disable-reason" class="form-label">Motivo *</label>
+                  <select
+                    id="disable-reason"
+                    class="form-control"
+                    [(ngModel)]="disableForm.reason"
+                    name="reason"
+                    required
+                  >
+                    <option value="" disabled selected>Selecciona un motivo</option>
+                    @for (reason of reasonOptions; track reason) {
+                      <option [value]="reason">{{ reason }}</option>
+                    }
+                  </select>
+                </div>
+
+                <!-- Observaciones -->
+                <div class="form-group">
+                  <label for="disable-obs" class="form-label">Observaciones (Opcional)</label>
+                  <textarea
+                    id="disable-obs"
+                    class="form-control textarea"
+                    rows="2"
+                    placeholder="Escribe aquí detalles o contexto adicional..."
+                    [(ngModel)]="disableForm.observation"
+                    name="observation"
+                  ></textarea>
+                </div>
+
+                <!-- Alerta de validación -->
+                @if (formError) {
+                  <div class="form-alert error-alert">
+                    ⚠️ {{ formError }}
+                  </div>
+                }
+
+                <div class="form-actions">
+                  <button type="button" class="btn-secondary" (click)="resetDisableForm()">
+                    Limpiar
+                  </button>
+                  <button type="submit" class="btn-primary">
+                    Ver vista previa e impacto →
+                  </button>
+                </div>
+              </form>
+            } @else {
+              <!-- SECCIÓN 2: PASO DE VISTA PREVIA DE IMPACTO -->
+              <div class="impact-preview-container">
+                <header class="impact-header">
+                  <h4>📊 Vista Previa del Impacto</h4>
+                  <p>Revisa el impacto en tu agenda antes de confirmar la inhabilitación.</p>
+                </header>
+
+                <div class="impact-summary-grid">
+                  <div class="impact-card">
+                    <span class="impact-label">Periodo</span>
+                    <strong class="impact-value">
+                      {{ disableForm.isRange ? (disableForm.startDate + ' al ' + disableForm.endDate) : disableForm.date }}
+                    </strong>
+                  </div>
+
+                  <div class="impact-card">
+                    <span class="impact-label">Horario</span>
+                    <strong class="impact-value">{{ disableForm.startTime }} - {{ disableForm.endTime }} hrs</strong>
+                  </div>
+
+                  <div class="impact-card highlight">
+                    <span class="impact-label">Slots afectados</span>
+                    <strong class="impact-value">{{ impactSummary.totalSlots }} bloques</strong>
+                  </div>
+
+                  <div class="impact-card" [class.warning]="impactSummary.conflictsCount > 0">
+                    <span class="impact-label">Citas en conflicto</span>
+                    <strong class="impact-value">
+                      {{ impactSummary.conflictsCount > 0 ? (impactSummary.conflictsCount + ' citas') : 'Sin conflictos' }}
+                    </strong>
+                  </div>
+                </div>
+
+                @if (impactSummary.conflictsCount > 0) {
+                  <div class="form-alert warning-alert">
+                    ⚠️ <strong>Atención:</strong> Inhabilitar este horario afectará citas previamente agendadas. Se notificará a los alumnos para su reprogramación.
+                  </div>
+                }
+
+                <div class="form-actions">
+                  <button type="button" class="btn-secondary" (click)="backToForm()">
+                    ← Volver a editar
+                  </button>
+                  <button type="button" class="btn-danger" (click)="confirmDisable()">
+                    Confirmar e Inhabilitar
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- SECCIÓN 3: HISTORIAL SECUNDARIO PLEGABLE (ACORDEÓN) -->
+          <details class="history-accordion" [open]="isHistoryOpen" (toggle)="onHistoryToggle($event)">
+            <summary class="history-accordion-header">
+              <span class="accordion-title">📅 Historial de inhabilitaciones registradas</span>
+              <span class="accordion-icon">{{ isHistoryOpen ? '▲' : '▼' }}</span>
+            </summary>
+
+            <div class="accordion-content">
+              <app-disabled-schedules-list [initialData]="initialData" />
+            </div>
+          </details>
+
+        </section>
+      }
+    </main>
+  </section>
+</div>
