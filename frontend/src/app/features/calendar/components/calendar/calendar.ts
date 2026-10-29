@@ -967,6 +967,22 @@ private toastTimeout:
       status:
         availability.status,
 
+      cancellationReason:
+        availability.cancellationReason,
+
+      cancellationObservation:
+        availability.cancellationObservation,
+
+      rehabilitable:
+        this.mode === 'psychologist' &&
+        availability.status === 'Cancelado' &&
+        availability.id > 0,
+
+      endsAtMs:
+        new Date(
+          `${availability.date}T${availability.endTime}`
+        ).getTime(),
+
       studentName:
         availability.studentName ||
         'Alumno',
@@ -1532,6 +1548,38 @@ selectAvailableSlot(
           );
         }
 
+      });
+  }
+
+  /*
+   * Rehabilita un horario cancelado.
+   * La cita cancelada permanece en el historial; el backend valida
+   * que el intervalo sea futuro y no tenga bloqueos ni conflictos.
+   */
+  onRehabilitate(): void {
+    if (
+      this.selectedAvailabilityId === null ||
+      this.selectedAvailabilityId < 0
+    ) {
+      return;
+    }
+
+    this.calendarService
+      .rehabilitateCancelledAvailability(this.selectedAvailabilityId)
+      .subscribe({
+        next: () => {
+          this.closeSidebar();
+          this.refreshCalendarData();
+          this.showToast('Horario rehabilitado y disponible nuevamente.', 'success');
+        },
+        error: (error) => {
+          console.error('Error al rehabilitar horario:', error);
+          this.showToast(
+            error.error?.error || 'No fue posible rehabilitar el horario.',
+            'error'
+          );
+          this.refreshCalendarData();
+        }
       });
   }
 
@@ -3901,7 +3949,6 @@ if (
      * Consultamos el backend cada 3 segundos.
      */
     if (
-      this.mode === 'patient' &&
       this.patientRefreshInterval === null
     ) {
 
@@ -3909,10 +3956,26 @@ if (
         setInterval(
           () => {
 
+            /*
+             * En la vista de la psicóloga no se refresca
+             * mientras haya un modal abierto para no
+             * interferir con la captura de datos.
+             */
+            if (
+              this.mode === 'psychologist' &&
+              (
+                this.isCancelModalOpen ||
+                this.isRescheduleModalOpen ||
+                this.isManageScheduleOpen
+              )
+            ) {
+              return;
+            }
+
             this.refreshCalendarData();
 
           },
-          3000
+          this.mode === 'patient' ? 3000 : 5000
         );
     }
 

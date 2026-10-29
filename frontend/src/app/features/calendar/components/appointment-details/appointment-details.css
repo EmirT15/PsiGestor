@@ -223,3 +223,22 @@
   text-align: center;
   line-height: 1.5;
 }
+
+.btn-rehabilitate {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 10px;
+  background: #16a34a;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-rehabilitate:hover {
+  background: #15803d;
+}

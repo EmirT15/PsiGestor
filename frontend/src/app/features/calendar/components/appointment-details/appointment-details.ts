@@ -18,6 +18,11 @@ export interface AppointmentMock {
   reason: string;
   derivedBy: string;
   sessionCount: string;
+  cancellationReason?: string | null;
+  cancellationObservation?: string | null;
+  // Rehabilitación de horarios cancelados
+  rehabilitable?: boolean;
+  endsAtMs?: number;
 }
 
 @Component({
@@ -31,6 +36,7 @@ export class AppointmentDetails {
   @Output() close = new EventEmitter<void>();
   @Output() reschedule = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
+  @Output() rehabilitate = new EventEmitter<void>();
 
   // Use a default mock if none is provided, to match the design for now
   defaultMock: AppointmentMock = {
@@ -50,6 +56,28 @@ export class AppointmentDetails {
     derivedBy: 'Coordinación Académica',
     sessionCount: '2da Sesión'
   };
+
+  // El botón solo se ofrece para citas canceladas cuyo horario aún no ha pasado
+  get canRehabilitate(): boolean {
+    const appointment = this.displayAppointment;
+
+    return (
+      appointment.status === 'Cancelado' &&
+      appointment.rehabilitable === true &&
+      typeof appointment.endsAtMs === 'number' &&
+      appointment.endsAtMs > Date.now()
+    );
+  }
+
+  get isCancelledPast(): boolean {
+    const appointment = this.displayAppointment;
+
+    return (
+      appointment.status === 'Cancelado' &&
+      typeof appointment.endsAtMs === 'number' &&
+      appointment.endsAtMs <= Date.now()
+    );
+  }
 
   get displayAppointment(): AppointmentMock {
     return this.appointment || this.defaultMock;

@@ -1,11 +1,18 @@
 from datetime import datetime, date, timedelta
 import os
+from zoneinfo import ZoneInfo
 
 import psycopg
 from dotenv import load_dotenv
 
 
 load_dotenv()
+
+LOCAL_TIMEZONE = ZoneInfo('America/Merida')
+
+
+class RehabilitationConflictError(ValueError):
+    """El horario no puede rehabilitarse por bloqueo o conflicto."""
 
 
 def create_availability(
@@ -203,13 +210,17 @@ def cancel_availability_repo(
             cursor.execute(
                 """
                 UPDATE appointments
-                SET status = 'Cancelled'
+                SET status = 'Cancelled',
+                    cancellation_reason = %s,
+                    cancellation_observation = %s,
+                    cancelled_at = CURRENT_TIMESTAMP,
+                    cancelled_by = 'psicologo'
                 WHERE date = %s
                   AND start_time = %s
                   AND end_time = %s
                   AND status <> 'Cancelled';
                 """,
-                (result[1], result[2], result[3])
+                (reason, observation, result[1], result[2], result[3])
             )
 
         connection.commit()
@@ -772,5 +783,149 @@ def reject_availability_reschedule_repo(availability_id):
             )
             connection.commit()
             return True
+    finally:
+        connection.close()
+
+
+def rehabilitate_availability_repo(availability_id, user_id=None):
+    """
+    Libera un horario cancelado para que vuelva a ser reservable.
+
+    - La cita cancelada se conserva como historial (no se elimina).
+    - Solo aplica si el intervalo es futuro, no está inhabilitado y no
+      tiene conflicto con otra disponibilidad o cita activa.
+    """
+    connection = get_db_connection()
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id, date, start_time, end_time, status
+                FROM availabilities
+                WHERE id = %s
+                FOR UPDATE;
+                """,
+                (availability_id,)
+            )
+            row = cursor.fetchone()
+
+            if not row:
+                return None
+
+            avail_id, a_date, a_start, a_end, a_status = row
+
+            if a_status != 'Cancelado':
+                raise ValueError(
+                    'Solo se pueden rehabilitar horarios cancelados.'
+                )
+
+            end_moment = datetime.combine(
+                a_date,
+                a_end,
+                tzinfo=LOCAL_TIMEZONE
+            )
+
+            if end_moment <= datetime.now(LOCAL_TIMEZONE):
+                raise ValueError(
+                    'El horario ya pasó y no puede volver a reservarse.'
+                )
+
+            cursor.execute(
+                """
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM disabled_schedules
+                    WHERE start_date <= %s
+                      AND end_date >= %s
+                      AND start_time < %s
+                      AND end_time > %s
+                      AND status = 'Inhabilitado'
+                );
+                """,
+                (a_date, a_date, a_end, a_start)
+            )
+
+            if cursor.fetchone()[0]:
+                raise RehabilitationConflictError(
+                    'El horario está inhabilitado y sigue no disponible.'
+                )
+
+            cursor.execute(
+                """
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM availabilities
+                    WHERE id <> %s
+                      AND date = %s
+                      AND start_time < %s
+                      AND end_time > %s
+                      AND status <> 'Cancelado'
+                ) OR EXISTS (
+                    SELECT 1
+                    FROM appointments
+                    WHERE date = %s
+                      AND start_time < %s
+                      AND end_time > %s
+                      AND status <> 'Cancelled'
+                );
+                """,
+                (
+                    avail_id, a_date, a_end, a_start,
+                    a_date, a_end, a_start
+                )
+            )
+
+            if cursor.fetchone()[0]:
+                raise RehabilitationConflictError(
+                    'Existe un conflicto con otra cita o disponibilidad en este horario.'
+                )
+
+            cursor.execute(
+                """
+                UPDATE availabilities
+                SET status = 'Disponible',
+                    student_name = NULL,
+                    student_initials = NULL,
+                    student_age = NULL,
+                    student_semester = NULL,
+                    student_program = NULL,
+                    consultation_reason = NULL,
+                    modality = NULL,
+                    location = NULL,
+                    folio = NULL,
+                    proposed_date = NULL,
+                    proposed_start_time = NULL,
+                    proposed_end_time = NULL,
+                    cancellation_reason = NULL,
+                    cancellation_observation = NULL
+                WHERE id = %s
+                RETURNING id, date, start_time, end_time, status;
+                """,
+                (avail_id,)
+            )
+            result = cursor.fetchone()
+
+            # Auditoría: la cita cancelada se conserva y se marca como rehabilitada.
+            cursor.execute(
+                """
+                UPDATE appointments
+                SET rehabilitated_at = CURRENT_TIMESTAMP,
+                    rehabilitated_by = %s
+                WHERE date = %s
+                  AND start_time = %s
+                  AND end_time = %s
+                  AND status = 'Cancelled';
+                """,
+                (user_id, a_date, a_start, a_end)
+            )
+
+        connection.commit()
+        return result
+
+    except Exception:
+        connection.rollback()
+        raise
+
     finally:
         connection.close()
