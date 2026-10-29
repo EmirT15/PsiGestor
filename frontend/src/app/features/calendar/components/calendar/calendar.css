@@ -1,0 +1,2844 @@
+/* ============================================================
+   BASE DEL COMPONENTE Y VARIABLES
+   ============================================================ */
+
+:host {
+  --color-primary: #1e3a8a;
+  --color-primary-light: #3b82f6;
+  --color-accent: #8b5cf6;
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #1e293b;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-success: #10b981;
+  --color-success-bg: #ecfdf5;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fffbeb;
+  --color-danger: #ef4444;
+  --color-danger-bg: #fef2f2;
+  --color-info: #3b82f6;
+  --color-info-bg: #eff6ff;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: block;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  color: var(--color-text);
+  background: var(--color-bg);
+  box-sizing: border-box;
+}
+
+
+/* ============================================================
+   VISTA MES - ENCABEZADOS Y CUADRÍCULA
+   ============================================================ */
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+  text-align: center;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.calendar-grid button.month-day-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border: 1px solid #d9e2ec;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #182230;
+  box-shadow: none;
+  box-sizing: border-box;
+  cursor: pointer;
+
+  transition:
+  border-color 0.15s ease,
+  background 0.15s ease,
+  box-shadow 0.15s ease;
+  
+  min-height: 92px;
+  padding: 6px;
+  position: relative;
+}
+
+/* ============================================================
+   INDICADORES DE ESTADO EN VISTA MES
+   ============================================================ */
+
+.dots-container {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 3px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-available {
+  background-color: #16a34a;
+}
+
+.dot-reserved {
+  background-color: #2563eb;
+}
+
+.dot-reschedule {
+  background-color: #d97706;
+}
+
+.dot-cancelled {
+  background-color: #dc2626;
+}
+
+.dot-disabled {
+  background-color: #64748b;
+}
+
+.calendar-grid button.month-day-cell:hover {
+  background: #f8fbff;
+  border-color: #aebdcb;
+}
+
+.calendar-grid button.month-day-cell.today {
+  background: #edf5ff;
+  border-color: #9fc5ec;
+}
+
+.calendar-grid button.month-day-cell.selected {
+  outline: none;
+  border-color: #075ea5;
+  background: #ffffff;
+  color: #182230;
+  box-shadow: 0 0 0 2px rgba(7, 94, 165, 0.12);
+}
+
+.calendar-grid button.month-day-cell.today.selected {
+  background: #edf5ff;
+}
+
+/* ============================================================
+   VISTA MES - CONTENIDO DE CADA DÍA
+   ============================================================ */
+
+.month-day-header {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-height: 22px;
+}
+
+.month-day-number {
+  line-height: 1;
+  color: #344054;
+  padding: 1px 3px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.month-today-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #075ea5;
+  color: #ffffff;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.month-day-body {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 3px;
+  padding-top: 6px;
+}
+
+/* DISPONIBLE - VERDE */
+
+.month-availability-summary {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+  box-sizing: border-box;
+  min-height: 23px;
+  padding: 4px 6px;
+  border-radius: 5px;
+
+  background: #f0fdf4;
+  color: #166534;
+
+  border: 1px solid #86efac;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.month-availability-dot {
+  flex-shrink: 0;
+
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #16a34a;
+}
+
+
+/* RESERVADO - AZUL */
+
+.month-reserved-summary {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #93c5fd;
+}
+
+.month-reserved-dot {
+  background: #2563eb;
+}
+
+.month-reschedule-summary {
+  background: #ccfbf1;
+  color: #115e59;
+}
+
+.month-reschedule-dot {
+  background: #0d9488;
+}
+
+.month-cancelled-summary {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.month-cancelled-dot {
+  background: #ea580c;
+}
+
+.month-disabled-summary {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.month-disabled-dot {
+  background: #64748b;
+}
+
+.calendar-grid button.has-disabled {
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+}
+
+/* ============================================================
+   VISTA DÍA - CONTENEDOR Y ENCABEZADO
+   ============================================================ */
+
+.day-view {
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  background: #ffffff;
+  border-radius: 14px;
+}
+
+.day-view > h3 {
+  font-family: "Poppins", sans-serif;
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #182230;
+  text-transform: capitalize;
+}
+
+/* ============================================================
+   VISTA DÍA - DESCANSO HABITUAL
+   ============================================================ */
+
+.day-habitual-break-card {
+  width: 100%;
+  padding: 14px 16px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  box-sizing: border-box;
+
+  background: #f1f5fb;
+  border: 1px solid #d7e1ee;
+  border-radius: 10px;
+
+  cursor: default;
+}
+
+.day-habitual-break-main {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.day-habitual-break-time {
+  font-size: 15px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.day-habitual-break-badge {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 3px 9px;
+
+  border-radius: 999px;
+
+  background: #dde7f3;
+  color: #475569;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.day-habitual-break-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  font-size: 12px;
+  color: #64748b;
+}
+
+.day-habitual-break-duration {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* ============================================================
+   VISTA DÍA - TARJETAS DE DISPONIBILIDAD
+   ============================================================ */
+
+.day-availability-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #86efac;
+  border-radius: 12px;
+  background: #f0fdf4;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.day-availability-card:hover {
+  background: #dcfce7;
+  border-color: #4ade80;
+
+  box-shadow:
+    0 3px 10px
+    rgba(22, 163, 74, 0.10);
+}
+
+.day-availability-card:active {
+  transform: scale(0.995);
+}
+
+.day-availability-card-selected {
+  background: #dcfce7;
+  border-color: #16a34a;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(22, 163, 74, 0.14);
+}
+
+.day-availability-icon {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: #bbf7d0;
+  color: #166534;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.day-availability-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.day-availability-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.day-availability-time {
+  font-size: 15px;
+  font-weight: 600;
+  color: #182230;
+}
+
+.day-availability-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.day-availability-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.day-availability-duration {
+  font-size: 11px;
+  font-weight: 500;
+  color: #667085;
+}
+
+
+.day-reserved-card:hover {
+  background: #dbeafe;
+  border-color: #60a5fa;
+
+  box-shadow:
+    0 3px 10px
+    rgba(37, 99, 235, 0.10);
+}
+
+.day-reserved-card.day-availability-card-selected {
+  background: #dbeafe;
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(37, 99, 235, 0.14);
+}
+
+.day-reserved-icon {
+  background: #bfdbfe;
+  color: #1d4ed8;
+  font-size: 13px;
+}
+
+.day-reserved-badge {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+/* REPROGRAMACIÓN PENDIENTE - ÁMBAR */
+
+.day-reschedule-card {
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+
+.day-reschedule-card:hover {
+  background: #fef3c7;
+  border-color: #fbbf24;
+
+  box-shadow:
+    0 3px 10px
+    rgba(217, 119, 6, 0.10);
+}
+
+.day-reschedule-card.day-availability-card-selected {
+  background: #fef3c7;
+  border-color: #d97706;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(217, 119, 6, 0.14);
+}
+
+.day-reschedule-icon {
+  background: #fde68a;
+  color: #92400e;
+  font-size: 13px;
+}
+
+.day-reschedule-badge {
+  background: #d97706;
+  color: #ffffff;
+}
+
+/* CANCELADO - ROJO */
+
+.day-cancelled-card {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.day-cancelled-card:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+
+  box-shadow:
+    0 3px 10px
+    rgba(220, 38, 38, 0.10);
+}
+
+.day-cancelled-card.day-availability-card-selected {
+  background: #fee2e2;
+  border-color: #dc2626;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(220, 38, 38, 0.14);
+}
+
+.day-cancelled-icon {
+  background: #fecaca;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.day-cancelled-badge {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+/* INHABILITADO - GRIS */
+
+.day-disabled-card {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  cursor: default;
+}
+
+.day-disabled-card:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  box-shadow: none;
+}
+
+.day-disabled-icon {
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 15px;
+}
+
+.day-disabled-badge {
+  background: #64748b;
+  color: #ffffff;
+}
+
+.day-empty-state {
+  padding: 24px 16px;
+  text-align: center;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.day-view,
+.week-calendar,
+.calendar-weekdays {
+  margin-top: 16px;
+}
+
+/* ============================================================
+   VISTA SEMANA - TIME GRID
+   ============================================================ */
+
+.week-calendar {
+  --week-hour-height: 68px;
+
+  width: 100%;
+  /* El margin-top individual de 14px se removió a favor de la regla unificada de 16px */
+
+  background: #ffffff;
+
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+
+  overflow: hidden;
+
+  box-shadow: var(--shadow-sm);
+}
+
+
+.week-calendar-scroll {
+  width: 100%;
+
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: thin;
+}
+
+
+.week-schedule-grid {
+  display: grid;
+
+  grid-template-columns:
+    56px repeat(7, minmax(105px, 1fr));
+
+  width: 100%;
+  min-width: 791px;
+}
+
+
+/* ============================================================
+   ENCABEZADO
+   ============================================================ */
+
+.week-grid-corner,
+.week-day-header {
+  height: 58px;
+  min-height: 58px;
+
+  box-sizing: border-box;
+
+  background: #f8fafc;
+
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #dce4ec;
+}
+
+
+.week-grid-corner {
+  position: sticky;
+  left: 0;
+
+  z-index: 8;
+}
+
+
+.week-day-header {
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 2px;
+}
+
+
+.week-day-name {
+  color: #667085;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+  letter-spacing: 0.45px;
+}
+
+
+.week-day-number {
+  width: 28px;
+  height: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #182230;
+
+  border-radius: 50%;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+
+.week-day-header.today {
+  background: #f3f8ff;
+}
+
+
+.week-day-header.today
+.week-day-name {
+  color: #075ea5;
+}
+
+
+.week-day-header.today
+.week-day-number {
+  color: #ffffff;
+  background: #075ea5;
+}
+
+
+/* ============================================================
+   COLUMNA DE HORAS
+   ============================================================ */
+
+.week-time-column {
+  position: relative;
+
+  height: var(--week-hour-height);
+  min-height: var(--week-hour-height);
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  border-right: 1px solid #dfe6ee;
+  border-bottom: 1px solid #e5eaf0;
+}
+
+
+.week-time-column span {
+  position: absolute;
+
+  top: 5px;
+  right: 8px;
+
+  color: #667085;
+
+  font-size: 10px;
+  font-weight: 500;
+
+  line-height: 1;
+
+  white-space: nowrap;
+}
+
+
+/* ============================================================
+   CELDAS DEL TIME GRID
+   ============================================================ */
+
+.week-calendar-cell {
+  position: relative;
+
+  height: var(--week-hour-height);
+  min-height: var(--week-hour-height);
+
+  padding: 0;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  border-right: 1px solid #e5eaf0;
+  border-bottom: 1px solid #e5eaf0;
+
+  overflow: visible;
+}
+
+
+.week-calendar-cell.today-column {
+  background: #fbfdff;
+}
+
+
+/*
+ * Línea interna de media hora.
+ * Ayuda a interpretar visualmente posiciones como
+ * 08:30, 09:30, 10:30, etc.
+ */
+.week-calendar-cell::after {
+  content: "";
+
+  position: absolute;
+
+  top: 50%;
+  left: 0;
+  right: 0;
+
+  z-index: 0;
+
+  border-top: 1px dashed #eef2f6;
+
+  pointer-events: none;
+}
+
+
+/* ============================================================
+   BLOQUES POSICIONADOS
+   ============================================================ */
+
+.week-positioned-block {
+  position: absolute;
+
+  left: 4px;
+  right: 4px;
+
+  width: auto;
+
+  box-sizing: border-box;
+
+  margin: 0;
+
+  overflow: hidden;
+}
+
+
+/* ============================================================
+   DISPONIBILIDAD
+   ============================================================ */
+
+.week-availability-card.week-positioned-block {
+  z-index: 4;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 1.5px;
+
+  min-height: 0;
+
+  padding: 3px 5px;
+  box-sizing: border-box;
+  overflow: hidden;
+
+  background: #eafaf1;
+  color: #145f3d;
+
+  border: 1px solid #9ee0bd;
+  border-radius: 5px;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+
+.week-availability-card.week-positioned-block:hover {
+  z-index: 7;
+
+  background: #ddf7e8;
+
+  border-color: #5fcf94;
+
+  box-shadow:
+    0 2px 5px
+    rgba(16, 185, 129, 0.12);
+}
+
+
+.week-availability-card-selected {
+  z-index: 8 !important;
+
+  border-color: #168454 !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(22, 132, 84, 0.13);
+}
+
+
+/* Primera línea: horario */
+
+.week-availability-time {
+  min-width: 0;
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 4px;
+
+  color: #126844;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.15;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+
+.week-availability-dot {
+  width: 5px;
+  height: 5px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #168454;
+}
+
+
+/* Segunda línea */
+
+.week-availability-status {
+  min-width: 0;
+  width: 100%;
+
+  color: #147749;
+
+  font-size: 9px;
+  font-weight: 600;
+
+  line-height: 1.15;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  box-sizing: border-box;
+}
+
+
+.week-availability-duration {
+  min-width: 0;
+  width: 100%;
+
+  color: #667085;
+
+  font-size: 8.5px;
+  font-weight: 500;
+
+  line-height: 1.15;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  box-sizing: border-box;
+}
+
+
+/* ============================================================
+   DESCANSO HABITUAL
+   ============================================================ */
+
+.week-habitual-break-inline.week-positioned-block {
+  z-index: 3;
+
+  min-height: 0;
+
+  display: flex;
+  align-items: flex-start;
+
+  padding: 4px 6px;
+
+  background: #f1f5fb;
+
+  border: 1px solid #d7e1ee;
+  border-radius: 5px;
+
+  color: #475569;
+
+  overflow: hidden;
+}
+
+
+.week-habitual-break-inline-header {
+  width: 100%;
+
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+}
+
+
+.week-habitual-break-time {
+  flex-shrink: 0;
+
+  color: #334155;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.05;
+
+  white-space: nowrap;
+}
+
+
+.week-habitual-break-badge {
+  min-width: 0;
+
+  padding: 2px 5px;
+
+  background: #dce6f2;
+  color: #52657a;
+
+  border-radius: 999px;
+
+  font-size: 8px;
+  font-weight: 600;
+
+  line-height: 1;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ============================================================
+   COMPORTAMIENTO PARA BLOQUES MUY PEQUEÑOS
+   ============================================================ */
+
+/*
+ * No imponemos una altura mínima.
+ *
+ * Si en el futuro existe un bloque de 15 minutos,
+ * ocupará 15px porque una hora representa 60px.
+ *
+ * El contenido excedente simplemente se oculta,
+ * igual que en los calendarios basados en tiempo.
+ */
+.week-positioned-block {
+  min-height: 0;
+}
+
+/* ============================================================
+   ESTADOS - VISTA SEMANA
+   ============================================================ */
+
+
+/* Mantener base azul de Reservado en vista Día */
+
+.day-reserved-card {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+
+/* ============================================================
+   RESERVADO - AZUL
+   ============================================================ */
+
+.week-availability-card.week-reserved-card {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-left: 3px solid #2563eb;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.06);
+}
+
+.week-availability-card.week-reserved-card:hover {
+  background: #dbeafe;
+  border-color: #60a5fa;
+}
+
+.week-reserved-card .week-availability-time,
+.week-reserved-card .week-availability-status {
+  color: #1d4ed8;
+}
+
+.week-reserved-card .week-availability-duration {
+  color: #2563eb;
+}
+
+.week-reserved-card .week-availability-dot {
+  background: #2563eb;
+}
+
+
+/* ============================================================
+   REPROGRAMACIÓN PENDIENTE - ÁMBAR
+   ============================================================ */
+
+.week-availability-card.week-reschedule-card {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-left: 3px solid #d97706;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(217, 119, 6, 0.06);
+}
+
+.week-availability-card.week-reschedule-card:hover {
+  background: #fef3c7;
+  border-color: #fbbf24;
+}
+
+.week-reschedule-card .week-availability-time,
+.week-reschedule-card .week-availability-status {
+  color: #92400e;
+}
+
+.week-reschedule-card .week-availability-duration {
+  color: #d97706;
+}
+
+.week-reschedule-card .week-availability-dot {
+  background: #d97706;
+}
+
+
+/* ============================================================
+   CANCELADO - ROJO
+   ============================================================ */
+
+.week-availability-card.week-cancelled-card {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 3px solid #dc2626;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(220, 38, 38, 0.06);
+}
+
+.week-availability-card.week-cancelled-card:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+}
+
+.week-cancelled-card .week-availability-time,
+.week-cancelled-card .week-availability-status {
+  color: #b91c1c;
+}
+
+.week-cancelled-card .week-availability-duration {
+  color: #dc2626;
+}
+
+.week-cancelled-card .week-availability-dot {
+  background: #dc2626;
+}
+
+
+/* ============================================================
+   INHABILITADO - GRIS
+   ============================================================ */
+
+.week-availability-card.week-disabled-card {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  cursor: default;
+}
+
+.week-availability-card.week-disabled-card
+.week-availability-time,
+.week-availability-card.week-disabled-card
+.week-availability-status {
+  color: #475569;
+}
+
+.week-availability-card.week-disabled-card
+.week-availability-duration {
+  color: #64748b;
+}
+
+.week-availability-card.week-disabled-card
+.week-availability-dot {
+  background: #64748b;
+}
+
+/* ============================================================
+   SELECCIÓN SEGÚN ESTADO - VISTA SEMANA
+   ============================================================ */
+
+
+/* Reservado seleccionado - azul */
+
+.week-reserved-card.week-availability-card-selected {
+  border-color: #2563eb !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(37, 99, 235, 0.16) !important;
+}
+
+
+/* Reprogramación seleccionada - ámbar */
+
+.week-reschedule-card.week-availability-card-selected {
+  border-color: #d97706 !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(217, 119, 6, 0.16) !important;
+}
+
+
+/* Cancelado seleccionado - rojo */
+
+.week-cancelled-card.week-availability-card-selected {
+  border-color: #dc2626 !important;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(220, 38, 38, 0.16) !important;
+}
+
+/* ============================================================
+   DETALLE DE FECHA SELECCIONADA
+   ============================================================ */
+
+.selected-date {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.selected-date h3 {
+  margin: 0 0 12px;
+  font-family: "Poppins", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.selected-date p {
+  margin: 0 0 14px;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.selected-date p strong {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* ============================================================
+   BADGES DE ESTADO
+   ============================================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
+.badge-success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.badge-warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.badge-danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.badge-info {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+/* ============================================================
+   LAYOUT PRINCIPAL Y SIDEBAR HU-03
+   ============================================================ */
+
+.calendar-layout {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  height: 100%;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.calendar-main-content {
+  flex: 1;
+
+  width: 100%;
+  min-width: 0;
+
+  container-type: inline-size;
+  container-name: calendar-main;
+
+  transition: all 0.3s ease;
+}
+
+.calendar-sidebar-wrapper {
+  background: #ffffff;
+  border: 1.5px solid #d9e3ee;
+  border-radius: 24px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.calendar-sidebar-wrapper.open {
+  width: 380px;
+  background: #ffffff;
+  border: 1.5px solid #d9e3ee;
+  border-radius: 24px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+/* ============================================================
+   ESTADO VACÍO DEL PANEL DE CITA
+   ============================================================ */
+
+.empty-appointment-state {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.empty-appointment-state .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.empty-appointment-state .title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.empty-appointment-state .icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 4px;
+}
+
+.empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+  padding: 32px;
+  background-color: #F8FAFC;
+  border-radius: 12px;
+  border: 1px dashed #CBD5E1;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+
+
+/* ============================================================
+   RESPONSIVE - TABLET GRANDE
+   ============================================================ */
+@media (max-width: 1100px) {
+
+  :host {
+    padding: 14px;
+  }
+
+}
+
+@media (max-width: 1024px) {
+  .calendar-sidebar-wrapper.open {
+    width: 320px;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE - TABLET Y MÓVIL
+   ============================================================ */
+
+@media (max-width: 768px) {
+  :host {
+    padding: 12px;
+  }
+
+  .calendar-header h2 {
+    font-size: 0.95rem;
+  }
+
+  .calendar-view-buttons button {
+    padding: 5px 12px;
+    font-size: 0.8rem;
+  }
+
+  .calendar-layout {
+    flex-direction: column;
+  }
+
+  .calendar-sidebar-wrapper.open {
+    width: 100%;
+    height: auto;
+  }
+
+  .calendar-grid button.month-day-cell {
+    min-height: 82px;
+    padding: 5px;
+  }
+
+  .month-day-header {
+    min-height: 20px;
+  }
+
+  .month-day-number {
+    font-size: 10px;
+  }
+
+  .month-today-badge {
+    padding: 2px 4px;
+    font-size: 9px;
+  }
+
+  .month-availability-summary {
+    padding: 3px 4px;
+    font-size: 9px;
+  }
+
+  .month-availability-dot {
+    width: 4px;
+    height: 4px;
+  }
+}
+
+/* ============================================================
+    RESPONSIVE - VISTA DÍA EN MÓVIL
+   ============================================================ */
+
+@media (max-width: 600px) {
+  .day-view {
+    padding: 12px;
+  }
+
+  .day-availability-card {
+    align-items: flex-start;
+    padding: 13px;
+  }
+
+  .day-availability-header {
+    align-items: flex-start;
+  }
+
+  .day-availability-duration {
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE - VISTA SEMANA
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   VENTANA REDUCIDA / PANEL DERECHO ABIERTO
+   ------------------------------------------------------------ */
+
+@container calendar-main (max-width: 950px) {
+
+  .week-schedule-grid {
+    grid-template-columns:
+      48px repeat(7, minmax(0, 1fr));
+  }
+
+
+  .week-grid-corner,
+  .week-day-header {
+    height: 52px;
+    min-height: 52px;
+  }
+
+
+  .week-day-name {
+    font-size: 9px;
+    letter-spacing: 0.2px;
+  }
+
+
+  .week-day-number {
+    width: 25px;
+    height: 25px;
+
+    font-size: 12px;
+  }
+
+
+  .week-time-column span {
+    right: 5px;
+
+    font-size: 9px;
+  }
+
+
+  .week-positioned-block {
+    left: 2px;
+    right: 2px;
+  }
+
+
+  .week-availability-card.week-positioned-block {
+    padding: 3px 4px;
+
+    column-gap: 3px;
+
+    border-radius: 4px;
+  }
+
+
+  .week-availability-time {
+  width: 100%;
+
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 4px;
+
+  color: #166534;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.1;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+  .week-availability-dot {
+  width: 5px;
+  height: 5px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #16a34a;
+}
+
+
+  .week-availability-status {
+  width: 100%;
+
+  color: #166534;
+
+  font-size: 9px;
+  font-weight: 600;
+
+  line-height: 1.05;
+
+  white-space: nowrap;
+}
+
+
+  .week-availability-duration {
+    font-size: 7px;
+  }
+
+
+  .week-habitual-break-inline.week-positioned-block {
+    padding: 3px 4px;
+  }
+
+
+  .week-habitual-break-time {
+    font-size: 8px;
+  }
+
+
+  .week-habitual-break-badge {
+    padding: 2px 3px;
+
+    font-size: 7px;
+  }
+
+}
+
+
+/* ------------------------------------------------------------
+   TABLET / CONTENEDOR MUY REDUCIDO
+   ------------------------------------------------------------ */
+
+@container calendar-main (max-width: 720px) {
+
+  .week-schedule-grid {
+    grid-template-columns:
+      42px repeat(7, minmax(0, 1fr));
+  }
+
+
+  .week-grid-corner,
+  .week-day-header {
+    height: 48px;
+    min-height: 48px;
+  }
+
+
+  .week-day-name {
+    font-size: 8px;
+    letter-spacing: 0;
+  }
+
+
+  .week-day-number {
+    width: 22px;
+    height: 22px;
+
+    font-size: 11px;
+  }
+
+
+  .week-time-column span {
+    right: 4px;
+
+    font-size: 8px;
+  }
+
+
+  .week-positioned-block {
+    left: 1px;
+    right: 1px;
+  }
+
+
+  /*
+   * Con poco ancho damos prioridad
+   * al horario.
+   */
+  .week-availability-card.week-positioned-block {
+    display: block;
+
+    padding: 3px;
+  }
+
+
+  .week-availability-time {
+    font-size: 7px;
+  }
+
+
+  .week-availability-status,
+  .week-availability-duration {
+    display: none;
+  }
+
+
+  .week-habitual-break-inline.week-positioned-block {
+    padding: 3px;
+  }
+
+
+  .week-habitual-break-time {
+    font-size: 7px;
+  }
+
+
+  .week-habitual-break-badge {
+    display: none;
+  }
+
+}
+
+
+/* ------------------------------------------------------------
+   MÓVIL
+   ------------------------------------------------------------ */
+
+@container calendar-main (max-width: 520px) {
+
+  /*
+   * A este tamaño ya no conviene seguir
+   * comprimiendo las siete columnas.
+   *
+   * Se activa scroll horizontal para
+   * conservar legibilidad.
+   */
+  .week-calendar-scroll {
+    overflow-x: auto;
+  }
+
+
+  .week-schedule-grid {
+    width: max-content;
+
+    min-width: 700px;
+
+    grid-template-columns:
+      44px repeat(7, 94px);
+  }
+
+
+  .week-positioned-block {
+    left: 2px;
+    right: 2px;
+  }
+
+
+  .week-availability-time {
+    font-size: 8px;
+  }
+
+}
+
+/* ============================================================
+   VISTA SEMANA - SLOT DISPONIBLE POSICIONADO
+   ============================================================ */
+
+.week-slot-block {
+  z-index: 4;
+
+  min-height: 0;
+
+  overflow: visible;
+}
+
+
+.week-slot-block:hover {
+  z-index: 7;
+}
+
+
+.week-slot-main {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 1.5px;
+  box-sizing: border-box;
+  padding: 4px 22px 4px 6px;
+  overflow: hidden;
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #86efac;
+  border-radius: 5px;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.week-slot-main:hover {
+  background: #dcfce7;
+  border-color: #4ade80;
+
+  box-shadow:
+    0 2px 5px
+    rgba(22, 163, 74, 0.12);
+}
+
+
+.week-slot-block.week-availability-card-selected
+.week-slot-main {
+  border-color: #16a34a;
+
+  box-shadow:
+    0 0 0 2px
+    rgba(22, 163, 74, 0.15);
+}
+
+
+/* ============================================================
+   INHABILITACIÓN RÁPIDA DESDE DISPONIBILIDAD
+   ============================================================ */
+
+.week-quick-disable {
+  position: absolute;
+
+  top: 3px;
+  right: 3px;
+
+  z-index: 8;
+
+  width: 17px;
+  height: 17px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.9);
+  color: #64748b;
+
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+
+.week-quick-disable:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+
+/* ============================================================
+   ASEGURAR BLOQUES POSICIONADOS DE ESTADOS
+   ============================================================ */
+
+.week-availability-card.week-positioned-block {
+  min-height: 0;
+
+  overflow: hidden;
+}
+
+
+.week-disabled-card.week-positioned-block {
+  z-index: 6;
+}
+
+
+.week-reserved-card.week-positioned-block,
+.week-reschedule-card.week-positioned-block,
+.week-cancelled-card.week-positioned-block {
+  z-index: 5;
+}
+
+
+/* ============================================================
+   RESPONSIVE DE SLOT SEMANAL
+   ============================================================ */
+
+@container calendar-main (max-width: 950px) {
+
+  .week-slot-main {
+    padding:
+      3px 20px
+      3px 4px;
+  }
+
+  .week-quick-disable {
+    width: 15px;
+    height: 15px;
+
+    font-size: 10px;
+  }
+
+}
+
+
+@container calendar-main (max-width: 720px) {
+
+  .week-slot-main {
+    display: block;
+
+    padding:
+      3px 18px
+      3px 3px;
+  }
+
+}
+
+
+@container calendar-main (max-width: 520px) {
+
+  .week-slot-main {
+    padding:
+      3px 19px
+      3px 4px;
+  }
+
+}
+
+/* ============================================================
+   HU-04 - FORMULARIO AGENDAR CITA
+   ============================================================ */
+
+.appointment-booking-panel {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 20px;
+
+  background: #ffffff;
+  color: #172b4d;
+
+  border: 1px solid #e5edf5;
+  border-radius: 22px;
+}
+
+
+/* ============================================================
+   ENCABEZADO
+   ============================================================ */
+
+.booking-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+
+  border-bottom: 1px solid #edf1f5;
+}
+
+
+.booking-eyebrow {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #0f766e;
+
+  font-size: 11px;
+  font-weight: 600;
+}
+
+
+.booking-header h2 {
+  margin: 0;
+
+  color: #172b4d;
+
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+
+.booking-header .icon-btn {
+  width: 34px;
+  height: 34px;
+
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  padding: 0;
+
+  border: 1px solid #dbe4ee;
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: #64748b;
+
+  font-size: 20px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+
+.booking-header .icon-btn:hover {
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+
+/* ============================================================
+   RESUMEN DEL HORARIO SELECCIONADO
+   ============================================================ */
+
+.booking-schedule-summary {
+  display: grid;
+
+  grid-template-columns:
+    36px
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 10px;
+
+  margin-bottom: 18px;
+  padding: 12px;
+
+  border: 1px solid #dce5ef;
+  border-radius: 10px;
+
+  background: #f8fafc;
+}
+
+
+.booking-summary-icon {
+  width: 36px;
+  height: 36px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 8px;
+
+  background: #e0f2fe;
+  color: #0369a1;
+
+  font-size: 18px;
+}
+
+
+.booking-summary-info {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+
+.booking-summary-info strong {
+  color: #1e293b;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+.booking-summary-info span {
+  color: #334155;
+
+  font-size: 11px;
+  font-weight: 500;
+}
+
+
+.booking-summary-info small {
+  color: #64748b;
+
+  font-size: 10px;
+}
+
+
+.booking-status {
+  align-self: start;
+
+  padding: 4px 8px;
+
+  border-radius: 999px;
+
+  background: #dcfce7;
+  color: #15803d;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+
+/* ============================================================
+   FORMULARIO
+   ============================================================ */
+
+.booking-form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 14px;
+}
+
+
+.booking-field {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+}
+
+
+.booking-field > label,
+.booking-field legend {
+  margin: 0;
+
+  color: #27364b;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+.booking-field label span,
+.booking-field legend span {
+  color: #dc2626;
+}
+
+
+.booking-field input[type="text"],
+.booking-field textarea {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 10px 11px;
+
+  border: 1px solid #cbd8e6;
+  border-radius: 8px;
+
+  outline: none;
+
+  background: #ffffff;
+  color: #172b4d;
+
+  font: inherit;
+  font-size: 12px;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+
+.booking-field input[type="text"] {
+  min-height: 40px;
+}
+
+
+.booking-field input[type="text"]:focus,
+.booking-field textarea:focus {
+  border-color: #1681c4;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(22, 129, 196, 0.10);
+}
+
+
+.booking-field textarea {
+  min-height: 84px;
+
+  resize: vertical;
+}
+
+
+.booking-field > small {
+  color: #718096;
+
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+
+/* ============================================================
+   MODALIDAD
+   ============================================================ */
+
+.booking-modality-options {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 7px;
+}
+
+
+.booking-modality-option {
+  min-height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  box-sizing: border-box;
+
+  padding: 8px 10px;
+
+  border: 1px solid #dbe4ee;
+  border-radius: 8px;
+
+  background: #f8fafc;
+  color: #475569;
+
+  font-size: 11px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+
+.booking-modality-option:hover {
+  background: #f1f6fa;
+}
+
+
+.booking-modality-option:has(input:checked) {
+  border-color: #1681c4;
+
+  background: #eef7ff;
+  color: #075985;
+}
+
+
+.booking-modality-option input {
+  margin: 0;
+
+  accent-color: #0875b5;
+}
+
+
+/* ============================================================
+   RESULTADOS DE BÚSQUEDA DE ALUMNOS
+   ============================================================ */
+
+.student-search-results {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  max-height: 180px;
+
+  margin-top: 2px;
+  padding: 4px;
+
+  overflow-y: auto;
+
+  border: 1px solid #dbe5ef;
+  border-radius: 10px;
+
+  background: #ffffff;
+}
+
+
+.student-result {
+  position: relative;
+
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  gap: 2px;
+
+  box-sizing: border-box;
+
+  padding: 9px 32px 9px 10px;
+
+  border: 1px solid #dce6f0;
+  border-radius: 8px;
+
+  background: #f8fbff;
+  color: #172b45;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+
+.student-result strong {
+  color: #172b45;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+.student-result span,
+.student-result small {
+  color: #64748b;
+
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+
+.student-result:hover {
+  border-color: #9bc7e8;
+
+  background: #eef7ff;
+
+  box-shadow:
+    0 2px 6px
+    rgba(15, 76, 129, 0.07);
+}
+
+
+/* ============================================================
+   ACCIONES
+   ============================================================ */
+
+.booking-actions {
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 8px;
+
+  margin-top: 4px;
+}
+
+
+.booking-actions button {
+  min-height: 40px;
+
+  padding: 9px 12px;
+
+  border-radius: 8px;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.booking-cancel-button {
+  border: 1px solid #dbe4ee;
+
+  background: #ffffff;
+  color: #475569;
+}
+
+
+.booking-cancel-button:hover {
+  background: #f8fafc;
+}
+
+
+.booking-submit-button {
+  border: 1px solid #086ca8;
+
+  background: #086ca8;
+  color: #ffffff;
+}
+
+
+.booking-submit-button:hover {
+  background: #075985;
+}
+
+
+/* ============================================================
+   PANEL LATERAL
+   ============================================================ */
+
+.calendar-sidebar-wrapper.open {
+  width: 380px;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1024px) {
+
+  .calendar-sidebar-wrapper.open {
+    width: 340px;
+  }
+
+}
+
+
+@media (max-width: 768px) {
+
+  .calendar-sidebar-wrapper.open {
+    width: 100%;
+  }
+
+
+  .appointment-booking-panel {
+    padding: 16px;
+  }
+
+}
+
+
+@media (max-width: 480px) {
+
+  .booking-schedule-summary {
+    grid-template-columns:
+      34px
+      minmax(0, 1fr);
+  }
+
+
+  .booking-status {
+    grid-column: 2;
+  }
+
+
+  .booking-actions {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+/* ============================================================
+   NOTIFICACIONES TOAST
+   ============================================================ */
+
+.calendar-toast {
+  position: fixed;
+  top: 22px;
+  right: 24px;
+
+  z-index: 5000;
+
+  width: min(
+    390px,
+    calc(100vw - 32px)
+  );
+
+  display: grid;
+
+  grid-template-columns:
+    40px
+    minmax(0, 1fr)
+    30px;
+
+  align-items: center;
+
+  gap: 12px;
+
+  box-sizing: border-box;
+
+  padding: 13px 12px 13px 14px;
+
+  border: 1px solid #dbe5ef;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 12px 30px
+    rgba(15, 23, 42, 0.16);
+
+  animation:
+    calendar-toast-enter
+    0.22s ease-out;
+}
+
+
+/* ============================================================
+   ICONO
+   ============================================================ */
+
+.calendar-toast-icon {
+  width: 38px;
+  height: 38px;
+
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  font-size: 18px;
+  font-weight: 700;
+}
+
+
+/* ============================================================
+   CONTENIDO
+   ============================================================ */
+
+.calendar-toast-content {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+
+.calendar-toast-content strong {
+  color: #172b4d;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  line-height: 1.3;
+}
+
+
+.calendar-toast-content span {
+  color: #64748b;
+
+  font-size: 11px;
+
+  line-height: 1.4;
+}
+
+
+/* ============================================================
+   BOTÓN CERRAR
+   ============================================================ */
+
+.calendar-toast-close {
+  width: 28px;
+  height: 28px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: none;
+  border-radius: 7px;
+
+  background: transparent;
+  color: #64748b;
+
+  font-size: 18px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+
+.calendar-toast-close:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+
+/* ============================================================
+   SUCCESS
+   ============================================================ */
+
+.calendar-toast-success {
+  border-color: #bbf7d0;
+
+  box-shadow:
+    0 12px 30px
+    rgba(21, 128, 61, 0.10);
+}
+
+
+.calendar-toast-success
+.calendar-toast-icon {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+
+/* ============================================================
+   WARNING
+   ============================================================ */
+
+.calendar-toast-warning {
+  border-color: #fde68a;
+
+  box-shadow:
+    0 12px 30px
+    rgba(161, 98, 7, 0.10);
+}
+
+
+.calendar-toast-warning
+.calendar-toast-icon {
+  background: #fef3c7;
+  color: #a16207;
+}
+
+
+/* ============================================================
+   ERROR
+   ============================================================ */
+
+.calendar-toast-error {
+  border-color: #fecaca;
+
+  box-shadow:
+    0 12px 30px
+    rgba(220, 38, 38, 0.10);
+}
+
+
+.calendar-toast-error
+.calendar-toast-icon {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+
+/* ============================================================
+   ANIMACIÓN
+   ============================================================ */
+
+@keyframes calendar-toast-enter {
+
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(-10px)
+      scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 600px) {
+
+  .calendar-toast {
+    top: 14px;
+    right: 14px;
+    left: 14px;
+
+    width: auto;
+  }
+
+}
+
+
+.patient-date-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.patient-date-modal {
+  width: min(100%, 560px);
+  max-height: min(80vh, 680px);
+  overflow-y: auto;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+}
+
+.patient-date-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.patient-date-modal-header h2 {
+  margin: 0;
+  color: #182230;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.patient-date-modal-header p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.patient-date-modal-close {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 1.6rem;
+  cursor: pointer;
+}
+
+.patient-date-modal-description {
+  margin: 18px 0 12px;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.patient-date-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.patient-date-modal-slot {
+  text-align: left;
+  cursor: pointer;
+}
+
+.patient-date-modal-empty {
+  margin: 20px 0;
+  padding: 24px 16px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+  text-align: center;
+}
+
+.patient-date-modal-empty p:first-child {
+  margin: 0 0 8px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.patient-date-modal-empty p:last-child {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.patient-date-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.patient-date-modal-cancel {
+  padding: 10px 18px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #334155;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.patient-date-modal-cancel:hover,
+.patient-date-modal-close:hover {
+  background: #e2e8f0;
+}
+
+@media (max-width: 600px) {
+  .patient-date-modal-overlay {
+    padding: 12px;
+  }
+
+  .patient-date-modal {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .patient-date-modal-header h2 {
+    font-size: 1.15rem;
+  }
+}
