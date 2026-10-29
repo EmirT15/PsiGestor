@@ -3,21 +3,29 @@ services:
   frontend:
     build: ./frontend
     container_name: psigestor_frontend
+    command: npm run start -- --host 0.0.0.0 --poll 1000
     ports:
       - "4200:4200"
     volumes:
-    - ./frontend:/app
-    - /app/node_modules
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
 
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: psigestor_backend
     ports:
       - "5000:5000"
     env_file:
       - ./backend/.env
+
+    volumes:
+      - ./backend:/app
+      - ./database:/database
+
     depends_on:
       - postgres
 

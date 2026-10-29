@@ -1,0 +1,88 @@
+<header class="header-container">
+  <div class="header-content">
+    
+    <!-- ZONA 1: BRANDING / IDENTIDAD DEL SISTEMA (IZQUIERDA) -->
+    <div class="brand-zone" routerLink="/calendar">
+      <img src="logo-psigestor.svg" alt="PsiGestor Logo" class="brand-logo" />
+      <span class="brand-title">PsiGestor</span>
+    </div>
+
+    <!-- BOTÓN MENÚ MÓVIL -->
+    <button 
+      class="mobile-toggle" 
+      (click)="toggleMobileMenu()" 
+      aria-label="Abrir menú de navegación"
+    >
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+
+    <!-- ZONA 2: MENÚ DE NAVEGACIÓN (VISUALMENTE CENTRADO) -->
+    <nav class="nav-zone" [class.is-open]="isMobileMenuOpen()">
+      <ul class="nav-list">
+        @for (option of navOptions; track option.route) {
+          <li class="nav-item">
+            <a 
+              [routerLink]="option.route" 
+              routerLinkActive="active-link"
+              class="nav-link"
+              (click)="isMobileMenuOpen.set(false)"
+            >
+              {{ option.label }}
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <!-- ZONA 3: PERFIL DE LA PSICÓLOGA CON SUBMENÚ (DERECHA) -->
+    @if (currentUser(); as user) {
+      <div class="user-zone-container">
+        <button 
+          type="button" 
+          class="user-zone-trigger" 
+          (click)="toggleProfileMenu($event)"
+          [class.active]="isProfileMenuOpen()"
+          aria-haspopup="true"
+          [attr.aria-expanded]="isProfileMenuOpen()"
+        >
+          <div class="user-info">
+            <span class="user-name">{{ user.name }}</span>
+            <span class="user-role">
+              {{ user.role === 'psicologo' ? 'Psicóloga' : user.role }}
+            </span>
+          </div>
+
+          <div class="avatar-container">
+            @if (user.avatarUrl) {
+              <img [src]="user.avatarUrl" [alt]="user.name" class="avatar-img" />
+            } @else {
+              <div class="avatar-fallback">
+                {{ getInitials(user.name) }}
+              </div>
+            }
+          </div>
+
+          <span class="dropdown-chevron" [class.rotated]="isProfileMenuOpen()">▾</span>
+        </button>
+
+        <!-- SUBMENÚ DESPLEGABLE DEL PERFIL -->
+        @if (isProfileMenuOpen()) {
+          <div class="profile-dropdown">
+            <div class="dropdown-header">
+              <span class="dropdown-user-name">{{ user.name }}</span>
+              <span class="dropdown-user-email">{{ user.email }}</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <button type="button" class="dropdown-item logout-item" (click)="onLogout()">
+              <span class="dropdown-icon" aria-hidden="true">🚪</span>
+              Cerrar sesión
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+</header>

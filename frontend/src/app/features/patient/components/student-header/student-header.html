@@ -1,0 +1,66 @@
+<header class="header-container">
+  <div class="header-content">
+
+    <!-- BRANDING / IDENTIDAD DEL SISTEMA -->
+    <div class="brand-zone" routerLink="/portal-alumno">
+      <img src="logo-psigestor.svg" alt="PsiGestor Logo" class="brand-logo" />
+      <span class="brand-title">PsiGestor</span>
+    </div>
+
+    <!-- BOTÓN MENÚ MÓVIL -->
+    <button 
+      class="mobile-toggle" 
+      (click)="toggleMenu()" 
+      aria-label="Toggle navigation menu"
+    >
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+
+    <!-- OPCIONES DE NAVEGACIÓN PERMITIDAS -->
+    <nav class="nav-zone" [class.is-open]="isMobileMenuOpen()">
+      <ul class="nav-list">
+        @for (option of navOptions; track option.route) {
+          <li class="nav-item">
+            <a 
+              [routerLink]="option.route" 
+              routerLinkActive="active-link"
+              class="nav-link"
+              (click)="isMobileMenuOpen.set(false)"
+            >
+              {{ option.label }}
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <!-- DATOS DEL ALUMNO AUTENTICADO (SOLO LECTURA) -->
+    @if (displayStudent; as currentStudent) {
+      <div class="user-zone">
+        <div class="user-info">
+          <span class="user-name">{{ currentStudent.name }}</span>
+          <span class="user-role">
+            @if (currentStudent.studentId) {
+              Matrícula: {{ currentStudent.studentId }} • {{ currentStudent.role }}
+            } @else {
+              {{ currentStudent.role }}
+            }
+          </span>
+        </div>
+
+        <div class="avatar-container">
+          @if (currentStudent.photoUrl) {
+            <img [src]="currentStudent.photoUrl" [alt]="currentStudent.name" class="avatar-img" />
+          } @else {
+            <div class="avatar-fallback">
+              {{ getInitials(currentStudent.name) }}
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+  </div>
+</header>

@@ -1,0 +1,151 @@
+<div class="modal-overlay" (click)="close.emit()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="header-icon-box">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"></path>
+        </svg>
+      </div>
+      <div>
+        <h2 class="modal-title">Solicitar Reprogramación</h2>
+        <p class="modal-subtitle">Selecciona un nuevo horario disponible para tu atención</p>
+      </div>
+      <button class="btn-close" (click)="close.emit()" title="Cerrar ventana">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      
+      <!-- Cita actual (fecha actual y horario actual) -->
+      <div class="current-slot-card">
+        <div class="slot-badge">Horario actual reservado</div>
+        <div class="slot-details">
+          <div class="slot-row">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <strong>{{ formatDate(appointment.date) }}</strong>
+          </div>
+          <div class="slot-row">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>{{ appointment.start_time }} - {{ appointment.end_time }} hrs ({{ appointment.duration }} min)</span>
+          </div>
+        </div>
+        <div class="notice-note">
+          Tu horario actual se mantendrá reservado hasta que la psicóloga resuelva tu solicitud.
+        </div>
+      </div>
+
+      <!-- Selección de nuevo horario disponible -->
+      <div class="form-group">
+        <label class="form-label">
+          Nuevo horario solicitado (Disponibilidad de la psicóloga) <span class="required">*</span>
+        </label>
+
+        @if (isLoadingSlots) {
+          <div class="loading-state">
+            <span class="spinner dark"></span>
+            <span>Consultando horarios disponibles...</span>
+          </div>
+        } @else if (availableSlots.length === 0) {
+          <div class="empty-state">
+            <p>No hay otros horarios disponibles en este momento. Por favor intenta más tarde o comunícate con la psicóloga.</p>
+          </div>
+        } @else {
+          <div class="slots-list">
+            @for (slot of availableSlots; track slot.id) {
+              <label class="slot-radio-option" [class.selected]="selectedSlotId === slot.id">
+                <input
+                  type="radio"
+                  name="rescheduleSlot"
+                  [value]="slot.id"
+                  [(ngModel)]="selectedSlotId"
+                />
+                <div class="radio-content">
+                  <strong class="slot-date">{{ formatDate(slot.date) }}</strong>
+                  <span class="slot-time">{{ slot.startTime }} - {{ slot.endTime }} hrs</span>
+                  <span class="slot-dur">{{ slot.duration }} min &bull; Disponible</span>
+                </div>
+              </label>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Motivo obligatorio de reprogramación -->
+      <div class="form-group">
+        <label for="reschedule-reason" class="form-label">
+          Motivo de la reprogramación <span class="required">*</span>
+        </label>
+        <textarea
+          id="reschedule-reason"
+          rows="3"
+          class="form-textarea"
+          [(ngModel)]="reason"
+          placeholder="Explica a la psicóloga el motivo por el cual requieres reprogramar tu cita..."
+          maxlength="500"
+        ></textarea>
+        <div class="char-counter">
+          {{ reason.length }} / 500 caracteres
+        </div>
+      </div>
+
+      <!-- Mensaje de error -->
+      @if (errorMessage) {
+        <div class="error-banner">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>{{ errorMessage }}</span>
+        </div>
+      }
+
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="close.emit()"
+        [disabled]="isSubmitting"
+      >
+        Regresar sin enviar
+      </button>
+
+      <button
+        type="button"
+        class="btn-primary"
+        (click)="submitReschedule()"
+        [disabled]="isSubmitting || !selectedSlotId || !reason.trim()"
+      >
+        @if (isSubmitting) {
+          <span class="spinner"></span>
+          <span>Enviando solicitud...</span>
+        } @else {
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+          <span>Enviar solicitud</span>
+        }
+      </button>
+    </div>
+
+  </div>
+</div>

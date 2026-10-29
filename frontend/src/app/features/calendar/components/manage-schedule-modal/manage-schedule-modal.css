@@ -1,0 +1,273 @@
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+
+/* ============================================================
+   FONDO DEL MODAL
+   ============================================================ */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(15, 23, 42, 0.45);
+
+  backdrop-filter: blur(2px);
+
+  box-sizing: border-box;
+}
+
+
+/* ============================================================
+   CONTENEDOR
+   ============================================================ */
+
+.schedule-modal {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 32px);
+
+  display: flex;
+  flex-direction: column;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+
+  box-shadow:
+    0 20px 50px rgba(15, 23, 42, 0.16),
+    0 5px 14px rgba(15, 23, 42, 0.07);
+
+  overflow: hidden;
+}
+
+
+/* ============================================================
+   ENCABEZADO
+   ============================================================ */
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  padding: 14px 18px 10px;
+}
+
+
+.modal-heading {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+}
+
+
+.modal-icon {
+  width: 32px;
+  height: 32px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #eaf3ff;
+  color: #075ea5;
+
+  border-radius: 8px;
+
+  font-size: 17px;
+}
+
+
+.modal-heading h2 {
+  margin: 0;
+
+  color: #172033;
+
+  font-size: 16px;
+  font-weight: 700;
+}
+
+
+.modal-heading p {
+  margin: 3px 0 0;
+
+  color: #64748b;
+
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+
+.close-button {
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: #64748b;
+
+  font-size: 20px;
+
+  cursor: pointer;
+}
+
+
+.close-button:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+
+/* ============================================================
+   PESTAÑAS
+   ============================================================ */
+
+.schedule-tabs {
+  display: flex;
+  align-items: flex-end;
+
+  gap: 18px;
+
+  padding: 0 18px;
+
+  border-bottom: 1px solid #e2e8f0;
+}
+
+
+.schedule-tabs button {
+  position: relative;
+
+  padding: 9px 2px;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #64748b;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+
+.schedule-tabs button:hover {
+  color: #075ea5;
+}
+
+
+.schedule-tabs button.active {
+  color: #075ea5;
+
+  font-weight: 600;
+}
+
+
+.schedule-tabs button.active::after {
+  content: '';
+
+  position: absolute;
+
+  left: 8px;
+  right: 8px;
+  bottom: -1px;
+
+  height: 2px;
+
+  background: #075ea5;
+
+  border-radius: 999px;
+}
+
+
+/* ============================================================
+   ÁREA DE CONTENIDO
+   ============================================================ */
+
+.modal-content {
+  min-height: 0;
+
+  padding: 12px 18px 14px;
+
+  background: #f8fafc;
+
+  overflow-y: auto;
+}
+
+
+.tab-workspace {
+  width: 100%;
+  min-height: 0;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 640px) {
+
+  .modal-backdrop {
+    align-items: flex-end;
+
+    padding: 12px;
+  }
+
+
+  .schedule-modal {
+    max-height: calc(100vh - 24px);
+
+    border-radius: 14px;
+  }
+
+
+  .modal-header {
+    padding: 16px 16px 10px;
+  }
+
+
+  .schedule-tabs {
+    padding: 0 16px;
+
+    overflow-x: auto;
+  }
+
+
+  .schedule-tabs button {
+    white-space: nowrap;
+  }
+
+
+  .modal-content {
+    padding: 14px 16px 18px;
+  }
+
+}
