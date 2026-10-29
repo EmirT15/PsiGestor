@@ -5,6 +5,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { CalendarService, Appointment } from '../../calendar/services/calendar.service';
 import { RescheduleAppointmentModal } from '../../patient/components/reschedule-appointment-modal/reschedule-appointment-modal';
 import { CancelAppointmentModal } from '../../patient/components/cancel-appointment-modal/cancel-appointment-modal';
+import { StudentHeader } from '../../patient/components/student-header/student-header';
 
 @Component({
   selector: 'app-portal-alumno',
@@ -12,6 +13,7 @@ import { CancelAppointmentModal } from '../../patient/components/cancel-appointm
   imports: [
     CommonModule,
     RouterModule,
+    StudentHeader,
     RescheduleAppointmentModal,
     CancelAppointmentModal
   ],
