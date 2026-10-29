@@ -20,7 +20,6 @@ export class CalendarToolbar {
 
   @Input() selectedStatus: StatusFilter = 'all';
 
-
   @Output() previous = new EventEmitter<void>();
 
   @Output() next = new EventEmitter<void>();
@@ -35,104 +34,60 @@ export class CalendarToolbar {
 
   @Output() manageSchedule = new EventEmitter<void>();
 
-  @Output() logout = new EventEmitter<void>();
-
   changeView(view: 'day' | 'week' | 'month'): void {
     this.viewChange.emit(view);
   }
 
 
   getPeriodLabel(): string {
-
     if (this.currentView === 'day') {
-
       return this.currentDate.toLocaleDateString('es-MX', {
         day: 'numeric',
         month: 'long',
         year: 'numeric'
       });
-
     }
 
-
-      if (this.currentView === 'week') {
-
-  const date =
-    new Date(this.currentDate);
-
-  const dayOfWeek =
-    date.getDay();
+    if (this.currentView === 'week') {
+      const date = new Date(this.currentDate);
+      const dayOfWeek = date.getDay();
 
   /*
    * Primero obtenemos el lunes usando
    * la misma lógica de Calendar.
    */
-  const monday =
-    new Date(date);
-
-
-  if (dayOfWeek === 0) {
-
-    monday.setDate(
-      date.getDate() + 1
-    );
-
-  } else {
-
-    monday.setDate(
-      date.getDate() - (dayOfWeek - 1)
-    );
-  }
-
-
+      const monday = new Date(date);
+      if (dayOfWeek === 0) {
+        monday.setDate(date.getDate() + 1);
+      } else {
+        monday.setDate(date.getDate() - (dayOfWeek - 1));
+      }
   /*
    * La vista visual inicia el domingo
    * anterior a ese lunes.
    */
-  const startOfWeek =
-    new Date(monday);
-
-  startOfWeek.setDate(
-    monday.getDate() - 1
-  );
-
-
+      const startOfWeek = new Date(monday);
+      startOfWeek.setDate(monday.getDate() - 1);
   /*
    * Y termina seis días después:
    * domingo → sábado.
    */
-  const endOfWeek =
-    new Date(startOfWeek);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-  endOfWeek.setDate(
-    startOfWeek.getDate() + 6
-  );
+      const startLabel = startOfWeek.toLocaleDateString('es-MX', {
+          day: 'numeric',
+          month: 'short'
+        });
 
-
-  const startLabel =
-    startOfWeek.toLocaleDateString(
-      'es-MX',
-      {
-        day: 'numeric',
-        month: 'short'
-      }
-    );
-
-
-  const endLabel =
-    endOfWeek.toLocaleDateString(
-      'es-MX',
-      {
+      const endLabel = endOfWeek.toLocaleDateString('es-MX', {
         day: 'numeric',
         month: 'short',
         year: 'numeric'
-      }
-    );
+      });
 
-
-  return `${startLabel} – ${endLabel}`;
-}
-
+      return `${startLabel} – ${endLabel}`;
+    }
 
     return this.currentDate.toLocaleDateString('es-MX', {
       month: 'long',
