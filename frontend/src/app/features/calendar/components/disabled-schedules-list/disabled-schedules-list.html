@@ -75,11 +75,11 @@
           }
         </div>
 
-        <!-- Botones de Acción directos en cada Tarjeta -->
+        <!-- Único Botón de Acción: Rehabilitar -->
         <div class="card-actions" style="display: flex; gap: 8px; align-items: center;">
-          <button type="button" class="btn-cancel" style="padding: 4px 8px; font-size: 12px;" (click)="viewDetails(item)">👁️ Ver</button>
-          <button type="button" class="btn-cancel" style="padding: 4px 8px; font-size: 12px;" (click)="editSchedule(item)">✏️ Editar</button>
-          <button type="button" class="btn-cancel" style="padding: 4px 8px; font-size: 12px; color: #dc2626; border-color: #fca5a5;" (click)="rehabilitate(item.id)">🔓 Rehabilitar</button>
+          <button type="button" class="btn-cancel" style="padding: 6px 12px; font-size: 13px; color: #dc2626; border-color: #fca5a5;" (click)="promptRehabilitate(item.id)">
+            🔓 Rehabilitar
+          </button>
         </div>
       </div>
     } @empty {
@@ -98,7 +98,7 @@
           <div class="title-with-icon">
             <div class="blue-icon-box">📅</div>
             <div>
-              <h3>{{ isEditing ? 'Editar horario inhabilitado' : 'Inhabilitar horario' }}</h3>
+              <h3>Inhabilitar horario</h3>
               <p>Selecciona una o más fechas y el horario que deseas marcar como no disponible.</p>
             </div>
           </div>
@@ -204,7 +204,8 @@
 
           <div class="modal-footer">
             <button type="button" class="btn-cancel" (click)="closeForm()">Cancelar</button>
-            <button type="submit" class="btn-confirm" [disabled]="isSubmitting">{{ isSubmitting ? 'Guardando...' : 'Confirmar inhabilitación' }}
+            <button type="submit" class="btn-confirm" [disabled]="isSubmitting">
+              {{ isSubmitting ? 'Guardando...' : 'Confirmar inhabilitación' }}
             </button>
           </div>
 
@@ -214,36 +215,12 @@
     </div>
   }
 
-  <!-- MODAL CONSULTAR DETALLE DE INHABILITACIÓN -->
-  @if (selectedItemForDetail) {
-    <div class="modal-overlay" (click)="closeDetails()">
-      <div class="modal-card" (click)="$event.stopPropagation()" style="max-width: 480px;">
-        <div class="modal-header">
-          <h3>📋 Detalle de la Inhabilitación</h3>
-          <button type="button" class="close-btn" (click)="closeDetails()">×</button>
-        </div>
-        <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px; font-size: 14px;">
-          <div><strong>Tipo:</strong> {{ selectedItemForDetail.type }}</div>
-          <div><strong>Fecha:</strong> {{ selectedItemForDetail.startDate }} {{ selectedItemForDetail.endDate ? 'al ' + selectedItemForDetail.endDate : '' }}</div>
-          <div><strong>Horario:</strong> {{ selectedItemForDetail.startTime }} - {{ selectedItemForDetail.endTime }}</div>
-          <div><strong>Motivo:</strong> {{ selectedItemForDetail.reason }}</div>
-          <div><strong>Observación:</strong> {{ selectedItemForDetail.observation || 'Sin observaciones' }}</div>
-          <div><strong>Estado:</strong> <span style="color: #dc2626; font-weight: bold;">Inhabilitado</span></div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-cancel" (click)="closeDetails()">Cerrar</button>
-          <button type="button" class="btn-confirm" (click)="editSchedule(selectedItemForDetail)">Editar</button>
-        </div>
-      </div>
-    </div>
-  }
-
   <!-- MODAL CONFIRMACIÓN PARA REHABILITAR -->
   @if (showConfirmModal) {
     <div class="modal-overlay" (click)="cancelRehabilitate()">
       <div class="modal-card" (click)="$event.stopPropagation()" style="max-width: 400px; text-align: center;">
         <div class="modal-header" style="justify-content: center;">
-          <h3 style="color: #dc2626;">🔓 ¿Rehabilitar Horario?</h3>
+          <h3 style="color: #059669;">🔓 ¿Rehabilitar Horario?</h3>
         </div>
         <div class="modal-body" style="padding: 16px 0;">
           <p>¿Está seguro de que desea rehabilitar este horario?</p>
@@ -251,7 +228,7 @@
         </div>
         <div class="modal-footer" style="justify-content: center; gap: 12px;">
           <button type="button" class="btn-cancel" (click)="cancelRehabilitate()">Cancelar</button>
-          <button type="button" class="btn-confirm" style="background-color: #dc2626;" (click)="confirmRehabilitate()">Sí, rehabilitar</button>
+          <button type="button" class="btn-confirm" style="background-color: #059669; border-color: #059669; color: white;" (click)="confirmRehabilitate()">Sí, rehabilitar</button>
         </div>
       </div>
     </div>

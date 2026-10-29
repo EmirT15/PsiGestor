@@ -183,6 +183,7 @@ private toastTimeout:
   selectedDate = '';
   selectedSlot = '';
   selectedSlotDate = '';
+  isPatientDateModalOpen = false;
 
   selectedAvailabilityId:
     number | null = null;
@@ -843,9 +844,7 @@ private toastTimeout:
   }
 
 
-  selectDate(
-    date: Date
-  ): void {
+  selectDate( date: Date ): void {
 
     this.currentDate =
 
@@ -871,6 +870,26 @@ private toastTimeout:
 
     this.changeDetectorRef
       .detectChanges();
+
+    if (this.mode === 'patient' && this.currentView === 'month') {
+      this.isPatientDateModalOpen = true;
+    }
+  }
+
+  closePatientDateModal(): void {
+    this.isPatientDateModalOpen = false;
+  }
+
+  hasPatientAvailableSchedules(): boolean {
+    if (!this.selectedDate) {
+      return false;
+    }
+
+    return this.getAvailabilitiesForDate(
+      this.getSelectedDate()
+    ).some(
+      (availability) => availability.status === 'Disponible'
+    );
   }
 
 
@@ -1108,97 +1127,94 @@ private toastTimeout:
   }
 
 
-  /*
-   * Selección visual de un bloque Disponible
-   * en Día/Semana.
-   */
+  /*Selección visual de un bloque Disponible en Día/Semana.*/
 
 
-selectAvailableSlot(
-  availability: Availability,
-  slot?: string
-): void {
+  selectAvailableSlot(
+    availability: Availability,
+    slot?: string
+  ): void {
 
-  /*
-   * En la vista del paciente solamente
-   * se permite seleccionar Disponible.
-   */
-  if (
-    this.mode === 'patient' &&
-    availability.status !== 'Disponible'
-  ) {
-    return;
-  }
-
-
-  this.selectedAvailability =
-    availability;
-
-  this.selectedAvailabilityId =
-    availability.id;
-
-  this.selectedAvailabilityStatus =
-    availability.status;
-
-  this.selectedSlotDate =
-    availability.date;
-
-  this.selectedDate =
-    availability.date;
-
-  this.currentDate =
-    new Date(
-      availability.date + 'T00:00:00'
-    );
+    /*
+    * En la vista del paciente solamente
+    * se permite seleccionar Disponible.
+    */
+    if (
+      this.mode === 'patient' &&
+      availability.status !== 'Disponible'
+    ) {
+      return;
+    }
 
 
-  const slots =
-    this.generateSlots(
-      availability
-    );
+    this.selectedAvailability =
+      availability;
+
+    this.selectedAvailabilityId =
+      availability.id;
+
+    this.selectedAvailabilityStatus =
+      availability.status;
+
+    this.selectedSlotDate =
+      availability.date;
+
+    this.selectedDate =
+      availability.date;
+
+    this.currentDate =
+      new Date(
+        availability.date + 'T00:00:00'
+      );
 
 
-  if (slots.length === 0) {
-
-    this.showToast(
-      'No hay horarios disponibles en este bloque.',
-      'warning'
-    );
-
-    return;
-  }
+    const slots =
+      this.generateSlots(
+        availability
+      );
 
 
-  this.selectedSlot =
-    slot ?? slots[0];
+    if (slots.length === 0) {
+
+      this.showToast(
+        'No hay horarios disponibles en este bloque.',
+        'warning'
+      );
+
+      return;
+    }
 
 
-  /*
-   * PACIENTE:
-   * no abre el sidebar administrativo.
-   * Envía la selección a su propia página.
-   */
-  if (this.mode === 'patient') {
+    this.selectedSlot =
+      slot ?? slots[0];
 
+
+    /*
+    * PACIENTE:
+    * no abre el sidebar administrativo.
+    * Envía la selección a su propia página.
+    */
+    if (this.mode === 'patient') {
+
+      this.isSidebarOpen = false;
+      this.isPatientDateModalOpen = false;
+
+      this.patientScheduleSelected.emit({
+        availability,
+        slot: this.selectedSlot
+      });
+
+      return;
+    }
+
+
+    /*
+    * PSICÓLOGA:
+    * conserva el comportamiento actual.
+    */
     this.isSidebarOpen =
-      false;
-
-    this.patientScheduleSelected.emit({
-      availability,
-      slot: this.selectedSlot
-    });
-
-    return;
+      true;
   }
-
-
-  /*
-   * PSICÓLOGA:
-   * conserva el comportamiento actual.
-   */
-  this.isSidebarOpen =
-    true;
-}
 
   showToast(
   message: string,
@@ -1239,6 +1255,103 @@ selectAvailableSlot(
       },
       3500
     );
+}
+
+
+/**
+ * Selecciona un horario inhabilitado desde el calendario
+ * para mostrar sus detalles en el panel lateral.
+ */
+selectDisabledSchedule(
+  disabled: any
+): void {
+
+  /*
+   * El paciente solo debe visualizar
+   * el horario como no disponible.
+   * No debe acceder a motivos administrativos.
+   */
+  if (this.mode === 'patient') {
+    return;
+  }
+
+  const dateStr =
+    disabled.startDate ||
+    disabled.date ||
+    this.formatDate(
+      this.getCurrentViewDate()
+    );
+
+  this.selectedSlotDate =
+    dateStr;
+
+  this.selectedDate =
+    dateStr;
+
+  this.selectedAvailabilityId =
+    disabled.id;
+
+  this.selectedAvailabilityStatus =
+    'Inhabilitado';
+
+
+  const startTimeFormatted =
+    disabled.startTime
+      ? this.formatAvailabilityTime(
+          disabled.startTime
+        )
+      : '';
+
+  const endTimeFormatted =
+    disabled.endTime
+      ? this.formatAvailabilityTime(
+          disabled.endTime
+        )
+      : '';
+
+
+  this.selectedAppointmentData = {
+    id: disabled.id,
+    status: 'Inhabilitado',
+
+    studentName:
+      'Horario Inhabilitado',
+
+    dateStr:
+      `${dateStr}, ${startTimeFormatted} - ${endTimeFormatted}`,
+
+    startTime:
+      disabled.startTime,
+
+    endTime:
+      disabled.endTime,
+
+    date:
+      dateStr,
+
+    reason:
+      disabled.reason ||
+      'Sin motivo especificado',
+
+    disabledReason:
+      disabled.reason ||
+      'Sin motivo especificado',
+
+    observation:
+      disabled.observation ||
+      '',
+
+    disabledObservation:
+      disabled.observation ||
+      '',
+
+    type:
+      disabled.type ||
+      'Puntual'
+  };
+
+  this.isSidebarOpen =
+    true;
 }
 
   onAppointmentSubmit(event: Event): void {
@@ -1431,6 +1544,89 @@ selectAvailableSlot(
       false;
   }
 
+  /**
+   * Se dispara al hacer clic en "Inhabilitar horario" desde el panel lateral (AppointmentDetails)
+   */
+  openDisableModalFromPanel(appointment: any): void {
+    // 1. Ocultamos el panel lateral de detalle
+    this.closeSidebar();
+
+    // 2. Extraemos la fecha formateada (YYYY-MM-DD)
+    const dateStr =
+      appointment.date ||
+      this.selectedSlotDate ||
+      this.formatDate(this.getCurrentViewDate());
+
+    // 3. Preparamos los datos iniciales para el modal de inhabilitación (ManageScheduleModal)
+    this.initialModalData = {
+      startDate: dateStr,
+      endDate: dateStr,
+      startTime: appointment.startTime || '08:00',
+      endTime: appointment.endTime || '09:00',
+      activeTab: 'disabled'
+    };
+
+    // 4. Abrimos el modal de gestionar horario
+    this.isManageScheduleOpen = true;
+  }
+
+  /**
+   * Se dispara al hacer clic en "Rehabilitar horario" desde el panel lateral (AppointmentDetails)
+   */
+/**
+   * Se dispara al hacer clic en "Rehabilitar horario" desde el panel lateral
+   */
+  rehabilitateFromPanel(appointment: any): void {
+    const targetId = Math.abs(appointment?.id || this.selectedAvailabilityId || 0);
+
+    if (!targetId) {
+      alert('No se pudo identificar el horario a rehabilitar.');
+      return;
+    }
+
+    if (confirm('¿Está seguro de que desea rehabilitar este horario? Volverá a estar disponible para agendar citas.')) {
+      // 1. Eliminar el registro de inhabilitación
+      this.calendarService.enableSchedule(targetId).subscribe({
+        next: () => {
+          const date = appointment.date || this.selectedSlotDate;
+          const startTime = appointment.startTime;
+          const endTime = appointment.endTime;
+
+          // 2. Si tenemos la fecha y franja horaria, generamos la disponibilidad como 'Disponible'
+          if (date && startTime && endTime) {
+            const availabilityPayload = {
+              date: date,
+              startTime: startTime,
+              endTime: endTime,
+              duration: appointment.duration || 45,
+              breakTime: 0,
+              status: 'Disponible'
+            };
+
+            this.calendarService.createAvailability(availabilityPayload).subscribe({
+              next: () => {
+                alert('El horario ha sido rehabilitado y ya está disponible.');
+                this.closeSidebar();
+                this.refreshCalendarData();
+              },
+              error: (err) => {
+                console.warn('Inhabilitación removida, actualizando calendario...', err);
+                this.closeSidebar();
+                this.refreshCalendarData();
+              }
+            });
+          } else {
+            this.closeSidebar();
+            this.refreshCalendarData();
+          }
+        },
+        error: (err) => {
+          console.error('Error al rehabilitar:', err);
+          alert('Ocurrió un error al intentar rehabilitar el horario.');
+        }
+      });
+    }
+  }
 
   openRescheduleModal(): void {
 
