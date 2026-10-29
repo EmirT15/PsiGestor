@@ -1132,9 +1132,11 @@
                               Disponible
                             </span>
 
-                            <span class="week-availability-duration">
-                              {{ availability.duration }} min
-                            </span>
+                            @if (availability.duration > 30) {
+                              <span class="week-availability-duration">
+                                {{ availability.duration }} min
+                              </span>
+                            }
 
                           </button>
 

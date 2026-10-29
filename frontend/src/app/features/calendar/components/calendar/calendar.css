@@ -2836,3 +2836,32 @@
     font-size: 1.15rem;
   }
 }
+
+/* Issue #50: contenido compacto en slots semanales pequeños */
+.week-slot-main {
+  min-width: 0;
+}
+
+.week-slot-main .week-availability-time,
+.week-slot-main .week-availability-status {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.week-slot-main .week-availability-time {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.week-slot-main .week-availability-status {
+  flex-shrink: 1;
+  white-space: nowrap;
+  line-height: 1.15;
+}
+
+.week-slot-main .week-availability-duration {
+  display: block;
+  line-height: 1.1;
+}

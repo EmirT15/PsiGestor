@@ -29,7 +29,7 @@ export const routes: Routes = [
   {
     path: 'portal-alumno',
     loadComponent: () =>
-      import('./features/student-portal/portal-alumno/portal-alumno')
+      import('./features/patient/student-portal/portal-alumno/portal-alumno')
         .then((m) => m.PortalAlumno)
   },
   {
