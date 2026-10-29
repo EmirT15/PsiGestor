@@ -588,6 +588,12 @@
   font-size: 13px;
 }
 
+.day-view,
+.week-calendar,
+.calendar-weekdays {
+  margin-top: 16px;
+}
+
 /* ============================================================
    VISTA SEMANA - TIME GRID
    ============================================================ */
@@ -596,7 +602,7 @@
   --week-hour-height: 68px;
 
   width: 100%;
-  margin-top: 14px;
+  /* El margin-top individual de 14px se removió a favor de la regla unificada de 16px */
 
   background: #ffffff;
 

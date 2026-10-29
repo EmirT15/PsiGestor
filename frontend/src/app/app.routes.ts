@@ -29,8 +29,13 @@ export const routes: Routes = [
   {
     path: 'portal-alumno',
     loadComponent: () =>
-      import('./features/patient/student-portal/portal-alumno/portal-alumno')
-        .then((m) => m.PortalAlumno)
+      import('./features/patient/pages/dashboard/dashboard')
+        .then((m) => m.Dashboard)
+  },
+  {
+    path: 'patient/dashboard',
+    pathMatch: 'full',
+    redirectTo: 'portal-alumno'
   },
   {
     path: 'patient/availability',

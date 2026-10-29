@@ -9,7 +9,12 @@ from app.services.appointment_service import (
     approve_student_reschedule,
     reject_student_reschedule,
 )
-from app.services.auth_service import get_current_user, require_auth
+from app.services.auth_service import (
+    get_current_user,
+    require_auth,
+    viewer_has_full_access,
+    redact_private_fields,
+)
 from app.repositories.appointment_repository import get_appointments
 
 
@@ -85,6 +90,9 @@ def list_appointments_route():
                 appointment["created_at"] = (
                     appointment["created_at"].isoformat()
                 )
+
+        if not viewer_has_full_access():
+            appointments = redact_private_fields(appointments)
 
         return jsonify({"appointments": appointments}), 200
 

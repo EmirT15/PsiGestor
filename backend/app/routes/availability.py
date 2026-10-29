@@ -1,11 +1,18 @@
 from flask import Blueprint, jsonify, request
 import traceback
-from app.services.auth_service import require_role
+from app.repositories.availability_repository import RehabilitationConflictError
+from app.services.auth_service import (
+    require_role,
+    get_current_user,
+    viewer_has_full_access,
+    redact_private_fields
+)
 
 from app.services.availability_service import (
     register_availability,
     list_availabilities,
     cancel_appointment,
+    rehabilitate_cancelled_availability,
     reschedule_appointment,
     register_disabled_schedule,
     list_disabled_schedules,
@@ -154,7 +161,7 @@ def create_availability():
 def get_availabilities():
     availabilities = list_availabilities()
 
-    return jsonify([
+    payload = [
         {
             'id': availability[0],
 
@@ -246,7 +253,12 @@ def get_availabilities():
 
         for availability
         in availabilities
-    ]), 200
+    ]
+
+    if not viewer_has_full_access():
+        payload = redact_private_fields(payload)
+
+    return jsonify(payload), 200
 
 
 # =========================================================
@@ -257,6 +269,7 @@ def get_availabilities():
     '/availabilities/<int(signed=True):id>/cancel',
     methods=['POST']
 )
+@require_role('psicologo')
 def cancel_availability_route(id):
     data = request.get_json() or {}
 
@@ -276,6 +289,49 @@ def cancel_availability_route(id):
             'message':
                 'Cita cancelada con éxito'
         }), 200
+
+    except ValueError as error:
+        return jsonify({
+            'error': str(error)
+        }), 400
+
+
+# =========================================================
+# REHABILITACIÓN DE HORARIO CANCELADO
+# =========================================================
+
+@availability_bp.route(
+    '/availabilities/<int(signed=True):id>/rehabilitate',
+    methods=['POST']
+)
+@require_role('psicologo')
+def rehabilitate_availability_route(id):
+    try:
+        if id < 0:
+            return jsonify({
+                'error': 'El horario cancelado no tiene un bloque asociado para rehabilitar.'
+            }), 404
+
+        user = get_current_user()
+
+        updated = rehabilitate_cancelled_availability(
+            id,
+            user['id'] if user else None
+        )
+
+        if not updated:
+            return jsonify({
+                'error': 'No encontrado'
+            }), 404
+
+        return jsonify({
+            'message': 'Horario rehabilitado y disponible nuevamente.'
+        }), 200
+
+    except RehabilitationConflictError as error:
+        return jsonify({
+            'error': str(error)
+        }), 409
 
     except ValueError as error:
         return jsonify({

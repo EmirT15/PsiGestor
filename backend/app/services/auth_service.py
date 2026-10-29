@@ -159,3 +159,37 @@ def require_role(*allowed_roles):
         return decorated_function
 
     return decorator
+
+
+def viewer_has_full_access():
+    """
+    True cuando quien consulta puede ver datos personales/históricos de citas
+    (psicóloga). Un alumno autenticado nunca los ve. Sin sesión solo se permite
+    mientras STRICT_AUTH esté desactivado (modo desarrollo).
+    """
+    user = get_current_user()
+    if user:
+        return user["role"] == "psicologo"
+    return os.getenv("STRICT_AUTH", "false").lower() != "true"
+
+
+PRIVATE_APPOINTMENT_FIELDS = (
+    "studentName", "studentInitials", "studentAge", "studentSemester",
+    "studentProgram", "consultationReason", "folio", "location", "modality",
+    "cancellationReason", "cancellationObservation",
+    "student_id", "student_name", "reason", "meeting_url", "location",
+    "reschedule_reason", "cancellation_reason", "cancellation_observation",
+    "cancelled_by", "user_id",
+)
+
+
+def redact_private_fields(items):
+    """Elimina datos personales e históricos de una lista de dicts."""
+    redacted = []
+    for item in items:
+        redacted.append({
+            key: value
+            for key, value in item.items()
+            if key not in PRIVATE_APPOINTMENT_FIELDS
+        })
+    return redacted

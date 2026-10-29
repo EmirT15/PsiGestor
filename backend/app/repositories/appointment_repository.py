@@ -408,7 +408,8 @@ def cancel_student_appointment_db(appointment_id, student_id, reason):
                 UPDATE appointments
                 SET status = 'Cancelled',
                     cancellation_reason = %s,
-                    cancelled_at = CURRENT_TIMESTAMP
+                    cancelled_at = CURRENT_TIMESTAMP,
+                    cancelled_by = 'alumno'
                 WHERE id = %s;
                 """,
                 (reason, appointment_id)

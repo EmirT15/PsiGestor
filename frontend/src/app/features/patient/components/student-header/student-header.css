@@ -175,3 +175,133 @@
     display: none;
   }
 }
+
+
+/* Student profile dropdown */
+.profile-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.35rem 0.5rem 0.35rem 0.85rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.profile-trigger:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.profile-trigger:focus-visible,
+.logout-option:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+}
+
+.profile-trigger .user-info {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  gap: 2px;
+}
+
+.profile-trigger .user-name {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-trigger .user-role {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.profile-chevron {
+  color: #64748b;
+  font-size: 1rem;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 100;
+  width: 230px;
+  padding: 0.5rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+}
+
+.dropdown-user {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  overflow-wrap: anywhere;
+}
+
+.dropdown-user strong {
+  color: #0f172a;
+  font-size: 0.875rem;
+}
+
+.dropdown-user span {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.logout-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.7rem 0.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #b91c1c;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.logout-option:hover {
+  background: #fef2f2;
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    flex-wrap: wrap;
+  }
+
+  .profile-trigger {
+    padding: 0.25rem;
+  }
+
+  .profile-trigger .user-info,
+  .profile-chevron {
+    display: none;
+  }
+
+  .profile-dropdown {
+    right: 0;
+  }
+}
+
+
+
