@@ -509,27 +509,24 @@
           track disabled.id
         ) {
 
-          <div class="day-availability-card day-disabled-card">
-
+          <!-- Reemplazar el <div class="day-availability-card day-disabled-card"> de Vista Día por: -->
+          <div 
+            class="day-availability-card day-disabled-card" 
+            style="cursor: pointer;"
+            (click)="selectDisabledSchedule(disabled)"
+          >
             <div class="day-availability-icon day-disabled-icon">
               🚫
             </div>
-
             <div class="day-availability-content">
-
               <div class="day-availability-header">
-
                 <span class="day-availability-time">
-                  {{ formatAvailabilityTime(disabled.startTime) }}
-                  -
-                  {{ formatAvailabilityTime(disabled.endTime) }}
+                  {{ formatAvailabilityTime(disabled.startTime) }} - {{ formatAvailabilityTime(disabled.endTime) }}
                 </span>
-
                 <span class="day-availability-badge day-disabled-badge">
                   <span class="day-availability-dot"></span>
                   Inhabilitado
                 </span>
-
                 <span class="day-availability-duration">
 
                   @if (mode === 'psychologist') {
@@ -548,11 +545,8 @@
                   }
 
                 </span>
-
               </div>
-
             </div>
-
           </div>
 
         }
@@ -1311,27 +1305,24 @@
           track disabled.id
         ) {
 
-          <div class="day-availability-card day-disabled-card" style="margin-bottom: 10px;">
-
+          <!-- Reemplazar la tarjeta inhabilitada en Detalle del Mes por: -->
+          <div 
+            class="day-availability-card day-disabled-card" 
+            style="margin-bottom: 10px; cursor: pointer;"
+            (click)="selectDisabledSchedule(disabled)"
+          >
             <div class="day-availability-icon day-disabled-icon">
               🚫
             </div>
-
             <div class="day-availability-content">
-
               <div class="day-availability-header">
-
                 <span class="day-availability-time">
-                  {{ formatAvailabilityTime(disabled.startTime) }}
-                  -
-                  {{ formatAvailabilityTime(disabled.endTime) }}
+                  {{ formatAvailabilityTime(disabled.startTime) }} - {{ formatAvailabilityTime(disabled.endTime) }}
                 </span>
-
                 <span class="day-availability-badge day-disabled-badge">
                   <span class="day-availability-dot"></span>
                   Inhabilitado
                 </span>
-
                 <span class="day-availability-duration">
 
                   @if (mode === 'psychologist') {
@@ -1350,11 +1341,8 @@
                   }
 
                 </span>
-
               </div>
-
             </div>
-
           </div>
 
         }
@@ -1711,6 +1699,15 @@
               </button>
 
               <button
+                type="button"
+                class="booking-cancel-button"
+                style="background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;"
+                (click)="handleDisableSelectedSlot()"
+              >
+                🚫 Inhabilitar horario
+              </button>
+
+              <button
                 type="submit"
                 class="booking-submit-button"
               >
@@ -1737,6 +1734,14 @@
           (cancel)="
             openCancelModal()
           "
+
+          (disable)="
+            openDisableModalFromPanel($event)
+          "
+
+          (enable)="
+            rehabilitateFromPanel($event)
+          "
         />
 
       }
@@ -1746,7 +1751,6 @@
     </div>
   }
 </div>
-
 
 <!-- ========================================= -->
 <!-- MODAL DE REPROGRAMACIÓN                   -->

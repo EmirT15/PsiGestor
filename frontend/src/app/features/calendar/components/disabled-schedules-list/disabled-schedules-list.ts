@@ -17,8 +17,6 @@ export class DisabledSchedulesList implements OnInit {
   schedules: DisabledSchedule[] = [];
   filterType: 'Todos' | 'Puntual' | 'Rango de fechas' = 'Todos';
   showForm: boolean = false;
-  isEditing: boolean = false;
-  selectedId?: number;
   hasConflictWarning = false;
   isSubmitting: boolean = false; // Bandera para evitar múltiples envíos
 
@@ -33,10 +31,8 @@ export class DisabledSchedulesList implements OnInit {
 
   formData: DisabledSchedule = this.getEmptyForm();
   conflictCount: number = 0;
-  forceConfirm: boolean = false;
 
-  // Variables para Modal de Detalle y Modal de Confirmación
-  selectedItemForDetail: DisabledSchedule | null = null;
+  // Variables para Modal de Confirmación
   showConfirmModal: boolean = false;
   itemToRehabilitateId?: number;
 
@@ -71,7 +67,6 @@ export class DisabledSchedulesList implements OnInit {
         observation: ''
       };
 
-      this.isEditing = false;
       this.showForm = true; // Muestra directamente la tarjeta del formulario (2da imagen)
       this.hasConflictWarning = false;
       this.cdr.detectChanges();
@@ -109,37 +104,8 @@ export class DisabledSchedulesList implements OnInit {
 
   openNewForm(): void {
     this.formData = this.getEmptyForm();
-    this.isEditing = false;
     this.showForm = true;
     this.hasConflictWarning = false;
-  }
-
-  // --- CONSULTAR DETALLE ---
-  viewDetails(item: DisabledSchedule): void {
-    this.selectedItemForDetail = item;
-  }
-
-  closeDetails(): void {
-    this.selectedItemForDetail = null;
-  }
-
-  // --- MODIFICAR INHABILITACIÓN ---
-  editSchedule(item: DisabledSchedule): void {
-    this.closeDetails();
-    this.formData = { ...item };
-    this.selectedId = item.id;
-    this.isEditing = true;
-    this.showForm = true;
-  }
-
-  // --- REHABILITAR HORARIO (MODAL DE CONFIRMACIÓN) ---
-  rehabilitate(id?: number): void {
-    if (!id) return;
-    if (confirm('¿Está seguro de que desea rehabilitar este horario? Volverá a estar disponible.')) {
-      this.calendarService.enableSchedule(id).subscribe(() => {
-        this.loadDisabledSchedules();
-      });
-    }
   }
 
   promptRehabilitate(id?: number): void {
@@ -156,12 +122,35 @@ export class DisabledSchedulesList implements OnInit {
   confirmRehabilitate(): void {
     if (!this.itemToRehabilitateId) return;
 
+    // 1. Localizar la información del horario antes de quitar la restricción
+    const targetSchedule = this.schedules.find(s => s.id === this.itemToRehabilitateId);
+
+    // 2. Eliminar la restricción de inhabilitación
     this.calendarService.enableSchedule(this.itemToRehabilitateId).subscribe({
       next: () => {
-        this.showConfirmModal = false;
-        this.itemToRehabilitateId = undefined;
-        this.closeDetails();
-        this.loadDisabledSchedules();
+        // 3. Crear el bloque con estado 'Disponible' en el calendario
+        if (targetSchedule && targetSchedule.startDate && targetSchedule.startTime && targetSchedule.endTime) {
+          const availabilityPayload = {
+            date: targetSchedule.startDate,
+            startTime: targetSchedule.startTime,
+            endTime: targetSchedule.endTime,
+            duration: 45,
+            breakTime: 0,
+            status: 'Disponible'
+          };
+
+          this.calendarService.createAvailability(availabilityPayload).subscribe({
+            next: () => {
+              this.finishRehabilitation();
+            },
+            error: (err) => {
+              console.warn('Se quitó la inhabilitación pero ocurrió un error al crear la disponibilidad:', err);
+              this.finishRehabilitation();
+            }
+          });
+        } else {
+          this.finishRehabilitation();
+        }
       },
       error: (err) => {
         console.error('Error al rehabilitar:', err);
@@ -170,28 +159,10 @@ export class DisabledSchedulesList implements OnInit {
     });
   }
 
-  checkConflicts(): void {
-    if (this.formData.startDate && this.formData.startTime && this.formData.endTime) {
-      if (this.formData.type === 'Puntual' || !this.formData.endDate || this.formData.endDate < this.formData.startDate) {
-        this.formData.endDate = this.formData.startDate;
-      }
-      this.calendarService.checkConflicts({
-        startDate: this.formData.startDate,
-        endDate: this.formData.endDate || this.formData.startDate,
-        startTime: this.formData.startTime,
-        endTime: this.formData.endTime
-      }).subscribe({
-        next: (res) => {
-          this.hasConflictWarning = res.hasConflict;
-          this.conflictCount = res.conflictCount;
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.hasConflictWarning = false;
-          this.conflictCount = 0;
-        }
-      });
-    }
+  private finishRehabilitation(): void {
+    this.showConfirmModal = false;
+    this.itemToRehabilitateId = undefined;
+    this.loadDisabledSchedules();
   }
 
   saveSchedule(): void {
@@ -204,19 +175,14 @@ export class DisabledSchedulesList implements OnInit {
       this.formData.endDate = this.formData.startDate;
     }
 
-    // Si ya se está enviando la petición, ignoramos nuevos clics
     if (this.isSubmitting) return;
     this.isSubmitting = true;
 
-    const request$ = (this.isEditing && this.selectedId)
-      ? this.calendarService.updateDisabledSchedule(String(this.selectedId), this.formData)
-      : this.calendarService.disableSchedule(this.formData);
-
-    request$.subscribe({
-      next: (res) => {
+    this.calendarService.disableSchedule(this.formData).subscribe({
+      next: () => {
         this.isSubmitting = false;
-        this.closeForm();             // 1. Cerramos la ventana modal de inmediato
-        this.loadDisabledSchedules(); // 2. Recargamos los datos para pintar la lista
+        this.closeForm();
+        this.loadDisabledSchedules();
       },
       error: (err) => {
         this.isSubmitting = false;
@@ -226,13 +192,11 @@ export class DisabledSchedulesList implements OnInit {
     });
   }
 
-  closeForm(): void {
-  this.showForm = false;
-  this.isSubmitting = false;
-  this.isEditing = false;
-  this.selectedId = undefined;
-  this.cdr.detectChanges(); // Forzar ocultar la ventana en la vista
-}
+    closeForm(): void {
+    this.showForm = false;
+    this.isSubmitting = false;
+    this.cdr.detectChanges(); // Forzar ocultar la ventana en la vista
+  }
 
   getCount(type: 'Puntual' | 'Rango de fechas'): number {
     return this.schedules.filter(s => s.type === type).length;
