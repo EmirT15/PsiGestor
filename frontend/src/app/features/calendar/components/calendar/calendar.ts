@@ -1,5 +1,6 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { PsychologistHeaderComponent } from '../../../psychologist/components/psychologist-header/psychologist-header.component';
+import { BookAppointmentModal } from '../../../patient/components/book-appointment-modal/book-appointment-modal';
 
 import {
   afterNextRender,
@@ -94,7 +95,8 @@ export interface PatientScheduleSelection {
     CancelModal,
     CalendarToolbar,
     ManageScheduleModal,
-    PsychologistHeaderComponent
+    PsychologistHeaderComponent,
+    BookAppointmentModal
   ],
 
   styleUrl: './calendar.css',
@@ -108,6 +110,10 @@ export class Calendar implements OnDestroy {
   @Output()
     patientScheduleSelected = 
     new EventEmitter<PatientScheduleSelection>();
+
+  @Output()
+    patientAppointmentBooked =
+    new EventEmitter<any>();
 
   @Input() mode: 'psychologist' | 'patient' = 'psychologist';
 
@@ -195,6 +201,19 @@ private toastTimeout:
    * Estados de ventanas y paneles.
    */
   isSidebarOpen = false;
+
+  sidebarView: 'day-summary' | 'slot-detail' | 'patient-booking-form' | 'patient-booking-success' = 'slot-detail';
+
+  patientSlotData: {
+    date: string;
+    startTime: string;
+    endTime: string;
+    duration: number;
+    status: string;
+    isExpired: boolean;
+  } | null = null;
+
+  bookedAppointmentResult: any = null;
 
   isRescheduleModalOpen = false;
 
@@ -395,6 +414,10 @@ private toastTimeout:
         this.currentDate = new Date(targetDay);
         this.selectedDate = this.formatDate(targetDay);
       }
+    }
+
+    if (view !== 'month' && this.sidebarView === 'day-summary') {
+      this.isSidebarOpen = false;
     }
 
     this.currentView = view;
@@ -824,6 +847,13 @@ private toastTimeout:
         (availability) => {
 
           if (
+            this.mode === 'patient' &&
+            availability.status === 'Cancelado'
+          ) {
+            return false;
+          }
+
+          if (
             availability.status === 'Disponible' &&
             this.generateSlots(availability).length === 0
           ) {
@@ -867,13 +897,16 @@ private toastTimeout:
     this.selectedAvailabilityId =
       null;
 
+    this.selectedAvailabilityStatus = '';
+
+    if (this.currentView === 'month') {
+      this.sidebarView = 'day-summary';
+      this.isSidebarOpen = true;
+      this.isPatientDateModalOpen = false;
+    }
 
     this.changeDetectorRef
       .detectChanges();
-
-    if (this.mode === 'patient' && this.currentView === 'month') {
-      this.isPatientDateModalOpen = true;
-    }
   }
 
   closePatientDateModal(): void {
@@ -903,8 +936,30 @@ private toastTimeout:
   ): void {
 
     if (this.mode === 'patient') {
-      return;
+      if (availability.status === 'Cancelado') {
+        return;
       }
+
+      this.selectedSlot = slot;
+      this.selectedSlotDate = availability.date;
+      this.selectedDate = availability.date;
+      this.currentDate = new Date(availability.date + 'T00:00:00');
+      this.selectedAvailabilityId = availability.id;
+      this.selectedAvailabilityStatus = 'Ocupado';
+
+      this.patientSlotData = {
+        date: availability.date,
+        startTime: this.formatAvailabilityTime(availability.startTime),
+        endTime: this.formatAvailabilityTime(availability.endTime),
+        duration: availability.duration || 45,
+        status: 'Ocupado',
+        isExpired: false
+      };
+
+      this.sidebarView = 'slot-detail';
+      this.isSidebarOpen = true;
+      return;
+    }
 
     this.selectedSlot =
       slot;
@@ -1121,7 +1176,7 @@ private toastTimeout:
         'psicologo'
     };
 
-
+    this.sidebarView = 'slot-detail';
     this.isSidebarOpen =
       true;
   }
@@ -1191,19 +1246,40 @@ private toastTimeout:
 
     /*
     * PACIENTE:
-    * no abre el sidebar administrativo.
-    * Envía la selección a su propia página.
+    * abre el panel lateral derecho con el detalle del horario
+    * y permite iniciar el agendado si no ha vencido.
     */
     if (this.mode === 'patient') {
-
-      this.isSidebarOpen = false;
       this.isPatientDateModalOpen = false;
 
-      this.patientScheduleSelected.emit({
-        availability,
-        slot: this.selectedSlot
-      });
+      let startTime24 = this.formatAvailabilityTime(availability.startTime);
+      let endTime24 = this.formatAvailabilityTime(availability.endTime);
 
+      if (this.selectedSlot && this.selectedSlot.includes(' - ')) {
+        const [rawStart, rawEnd] = this.selectedSlot.split(' - ');
+        if (rawStart && rawEnd) {
+          startTime24 = rawStart.includes('AM') || rawStart.includes('PM')
+            ? this.formatTime24Hour(rawStart.trim())
+            : rawStart.trim().slice(0, 5);
+          endTime24 = rawEnd.includes('AM') || rawEnd.includes('PM')
+            ? this.formatTime24Hour(rawEnd.trim())
+            : rawEnd.trim().slice(0, 5);
+        }
+      }
+
+      const expired = this.isSlotExpired(availability.date, startTime24);
+
+      this.patientSlotData = {
+        date: availability.date,
+        startTime: startTime24,
+        endTime: endTime24,
+        duration: availability.duration || 45,
+        status: expired ? 'Horario vencido' : 'Disponible',
+        isExpired: expired
+      };
+
+      this.sidebarView = 'slot-detail';
+      this.isSidebarOpen = true;
       return;
     }
 
@@ -1212,6 +1288,7 @@ private toastTimeout:
     * PSICÓLOGA:
     * conserva el comportamiento actual.
     */
+    this.sidebarView = 'slot-detail';
     this.isSidebarOpen =
       true;
   }
@@ -1272,6 +1349,27 @@ selectDisabledSchedule(
    * No debe acceder a motivos administrativos.
    */
   if (this.mode === 'patient') {
+    const patientDateStr =
+      disabled.startDate ||
+      disabled.date ||
+      this.formatDate(this.getCurrentViewDate());
+
+    this.selectedSlotDate = patientDateStr;
+    this.selectedDate = patientDateStr;
+    this.selectedAvailabilityId = disabled.id;
+    this.selectedAvailabilityStatus = 'Inhabilitado';
+
+    this.patientSlotData = {
+      date: patientDateStr,
+      startTime: disabled.startTime ? this.formatAvailabilityTime(disabled.startTime) : '00:00',
+      endTime: disabled.endTime ? this.formatAvailabilityTime(disabled.endTime) : '23:59',
+      duration: 0,
+      status: 'No disponible',
+      isExpired: false
+    };
+
+    this.sidebarView = 'slot-detail';
+    this.isSidebarOpen = true;
     return;
   }
 
@@ -1350,6 +1448,7 @@ selectDisabledSchedule(
       'Puntual'
   };
 
+  this.sidebarView = 'slot-detail';
   this.isSidebarOpen =
     true;
 }
@@ -1542,6 +1641,117 @@ selectDisabledSchedule(
 
     this.isSidebarOpen =
       false;
+  }
+
+  backToDaySummary(): void {
+    this.sidebarView = 'day-summary';
+    this.selectedSlot = '';
+    this.selectedAvailabilityId = null;
+    this.selectedAvailabilityStatus = '';
+  }
+
+  isSlotExpired(dateStr: string, startTime: string): boolean {
+    if (!dateStr || !startTime) {
+      return false;
+    }
+    const cleanTime = startTime.trim().slice(0, 5);
+    const slotStartMs = new Date(`${dateStr}T${cleanTime}:00`).getTime();
+    return Number.isFinite(slotStartMs) && slotStartMs <= Date.now();
+  }
+
+  openPatientBookingForm(): void {
+    if (!this.patientSlotData) {
+      return;
+    }
+
+    if (this.isSlotExpired(this.patientSlotData.date, this.patientSlotData.startTime)) {
+      this.patientSlotData.isExpired = true;
+      this.patientSlotData.status = 'Horario vencido';
+      this.showToast('Este horario ya ha transcurrido y no permite nuevas reservas.', 'warning');
+      return;
+    }
+
+    if (this.patientSlotData.status !== 'Disponible') {
+      return;
+    }
+
+    this.sidebarView = 'patient-booking-form';
+  }
+
+  backToPatientSlotDetail(): void {
+    this.sidebarView = 'slot-detail';
+  }
+
+  onPatientBookingConfirmed(response: any): void {
+    this.bookedAppointmentResult = response?.appointment || this.patientSlotData;
+    this.sidebarView = 'patient-booking-success';
+    this.refreshCalendarData();
+    this.calendarService.notifyScheduleChanged();
+    this.patientAppointmentBooked.emit(response);
+  }
+
+  selectHabitualBreak(date?: Date): void {
+    const targetDate = date || this.getSelectedDate();
+    const dateStr = this.formatDate(targetDate);
+
+    if (this.mode === 'patient') {
+      this.selectedSlotDate = dateStr;
+      this.selectedDate = dateStr;
+      this.selectedAvailabilityId = null;
+      this.selectedAvailabilityStatus = 'Descanso habitual';
+
+      this.patientSlotData = {
+        date: dateStr,
+        startTime: this.formatAvailabilityTime(this.getHabitualBreakStartTime()),
+        endTime: this.formatAvailabilityTime(this.getHabitualBreakEndTime()),
+        duration: this.getHabitualBreakDuration(),
+        status: 'Descanso',
+        isExpired: false
+      };
+
+      this.sidebarView = 'slot-detail';
+      this.isSidebarOpen = true;
+      return;
+    }
+
+    this.selectedSlotDate = dateStr;
+    this.selectedDate = dateStr;
+    this.selectedAvailabilityId = null;
+    this.selectedAvailabilityStatus = 'Descanso habitual';
+    this.sidebarView = 'slot-detail';
+
+    this.selectedAppointmentData = {
+      id: 0,
+      status: 'Descanso habitual',
+      dateStr: `${dateStr}, ${this.getHabitualBreakRange()}`,
+      duration: this.getHabitualBreakDuration(),
+      reason: 'Pausa dentro del horario habitual de atención'
+    };
+
+    this.isSidebarOpen = true;
+  }
+
+  hasMonthDayItems(): boolean {
+    if (!this.selectedDate) {
+      return false;
+    }
+    const date = this.getSelectedDate();
+    return (
+      this.getDisabledSchedulesForDate(date).length > 0 ||
+      this.getDayTimelineItems(date).length > 0
+    );
+  }
+
+  getSelectedDateFormatted(): string {
+    if (!this.selectedDate) {
+      return '';
+    }
+    return this.getSelectedDate().toLocaleDateString('es-MX', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
   }
 
   /**
@@ -4158,12 +4368,10 @@ if (
              * interferir con la captura de datos.
              */
             if (
-              this.mode === 'psychologist' &&
-              (
-                this.isCancelModalOpen ||
-                this.isRescheduleModalOpen ||
-                this.isManageScheduleOpen
-              )
+              this.isCancelModalOpen ||
+              this.isRescheduleModalOpen ||
+              this.isManageScheduleOpen ||
+              this.sidebarView === 'patient-booking-form'
             ) {
               return;
             }

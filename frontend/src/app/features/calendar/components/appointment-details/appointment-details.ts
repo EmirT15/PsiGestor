@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 
 export interface AppointmentMock {
   id: number;
-  status: string; // 'Disponible' | 'Reservado' | 'Cancelado' | 'Inhabilitado' | 'Reprogramación pendiente'
+  status: string; // 'Disponible' | 'Reservado' | 'Cancelado' | 'Inhabilitado' | 'Descanso habitual' | 'Reprogramación pendiente'
   studentName?: string;
   studentAge?: number;
   studentSemester?: string;
@@ -41,6 +41,7 @@ export class AppointmentDetails {
   @Output() rehabilitate = new EventEmitter<void>();
   @Output() disable = new EventEmitter<AppointmentMock>();
   @Output() enable = new EventEmitter<AppointmentMock>();
+  @Output() manageSchedule = new EventEmitter<void>();
 
   // Use a default mock if none is provided, to match the design for now
   defaultMock: AppointmentMock = {

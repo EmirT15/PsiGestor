@@ -385,3 +385,34 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+
+/* Modo integrado en panel lateral derecho */
+.inline-booking-wrapper {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.inline-booking-container {
+  max-width: 100%;
+  box-shadow: none;
+  border-radius: 0;
+  animation: none;
+}
+
+.inline-modal-body {
+  max-height: none;
+  padding: 16px 20px;
+}
+
+.inline-modal-footer {
+  padding: 14px 20px;
+  flex-direction: column-reverse;
+  align-items: stretch;
+}
+
+.inline-modal-footer .btn-secondary,
+.inline-modal-footer .btn-primary {
+  width: 100%;
+  justify-content: center;
+}

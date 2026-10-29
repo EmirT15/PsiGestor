@@ -256,7 +256,10 @@ def get_availabilities():
     ]
 
     if not viewer_has_full_access():
-        payload = redact_private_fields(payload)
+        payload = [
+            item for item in redact_private_fields(payload)
+            if item.get('status') != 'Cancelado'
+        ]
 
     return jsonify(payload), 200
 
@@ -514,10 +517,15 @@ def handle_disabled_schedules():
             list_disabled_schedules()
         )
 
-        return jsonify([
+        mapped = [
             map_schedule_data(row)
             for row in schedules
-        ]), 200
+        ]
+        if not viewer_has_full_access():
+            for item in mapped:
+                item['reason'] = 'No disponible'
+                item['observation'] = ''
+        return jsonify(mapped), 200
 
     except Exception as error:
         print(

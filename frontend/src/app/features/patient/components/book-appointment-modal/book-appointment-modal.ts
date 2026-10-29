@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CalendarService } from '../../../calendar/services/calendar.service';
@@ -11,15 +11,17 @@ import { AuthService } from '../../../../core/services/auth.service';
   templateUrl: './book-appointment-modal.html',
   styleUrl: './book-appointment-modal.css'
 })
-export class BookAppointmentModal {
+export class BookAppointmentModal implements OnChanges {
   @Input() slotData!: {
     date: string;
     startTime: string;
     endTime: string;
     duration: number;
   };
+  @Input() inline = false;
 
   @Output() close = new EventEmitter<void>();
+  @Output() cancel = new EventEmitter<void>();
   @Output() appointmentBooked = new EventEmitter<any>();
 
   private calendarService = inject(CalendarService);
@@ -30,6 +32,12 @@ export class BookAppointmentModal {
   location: string = 'Cubículo 2B - Departamento de Orientación y Psicología';
   isLoading = false;
   errorMessage = '';
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['slotData']) {
+      this.errorMessage = '';
+    }
+  }
 
   get currentUser() {
     return this.authService.currentUser();
@@ -53,6 +61,14 @@ export class BookAppointmentModal {
 
   onModalityChange(mod: 'Presencial' | 'En línea'): void {
     this.modality = mod;
+  }
+
+  onCancelClick(): void {
+    if (this.cancel.observed) {
+      this.cancel.emit();
+    } else {
+      this.close.emit();
+    }
   }
 
   submitBooking(): void {
@@ -84,6 +100,7 @@ export class BookAppointmentModal {
     this.calendarService.bookStudentAppointment(payload).subscribe({
       next: (response) => {
         this.isLoading = false;
+        this.reason = '';
         this.appointmentBooked.emit(response);
       },
       error: (err) => {

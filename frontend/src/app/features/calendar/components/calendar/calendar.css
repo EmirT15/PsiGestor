@@ -41,7 +41,7 @@
 
 .calendar-weekdays {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 8px;
   text-align: center;
@@ -55,7 +55,7 @@
 
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -77,6 +77,8 @@
   box-shadow 0.15s ease;
   
   min-height: 92px;
+  min-width: 0;
+  overflow: hidden;
   padding: 6px;
   position: relative;
 }
@@ -171,6 +173,10 @@
   border-radius: 4px;
   font-size: 10px;
   font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .month-day-body {
@@ -1222,112 +1228,193 @@
 }
 
 /* ============================================================
-   DETALLE DE FECHA SELECCIONADA
-   ============================================================ */
-
-.selected-date {
-  margin-top: 20px;
-  padding: 20px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-}
-
-.selected-date h3 {
-  margin: 0 0 12px;
-  font-family: "Poppins", sans-serif;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.selected-date p {
-  margin: 0 0 14px;
-  color: var(--color-muted);
-  font-size: 0.85rem;
-}
-
-.selected-date p strong {
-  color: var(--color-primary);
-  font-weight: 600;
-}
-
-/* ============================================================
-   BADGES DE ESTADO
-   ============================================================ */
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  text-transform: uppercase;
-}
-
-.badge-success {
-  background: var(--color-success-bg);
-  color: var(--color-success);
-}
-
-.badge-warning {
-  background: var(--color-warning-bg);
-  color: var(--color-warning);
-}
-
-.badge-danger {
-  background: var(--color-danger-bg);
-  color: var(--color-danger);
-}
-
-.badge-info {
-  background: var(--color-info-bg);
-  color: var(--color-info);
-}
-
-/* ============================================================
-   LAYOUT PRINCIPAL Y SIDEBAR HU-03
+   LAYOUT PRINCIPAL Y SIDEBAR LATERAL (MES / HU-03 / HU-04)
    ============================================================ */
 
 .calendar-layout {
   display: flex;
-  gap: 20px;
+  align-items: flex-start;
+  gap: 0;
   width: 100%;
   height: 100%;
-  transition: all 0.3s ease;
-  overflow: hidden;
+  transition: gap 0.25s ease;
+  overflow-x: hidden;
+}
+
+.calendar-layout.sidebar-open {
+  gap: 20px;
 }
 
 .calendar-main-content {
   flex: 1;
-
   width: 100%;
   min-width: 0;
-
   container-type: inline-size;
   container-name: calendar-main;
+  transition: width 0.25s ease;
+}
 
-  transition: all 0.3s ease;
+.calendar-sidebar-backdrop {
+  display: none;
 }
 
 .calendar-sidebar-wrapper {
-  background: #ffffff;
-  border: 1.5px solid #d9e3ee;
-  border-radius: 24px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  width: 0;
+  flex-shrink: 0;
+  border: 0;
+  box-shadow: none;
   overflow: hidden;
+  transition: width 0.25s ease;
 }
 
 .calendar-sidebar-wrapper.open {
-  width: 380px;
+  width: 400px;
+  max-height: calc(100vh - 100px);
+  position: sticky;
+  top: 16px;
   background: #ffffff;
   border: 1.5px solid #d9e3ee;
   border-radius: 24px;
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.month-day-sidebar-panel {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.month-day-sidebar-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.month-day-sidebar-title-group {
+  min-width: 0;
+}
+
+.month-day-sidebar-eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #075ea5;
+  text-transform: capitalize;
+  margin-bottom: 3px;
+}
+
+.month-day-sidebar-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #182230;
+}
+
+.month-day-sidebar-header .icon-btn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border: 1px solid #dbe4ee;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.month-day-sidebar-header .icon-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.month-day-sidebar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.month-sidebar-card {
+  padding: 13px 14px;
+  cursor: pointer;
+}
+
+.month-sidebar-break-btn {
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.month-sidebar-break-btn:hover {
+  background: #e2ecf7;
+  border-color: #b8cbe0;
+}
+
+.month-sidebar-available-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.month-sidebar-action-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #15803d;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.month-sidebar-empty-btn {
+  margin-top: 10px;
+  padding: 8px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.month-sidebar-empty-btn:hover {
+  background: #f1f5f9;
+}
+
+.sidebar-back-bar {
+  padding: 12px 20px 0;
+}
+
+.sidebar-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid #dbe4ee;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #075ea5;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sidebar-back-btn:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
 }
 
 /* ============================================================
@@ -1415,15 +1502,42 @@
 
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1100px) {
   .calendar-sidebar-wrapper.open {
-    width: 320px;
+    width: 350px;
   }
 }
 
 /* ============================================================
-   RESPONSIVE - TABLET Y MÓVIL
+   RESPONSIVE - DRAWER EN PANTALLAS ESTRECHAS
    ============================================================ */
+
+@media (max-width: 960px) {
+  .calendar-layout.sidebar-open {
+    gap: 0;
+  }
+
+  .calendar-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1190;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
+  }
+
+  .calendar-sidebar-wrapper.open {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1200;
+    width: min(420px, 92vw);
+    max-height: 100vh;
+    border-radius: 20px 0 0 20px;
+    box-shadow: -12px 0 36px rgba(15, 23, 42, 0.22);
+  }
+}
 
 @media (max-width: 768px) {
   :host {
@@ -1437,15 +1551,6 @@
   .calendar-view-buttons button {
     padding: 5px 12px;
     font-size: 0.8rem;
-  }
-
-  .calendar-layout {
-    flex-direction: column;
-  }
-
-  .calendar-sidebar-wrapper.open {
-    width: 100%;
-    height: auto;
   }
 
   .calendar-grid button.month-day-cell {
@@ -2416,39 +2521,10 @@
 }
 
 
-/* ============================================================
-   PANEL LATERAL
-   ============================================================ */
-
-.calendar-sidebar-wrapper.open {
-  width: 380px;
-}
-
-
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
-
-@media (max-width: 1024px) {
-
-  .calendar-sidebar-wrapper.open {
-    width: 340px;
-  }
-
-}
-
-
 @media (max-width: 768px) {
-
-  .calendar-sidebar-wrapper.open {
-    width: 100%;
-  }
-
-
   .appointment-booking-panel {
     padding: 16px;
   }
-
 }
 
 
@@ -2709,136 +2785,117 @@
 }
 
 
-.patient-date-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(3px);
-}
-
-.patient-date-modal {
-  width: min(100%, 560px);
-  max-height: min(80vh, 680px);
-  overflow-y: auto;
-  padding: 24px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
-}
-
-.patient-date-modal-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.patient-date-modal-header h2 {
-  margin: 0;
-  color: #182230;
-  font-size: 1.35rem;
-  font-weight: 700;
-}
-
-.patient-date-modal-header p {
-  margin: 8px 0 0;
-  color: #64748b;
-  font-size: 0.9rem;
-}
-
-.patient-date-modal-close {
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
-  border: 0;
-  border-radius: 10px;
-  background: #f1f5f9;
-  color: #334155;
-  font-size: 1.6rem;
-  cursor: pointer;
-}
-
-.patient-date-modal-description {
-  margin: 18px 0 12px;
-  color: #475569;
-  font-size: 0.9rem;
-}
-
-.patient-date-modal-list {
+.patient-detail-card {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 4px 0;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #f8fafc;
 }
 
-.patient-date-modal-slot {
-  text-align: left;
-  cursor: pointer;
+.patient-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.patient-date-modal-empty {
-  margin: 20px 0;
-  padding: 24px 16px;
-  border: 1px dashed #cbd5e1;
+.patient-detail-row:last-of-type {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.patient-detail-label {
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.patient-detail-value {
+  color: #0f172a;
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.patient-detail-meta {
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.patient-detail-notice {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
   background: #f8fafc;
-  text-align: center;
+  color: #475569;
+  font-size: 0.85rem;
+  line-height: 1.45;
 }
 
-.patient-date-modal-empty p:first-child {
-  margin: 0 0 8px;
-  color: #334155;
-  font-weight: 600;
+.patient-detail-notice.warning {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
 }
 
-.patient-date-modal-empty p:last-child {
+.patient-detail-notice p {
   margin: 0;
-  color: #64748b;
-  font-size: 0.9rem;
 }
 
-.patient-date-modal-footer {
+.patient-detail-actions {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid #e2e8f0;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
 }
 
-.patient-date-modal-cancel {
-  padding: 10px 18px;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  background: #ffffff;
-  color: #334155;
-  font-weight: 600;
-  cursor: pointer;
+.patient-detail-actions .btn-primary,
+.patient-detail-actions .btn-secondary {
+  width: 100%;
+  justify-content: center;
 }
 
-.patient-date-modal-cancel:hover,
-.patient-date-modal-close:hover {
-  background: #e2e8f0;
+.patient-success-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 18px 14px;
+  border: 1px solid #bbf7d0;
+  border-radius: 14px;
+  background: #f0fdf4;
+  margin-bottom: 14px;
 }
 
-@media (max-width: 600px) {
-  .patient-date-modal-overlay {
-    padding: 12px;
-  }
+.patient-success-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
 
-  .patient-date-modal {
-    padding: 18px;
-    border-radius: 16px;
-  }
+.patient-success-card h4 {
+  margin: 0 0 6px;
+  color: #14532d;
+  font-size: 1rem;
+}
 
-  .patient-date-modal-header h2 {
-    font-size: 1.15rem;
-  }
+.patient-success-card p {
+  margin: 0;
+  color: #166534;
+  font-size: 0.84rem;
+  line-height: 1.4;
 }

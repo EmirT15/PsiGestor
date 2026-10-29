@@ -177,8 +177,10 @@ PRIVATE_APPOINTMENT_FIELDS = (
     "studentName", "studentInitials", "studentAge", "studentSemester",
     "studentProgram", "consultationReason", "folio", "location", "modality",
     "cancellationReason", "cancellationObservation",
+    "proposedDate", "proposedStartTime", "proposedEndTime", "rescheduleRequestedBy",
     "student_id", "student_name", "reason", "meeting_url", "location",
     "reschedule_reason", "cancellation_reason", "cancellation_observation",
+    "proposed_date", "proposed_start_time", "proposed_end_time", "reschedule_requested_by",
     "cancelled_by", "user_id",
 )
 

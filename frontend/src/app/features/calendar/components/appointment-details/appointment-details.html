@@ -6,6 +6,7 @@
       class="status-badge"
       [class.status-cancelled]="displayAppointment.status === 'Cancelado'"
       [class.status-disabled]="displayAppointment.status === 'Inhabilitado'"
+      [class.status-break]="displayAppointment.status === 'Descanso habitual'"
     >
       <span class="dot"></span>
       {{ displayAppointment.status }}
@@ -19,7 +20,13 @@
   </div>
 
   <h2 class="title">
-    {{ displayAppointment.status === 'Inhabilitado' ? 'Detalle del Horario Inhabilitado' : 'Detalle de la Cita' }}
+    {{
+      displayAppointment.status === 'Inhabilitado'
+        ? 'Detalle del Horario Inhabilitado'
+        : displayAppointment.status === 'Descanso habitual'
+          ? 'Detalle del Descanso Habitual'
+          : 'Detalle de la Cita'
+    }}
   </h2>
 
   <!-- CASO 1: HORARIO INHABILITADO -->
@@ -70,8 +77,54 @@
 
   </ng-container>
 
+  <!-- CASO 1.B: DESCANSO HABITUAL -->
+  <ng-container *ngIf="displayAppointment.status === 'Descanso habitual'">
+    <div class="card info-card">
+      <div class="icon-wrapper">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <div class="card-content">
+        <span class="label">Horario de Descanso</span>
+        <strong class="main-text">{{ displayAppointment.dateStr }}</strong>
+        <span class="sub-text highlight" *ngIf="displayAppointment.duration">
+          Pausa habitual &bull; {{ displayAppointment.duration }} minutos bloqueados
+        </span>
+      </div>
+    </div>
+
+    <div class="card info-card reason-card">
+      <div class="icon-wrapper">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+          <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+          <line x1="6" y1="1" x2="6" y2="4"></line>
+          <line x1="10" y1="1" x2="10" y2="4"></line>
+          <line x1="14" y1="1" x2="14" y2="4"></line>
+        </svg>
+      </div>
+      <div class="card-content">
+        <span class="label">Estado del Bloque</span>
+        <strong class="main-text">{{ displayAppointment.reason || 'Pausa dentro del horario habitual de atención' }}</strong>
+        <span class="sub-text">Este intervalo se encuentra reservado para descanso y no admite agendamiento de citas.</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button
+        type="button"
+        class="btn btn-outline"
+        (click)="$event.stopPropagation(); manageSchedule.emit()"
+      >
+        Configurar horario habitual
+      </button>
+    </div>
+  </ng-container>
+
   <!-- CASO 2: CITA -->
-  <ng-container *ngIf="displayAppointment.status !== 'Inhabilitado'">
+  <ng-container *ngIf="displayAppointment.status !== 'Inhabilitado' && displayAppointment.status !== 'Descanso habitual'">
 
     <div class="card student-card" *ngIf="displayAppointment.studentName">
       <div class="avatar">

@@ -44,6 +44,24 @@
   background-color: #ea580c;
 }
 
+.status-badge.status-disabled {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.status-badge.status-disabled .dot {
+  background-color: #64748b;
+}
+
+.status-badge.status-break {
+  background-color: #dde7f3;
+  color: #334155;
+}
+
+.status-badge.status-break .dot {
+  background-color: #475569;
+}
+
 .icon-btn {
   background: none;
   border: none;
