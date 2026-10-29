@@ -3,6 +3,7 @@ from app.repositories.availability_repository import (
     get_availabilities,
     has_overlapping_availability,
     cancel_availability_repo,
+    rehabilitate_availability_repo,
     propose_reschedule_repo,
     create_disabled_schedule_db,
     get_all_disabled_schedules_db,
@@ -182,3 +183,7 @@ def approve_availability_reschedule(availability_id):
 def reject_availability_reschedule(availability_id):
     from app.repositories.availability_repository import reject_availability_reschedule_repo
     return reject_availability_reschedule_repo(availability_id)
+
+
+def rehabilitate_cancelled_availability(availability_id, user_id=None):
+    return rehabilitate_availability_repo(availability_id, user_id)

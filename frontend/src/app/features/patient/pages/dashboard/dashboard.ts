@@ -1,14 +1,23 @@
 import { ChangeDetectorRef, Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { AuthService } from '../../../core/services/auth.service';
-import { CalendarService, Appointment } from '../../calendar/services/calendar.service';
-import { RescheduleAppointmentModal } from '../../patient/components/reschedule-appointment-modal/reschedule-appointment-modal';
-import { CancelAppointmentModal } from '../../patient/components/cancel-appointment-modal/cancel-appointment-modal';
-import { StudentHeader } from '../../patient/components/student-header/student-header';
 
+import { AuthService } from '../../../../core/services/auth.service';
+import {
+  CalendarService,
+  Appointment
+} from '../../../calendar/services/calendar.service';
+import {
+  RescheduleAppointmentModal
+} from '../../components/reschedule-appointment-modal/reschedule-appointment-modal';
+import {
+  CancelAppointmentModal
+} from '../../components/cancel-appointment-modal/cancel-appointment-modal';
+import {
+  StudentHeader
+} from '../../components/student-header/student-header';
 @Component({
-  selector: 'app-portal-alumno',
+  selector: 'app-patient-dashboard',
   standalone: true,
   imports: [
     CommonModule,
@@ -17,10 +26,10 @@ import { StudentHeader } from '../../patient/components/student-header/student-h
     RescheduleAppointmentModal,
     CancelAppointmentModal
   ],
-  templateUrl: './portal-alumno.html',
-  styleUrl: './portal-alumno.css'
+  templateUrl: './dashboard.html',
+  styleUrl: './dashboard.css'
 })
-export class PortalAlumno implements OnInit {
+export class Dashboard implements OnInit {
   authService = inject(AuthService);
   private router = inject(Router);
   private calendarService = inject(CalendarService);

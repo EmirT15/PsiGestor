@@ -174,6 +174,16 @@ export class CalendarService {
     );
   }
 
+  // Libera un horario cancelado (la cita cancelada se conserva en el historial)
+  rehabilitateCancelledAvailability(id: number): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/availabilities/${id}/rehabilitate`,
+      {}
+    ).pipe(
+      tap(() => this.notifyScheduleChanged())
+    );
+  }
+
   rescheduleAppointment(
     id: number,
     date: string,
