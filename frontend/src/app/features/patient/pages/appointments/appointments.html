@@ -1,0 +1,385 @@
+
+<div class="appointments-page">
+
+  <app-student-header [student]="user"></app-student-header>
+
+  @if (toastMessage) {
+    <div class="toast-message">
+      {{ toastMessage }}
+    </div>
+  }
+
+  <main class="appointments-container">
+
+    <section class="page-heading">
+      <div>
+        <h1>Mis citas</h1>
+        <p>Consulta y administra tus citas psicopedagógicas.</p>
+      </div>
+
+      <a routerLink="/patient/availability" class="schedule-button">
+        Agendar nueva cita
+      </a>
+    </section>
+
+    <nav class="appointments-tabs">
+
+      <button
+        type="button"
+        [class.active]="activeTab === 'upcoming'"
+        (click)="setActiveTab('upcoming')">
+        Próximas
+        <span>{{ upcomingAppointments.length }}</span>
+      </button>
+
+      <button
+        type="button"
+        [class.active]="activeTab === 'in-progress'"
+        (click)="setActiveTab('in-progress')">
+        En curso
+        <span>{{ inProgressAppointments.length }}</span>
+      </button>
+
+      <button
+        type="button"
+        [class.active]="activeTab === 'requests'"
+        (click)="setActiveTab('requests')">
+        Solicitudes
+        <span>{{ pendingRescheduleAppointments.length }}</span>
+      </button>
+
+      <button
+        type="button"
+        [class.active]="activeTab === 'history'"
+        (click)="setActiveTab('history')">
+        Historial
+        <span>{{ historyAppointments.length }}</span>
+      </button>
+
+      <button
+        type="button"
+        [class.active]="activeTab === 'cancelled'"
+        (click)="setActiveTab('cancelled')">
+        Canceladas
+        <span>{{ cancelledAppointments.length }}</span>
+      </button>
+
+    </nav>
+
+    @if (isLoadingAppointments) {
+      <div class="loading-state">
+        <p>Cargando tus citas...</p>
+      </div>
+    } @else {
+
+      <!-- PRÓXIMAS -->
+      @if (activeTab === 'upcoming') {
+        <section class="appointments-section">
+          <h2>Próximas citas</h2>
+
+          @if (upcomingAppointments.length === 0) {
+            <div class="empty-state">
+              <h3>No tienes citas próximas</h3>
+              <p>Cuando tengas una cita confirmada, aparecerá aquí.</p>
+              <a routerLink="/patient/availability">
+                Consultar disponibilidad
+              </a>
+            </div>
+          }
+
+          @for (apt of upcomingAppointments; track apt.id) {
+            <article class="appointment-card">
+
+              <div class="appointment-card-header">
+                <div>
+                  <span class="appointment-date">
+                    {{ formatDate(apt.date) }}
+                  </span>
+                  <h3>{{ apt.start_time }} - {{ apt.end_time }} hrs</h3>
+                </div>
+
+                <span class="status-badge reserved">
+                  Confirmada
+                </span>
+              </div>
+
+              <div class="appointment-details">
+                <p><strong>Duración:</strong> {{ apt.duration }} minutos</p>
+                <p><strong>Modalidad:</strong> {{ apt.modality }}</p>
+                <p>
+                  <strong>Ubicación:</strong>
+                  {{ isPresencial(apt.modality) ? (apt.location || 'Por confirmar') : 'En línea' }}
+                </p>
+                <p><strong>Motivo:</strong> {{ apt.reason }}</p>
+              </div>
+
+              <div class="appointment-actions">
+                <button
+                  type="button"
+                  class="secondary-button"
+                  [disabled]="isProcessing"
+                  (click)="openRescheduleModal(apt)">
+                  Solicitar reprogramación
+                </button>
+
+                <button
+                  type="button"
+                  class="danger-button"
+                  [disabled]="isProcessing"
+                  (click)="openCancelModal(apt)">
+                  Cancelar cita
+                </button>
+              </div>
+
+            </article>
+          }
+        </section>
+      }
+
+      <!-- EN CURSO -->
+      @if (activeTab === 'in-progress') {
+        <section class="appointments-section">
+          <h2>Citas en curso</h2>
+
+          @if (inProgressAppointments.length === 0) {
+            <div class="empty-state">
+              <h3>No tienes citas en curso</h3>
+              <p>Aquí aparecerán las citas que ya hayan comenzado y no hayan terminado.</p>
+            </div>
+          }
+
+          @for (apt of inProgressAppointments; track apt.id) {
+            <article class="appointment-card">
+
+              <div class="appointment-card-header">
+                <div>
+                  <span class="appointment-date">
+                    {{ formatDate(apt.date) }}
+                  </span>
+                  <h3>{{ apt.start_time }} - {{ apt.end_time }} hrs</h3>
+                </div>
+
+                <span class="status-badge in-progress">
+                  En curso
+                </span>
+              </div>
+
+              <div class="appointment-details">
+                <p><strong>Duración:</strong> {{ apt.duration }} minutos</p>
+                <p><strong>Modalidad:</strong> {{ apt.modality }}</p>
+                <p>
+                  <strong>Ubicación:</strong>
+                  {{ isPresencial(apt.modality) ? (apt.location || 'Por confirmar') : 'En línea' }}
+                </p>
+                <p><strong>Motivo:</strong> {{ apt.reason }}</p>
+              </div>
+
+              <p class="information-message">
+                Esta cita ya comenzó. Las acciones de cancelación y reprogramación no están disponibles.
+              </p>
+
+            </article>
+          }
+        </section>
+      }
+
+      <!-- SOLICITUDES DE REPROGRAMACIÓN -->
+      @if (activeTab === 'requests') {
+        <section class="appointments-section">
+          <h2>Solicitudes de reprogramación</h2>
+
+          @if (pendingRescheduleAppointments.length === 0) {
+            <div class="empty-state">
+              <h3>No tienes solicitudes pendientes</h3>
+              <p>Las solicitudes de reprogramación aparecerán aquí.</p>
+            </div>
+          }
+
+          @for (apt of pendingRescheduleAppointments; track apt.id) {
+            <article class="appointment-card">
+
+              <div class="appointment-card-header">
+                <div>
+                  <span class="appointment-date">
+                    {{ formatDate(apt.date) }}
+                  </span>
+                  <h3>{{ apt.start_time }} - {{ apt.end_time }} hrs</h3>
+                </div>
+
+                <span class="status-badge pending">
+                  Reprogramación pendiente
+                </span>
+              </div>
+
+              <div class="appointment-details">
+                <p><strong>Modalidad:</strong> {{ apt.modality }}</p>
+                <p><strong>Motivo original:</strong> {{ apt.reason }}</p>
+                <p>
+                  <strong>Motivo de reprogramación:</strong>
+                  {{ apt.reschedule_reason || 'No especificado' }}
+                </p>
+
+                @if (apt.proposed_date) {
+                  <div class="proposed-schedule">
+                    <h4>Horario propuesto</h4>
+                    <p>{{ formatDate(apt.proposed_date) }}</p>
+                    <p>
+                      {{ apt.proposed_start_time }} -
+                      {{ apt.proposed_end_time }} hrs
+                    </p>
+                  </div>
+                }
+
+                @if (apt.reschedule_requested_by === 'psicologo') {
+                  <p>
+                    <strong>Solicitud realizada por:</strong> Psicóloga
+                  </p>
+                  <p>
+                    Si rechazas esta propuesta, la cita será cancelada según el comportamiento actual del sistema.
+                  </p>
+                } @else {
+                  <p>
+                    <strong>Solicitud realizada por:</strong> Alumno
+                  </p>
+                  <p>
+                    Mientras se resuelve la solicitud, se conserva el horario original.
+                  </p>
+                }
+              </div>
+
+              @if (isPendingRequestExpired(apt)) {
+                <p class="information-message">
+                  El horario original ya terminó. Esta solicitud requiere resolución administrativa.
+                </p>
+              } @else {
+                <div class="appointment-actions">
+
+                  @if (apt.reschedule_requested_by === 'psicologo') {
+                    <button
+                      type="button"
+                      class="primary-button"
+                      [disabled]="isProcessing"
+                      (click)="acceptReschedule(apt)">
+                      Aceptar propuesta
+                    </button>
+                  }
+
+                  <button
+                    type="button"
+                    class="danger-button"
+                    [disabled]="isProcessing"
+                    (click)="rejectReschedule(apt)">
+                    {{ apt.reschedule_requested_by === 'psicologo' ? 'Rechazar propuesta' : 'Descartar solicitud' }}
+                  </button>
+
+                </div>
+              }
+
+            </article>
+          }
+        </section>
+      }
+
+      <!-- HISTORIAL -->
+      @if (activeTab === 'history') {
+        <section class="appointments-section">
+          <h2>Historial de citas</h2>
+
+          @if (historyAppointments.length === 0) {
+            <div class="empty-state">
+              <h3>No tienes citas en el historial</h3>
+              <p>Las citas cuyo horario haya finalizado aparecerán aquí.</p>
+            </div>
+          }
+
+          @for (apt of historyAppointments; track apt.id) {
+            <article class="appointment-card">
+
+              <div class="appointment-card-header">
+                <div>
+                  <span class="appointment-date">
+                    {{ formatDate(apt.date) }}
+                  </span>
+                  <h3>{{ apt.start_time }} - {{ apt.end_time }} hrs</h3>
+                </div>
+
+                <span class="status-badge history">
+                  {{ apt.status }}
+                </span>
+              </div>
+
+              <div class="appointment-details">
+                <p><strong>Duración:</strong> {{ apt.duration }} minutos</p>
+                <p><strong>Modalidad:</strong> {{ apt.modality }}</p>
+                <p><strong>Motivo:</strong> {{ apt.reason }}</p>
+              </div>
+
+            </article>
+          }
+        </section>
+      }
+
+      <!-- CANCELADAS -->
+      @if (activeTab === 'cancelled') {
+        <section class="appointments-section">
+          <h2>Citas canceladas</h2>
+
+          @if (cancelledAppointments.length === 0) {
+            <div class="empty-state">
+              <h3>No tienes citas canceladas</h3>
+              <p>Las citas que hayas cancelado aparecerán aquí.</p>
+            </div>
+          }
+
+          @for (apt of cancelledAppointments; track apt.id) {
+            <article class="appointment-card">
+
+              <div class="appointment-card-header">
+                <div>
+                  <span class="appointment-date">
+                    {{ formatDate(apt.date) }}
+                  </span>
+                  <h3>{{ apt.start_time }} - {{ apt.end_time }} hrs</h3>
+                </div>
+
+                <span class="status-badge cancelled">
+                  Cancelada
+                </span>
+              </div>
+
+              <div class="appointment-details">
+                <p>
+                  <strong>Motivo de cancelación:</strong>
+                  {{ apt.cancellation_reason || 'No especificado' }}
+                </p>
+                <p><strong>Motivo original:</strong> {{ apt.reason }}</p>
+              </div>
+
+            </article>
+          }
+        </section>
+      }
+
+    }
+
+  </main>
+
+  <!-- MODAL DE REPROGRAMACIÓN -->
+  @if (reschedulingAppointment) {
+    <app-reschedule-appointment-modal
+      [appointment]="reschedulingAppointment"
+      (close)="closeRescheduleModal()"
+      (rescheduleRequested)="onRescheduleRequested()">
+    </app-reschedule-appointment-modal>
+  }
+
+  <!-- MODAL DE CANCELACIÓN -->
+  @if (cancellingAppointment) {
+    <app-cancel-appointment-modal
+      [appointment]="cancellingAppointment"
+      (close)="closeCancelModal()"
+      (appointmentCancelled)="onAppointmentCancelled()">
+    </app-cancel-appointment-modal>
+  }
+
+</div>

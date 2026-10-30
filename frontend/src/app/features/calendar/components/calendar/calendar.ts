@@ -108,17 +108,17 @@ export interface PatientScheduleSelection {
 export class Calendar implements OnDestroy {
 
   @Output()
-    patientScheduleSelected = 
+  patientScheduleSelected =
     new EventEmitter<PatientScheduleSelection>();
 
   @Output()
-    patientAppointmentBooked =
+  patientAppointmentBooked =
     new EventEmitter<any>();
 
   @Input() mode: 'psychologist' | 'patient' = 'psychologist';
 
   private isBrowser: boolean;
-  
+
   /*
  * Actualización automática de la agenda
  * del paciente.
@@ -148,19 +148,19 @@ export class Calendar implements OnDestroy {
 
   studentSearchResults: Student[] = [];
 
-/*Notificación visual del calendario. */
-toastMessage = '';
+  /*Notificación visual del calendario. */
+  toastMessage = '';
 
-toastType:
-  'success'
-  | 'error'
-  | 'warning' = 'success';
+  toastType:
+    'success'
+    | 'error'
+    | 'warning' = 'success';
 
-toastVisible = false;
+  toastVisible = false;
 
-private toastTimeout:
-  ReturnType<typeof setTimeout>
-  | null = null;
+  private toastTimeout:
+    ReturnType<typeof setTimeout>
+    | null = null;
 
   /*
    * Horarios inhabilitados de HU-02B.
@@ -486,10 +486,10 @@ private toastTimeout:
     this.refreshCalendarData();
   }
 
-    /*
-   * Inhabilitación rápida desde
-   * una disponibilidad concreta.
-   */
+  /*
+ * Inhabilitación rápida desde
+ * una disponibilidad concreta.
+ */
   handleDisableFromCard(
     availability: Availability
   ): void {
@@ -600,16 +600,16 @@ private toastTimeout:
     const startTime =
       parts[0]
         ? normalizeTime(
-            parts[0]
-          )
+          parts[0]
+        )
         : '08:00:00';
 
 
     const endTime =
       parts[1]
         ? normalizeTime(
-            parts[1]
-          )
+          parts[1]
+        )
         : '09:00:00';
 
 
@@ -760,6 +760,7 @@ private toastTimeout:
       studentSemester: '',
       studentProgram: '',
       consultationReason: appointment.reason || (appointment as any).reschedule_reason,
+      rescheduleReason: appointment.reschedule_reason || undefined,
       modality:
         appointment.modality === 'In person'
           ? 'Presencial'
@@ -812,6 +813,7 @@ private toastTimeout:
               : 'Reservado');
           matchingAvail.studentName = appointment.student_name;
           matchingAvail.consultationReason = appointment.reason || (appointment as any).reschedule_reason;
+          matchingAvail.rescheduleReason = appointment.reschedule_reason || undefined;
           matchingAvail.modality = appointment.modality === 'In person' ? 'Presencial' : 'En línea';
           matchingAvail.location = appointment.location || appointment.meeting_url || 'Cubículo';
           matchingAvail.proposedDate = appointment.proposed_date || undefined;
@@ -862,10 +864,10 @@ private toastTimeout:
 
           const sameStatus =
             this.statusFilter ===
-              'all'
+            'all'
             ||
             availability.status ===
-              this.statusFilter;
+            this.statusFilter;
 
 
           return sameStatus;
@@ -874,7 +876,7 @@ private toastTimeout:
   }
 
 
-  selectDate( date: Date ): void {
+  selectDate(date: Date): void {
 
     this.currentDate =
 
@@ -1099,7 +1101,7 @@ private toastTimeout:
         'Consultorio psicopedagógico',
 
       reason:
-        availability.consultationReason ||
+        availability.rescheduleReason ||
         '',
 
       derivedBy:
@@ -1154,8 +1156,8 @@ private toastTimeout:
       proposedDateStr:
         availability.proposedDate
           ? `${availability.proposedDate}, ` +
-            `${availability.proposedStartTime} - ` +
-            `${availability.proposedEndTime}`
+          `${availability.proposedStartTime} - ` +
+          `${availability.proposedEndTime}`
           : 'Propuesta pendiente',
 
       proposedDetails:
@@ -1294,164 +1296,164 @@ private toastTimeout:
   }
 
   showToast(
-  message: string,
-  type:
-    'success'
-    | 'error'
-    | 'warning' = 'success'
-): void {
+    message: string,
+    type:
+      'success'
+      | 'error'
+      | 'warning' = 'success'
+  ): void {
 
-  if (this.toastTimeout) {
-    clearTimeout(
-      this.toastTimeout
-    );
+    if (this.toastTimeout) {
+      clearTimeout(
+        this.toastTimeout
+      );
+    }
+
+    this.toastMessage =
+      message;
+
+    this.toastType =
+      type;
+
+    this.toastVisible =
+      true;
+
+    this.toastTimeout =
+      setTimeout(
+        () => {
+
+          this.toastVisible =
+            false;
+
+          this.toastTimeout =
+            null;
+
+          this.changeDetectorRef
+            .detectChanges();
+
+        },
+        3500
+      );
   }
 
-  this.toastMessage =
-    message;
 
-  this.toastType =
-    type;
-
-  this.toastVisible =
-    true;
-
-  this.toastTimeout =
-    setTimeout(
-      () => {
-
-        this.toastVisible =
-          false;
-
-        this.toastTimeout =
-          null;
-
-        this.changeDetectorRef
-          .detectChanges();
-
-      },
-      3500
-    );
-}
-
-
-/**
- * Selecciona un horario inhabilitado desde el calendario
- * para mostrar sus detalles en el panel lateral.
- */
-selectDisabledSchedule(
-  disabled: any
-): void {
-
-  /*
-   * El paciente solo debe visualizar
-   * el horario como no disponible.
-   * No debe acceder a motivos administrativos.
+  /**
+   * Selecciona un horario inhabilitado desde el calendario
+   * para mostrar sus detalles en el panel lateral.
    */
-  if (this.mode === 'patient') {
-    const patientDateStr =
+  selectDisabledSchedule(
+    disabled: any
+  ): void {
+
+    /*
+     * El paciente solo debe visualizar
+     * el horario como no disponible.
+     * No debe acceder a motivos administrativos.
+     */
+    if (this.mode === 'patient') {
+      const patientDateStr =
+        disabled.startDate ||
+        disabled.date ||
+        this.formatDate(this.getCurrentViewDate());
+
+      this.selectedSlotDate = patientDateStr;
+      this.selectedDate = patientDateStr;
+      this.selectedAvailabilityId = disabled.id;
+      this.selectedAvailabilityStatus = 'Inhabilitado';
+
+      this.patientSlotData = {
+        date: patientDateStr,
+        startTime: disabled.startTime ? this.formatAvailabilityTime(disabled.startTime) : '00:00',
+        endTime: disabled.endTime ? this.formatAvailabilityTime(disabled.endTime) : '23:59',
+        duration: 0,
+        status: 'No disponible',
+        isExpired: false
+      };
+
+      this.sidebarView = 'slot-detail';
+      this.isSidebarOpen = true;
+      return;
+    }
+
+    const dateStr =
       disabled.startDate ||
       disabled.date ||
-      this.formatDate(this.getCurrentViewDate());
+      this.formatDate(
+        this.getCurrentViewDate()
+      );
 
-    this.selectedSlotDate = patientDateStr;
-    this.selectedDate = patientDateStr;
-    this.selectedAvailabilityId = disabled.id;
-    this.selectedAvailabilityStatus = 'Inhabilitado';
+    this.selectedSlotDate =
+      dateStr;
 
-    this.patientSlotData = {
-      date: patientDateStr,
-      startTime: disabled.startTime ? this.formatAvailabilityTime(disabled.startTime) : '00:00',
-      endTime: disabled.endTime ? this.formatAvailabilityTime(disabled.endTime) : '23:59',
-      duration: 0,
-      status: 'No disponible',
-      isExpired: false
+    this.selectedDate =
+      dateStr;
+
+    this.selectedAvailabilityId =
+      disabled.id;
+
+    this.selectedAvailabilityStatus =
+      'Inhabilitado';
+
+
+    const startTimeFormatted =
+      disabled.startTime
+        ? this.formatAvailabilityTime(
+          disabled.startTime
+        )
+        : '';
+
+    const endTimeFormatted =
+      disabled.endTime
+        ? this.formatAvailabilityTime(
+          disabled.endTime
+        )
+        : '';
+
+
+    this.selectedAppointmentData = {
+      id: disabled.id,
+      status: 'Inhabilitado',
+
+      studentName:
+        'Horario Inhabilitado',
+
+      dateStr:
+        `${dateStr}, ${startTimeFormatted} - ${endTimeFormatted}`,
+
+      startTime:
+        disabled.startTime,
+
+      endTime:
+        disabled.endTime,
+
+      date:
+        dateStr,
+
+      reason:
+        disabled.reason ||
+        'Sin motivo especificado',
+
+      disabledReason:
+        disabled.reason ||
+        'Sin motivo especificado',
+
+      observation:
+        disabled.observation ||
+        '',
+
+      disabledObservation:
+        disabled.observation ||
+        '',
+
+      type:
+        disabled.type ||
+        'Puntual'
     };
 
     this.sidebarView = 'slot-detail';
-    this.isSidebarOpen = true;
-    return;
+    this.isSidebarOpen =
+      true;
   }
-
-  const dateStr =
-    disabled.startDate ||
-    disabled.date ||
-    this.formatDate(
-      this.getCurrentViewDate()
-    );
-
-  this.selectedSlotDate =
-    dateStr;
-
-  this.selectedDate =
-    dateStr;
-
-  this.selectedAvailabilityId =
-    disabled.id;
-
-  this.selectedAvailabilityStatus =
-    'Inhabilitado';
-
-
-  const startTimeFormatted =
-    disabled.startTime
-      ? this.formatAvailabilityTime(
-          disabled.startTime
-        )
-      : '';
-
-  const endTimeFormatted =
-    disabled.endTime
-      ? this.formatAvailabilityTime(
-          disabled.endTime
-        )
-      : '';
-
-
-  this.selectedAppointmentData = {
-    id: disabled.id,
-    status: 'Inhabilitado',
-
-    studentName:
-      'Horario Inhabilitado',
-
-    dateStr:
-      `${dateStr}, ${startTimeFormatted} - ${endTimeFormatted}`,
-
-    startTime:
-      disabled.startTime,
-
-    endTime:
-      disabled.endTime,
-
-    date:
-      dateStr,
-
-    reason:
-      disabled.reason ||
-      'Sin motivo especificado',
-
-    disabledReason:
-      disabled.reason ||
-      'Sin motivo especificado',
-
-    observation:
-      disabled.observation ||
-      '',
-
-    disabledObservation:
-      disabled.observation ||
-      '',
-
-    type:
-      disabled.type ||
-      'Puntual'
-  };
-
-  this.sidebarView = 'slot-detail';
-  this.isSidebarOpen =
-    true;
-}
 
   onAppointmentSubmit(event: Event): void {
     event.preventDefault();
@@ -1468,9 +1470,9 @@ selectDisabledSchedule(
     if (!selectedStudent) {
 
       this.showToast(
-          'Busca y selecciona un alumno de la lista.',
-          'warning'
-  );      return;
+        'Busca y selecciona un alumno de la lista.',
+        'warning'
+      ); return;
     }
 
     const modality = String(
@@ -1571,7 +1573,7 @@ selectDisabledSchedule(
       location: modality === 'In person' ? location : undefined,
       reason
     }).subscribe({
-     next: (response) => {
+      next: (response) => {
         console.log(
           'Cita registrada:',
           response
@@ -1783,9 +1785,9 @@ selectDisabledSchedule(
   /**
    * Se dispara al hacer clic en "Rehabilitar horario" desde el panel lateral (AppointmentDetails)
    */
-/**
-   * Se dispara al hacer clic en "Rehabilitar horario" desde el panel lateral
-   */
+  /**
+     * Se dispara al hacer clic en "Rehabilitar horario" desde el panel lateral
+     */
   rehabilitateFromPanel(appointment: any): void {
     const targetId = Math.abs(appointment?.id || this.selectedAvailabilityId || 0);
 
@@ -2209,9 +2211,9 @@ selectDisabledSchedule(
 
       for (
         const disabled of
-          this.getDisabledSchedulesForDate(
-            day
-          )
+        this.getDisabledSchedulesForDate(
+          day
+        )
       ) {
 
         if (
@@ -2316,7 +2318,7 @@ selectDisabledSchedule(
       duration / 60
     ) * 100;
   }
-  
+
   /*
    * Posición vertical de un slot generado
    * dentro de su fila horaria.
@@ -2455,8 +2457,8 @@ selectDisabledSchedule(
   ): Availability[] {
     if (
 
-    this.statusFilter !== 'all' &&
-    this.statusFilter !== 'Disponible'
+      this.statusFilter !== 'all' &&
+      this.statusFilter !== 'Disponible'
 
     ) {
       return [];
@@ -2488,104 +2490,104 @@ selectDisabledSchedule(
   }
 
 
-getBookedAvailabilitiesForHour(
-  date: Date,
-  hour: string
-): Availability[] {
+  getBookedAvailabilitiesForHour(
+    date: Date,
+    hour: string
+  ): Availability[] {
 
-  /*
-   * Los filtros administrativos solamente
-   * aplican a la vista de la psicóloga.
-   */
-  if (
-    this.mode === 'psychologist' &&
-    this.statusFilter !== 'all' &&
-    this.statusFilter !== 'Reservado' &&
-    this.statusFilter !== 'Reprogramacion pendiente' &&
-    this.statusFilter !== 'Cancelado'
-  ) {
-    return [];
-  }
-
-
-  const dateString =
-    this.formatDate(date);
-
-  const hourStart =
-    this.timeToMinutes(hour);
-
-  const hourEnd =
-    hourStart + 60;
+    /*
+     * Los filtros administrativos solamente
+     * aplican a la vista de la psicóloga.
+     */
+    if (
+      this.mode === 'psychologist' &&
+      this.statusFilter !== 'all' &&
+      this.statusFilter !== 'Reservado' &&
+      this.statusFilter !== 'Reprogramacion pendiente' &&
+      this.statusFilter !== 'Cancelado'
+    ) {
+      return [];
+    }
 
 
-  return this
-    .getMergedAvailabilitiesForDateString(
-      dateString
-    )
-    .filter((availability) => {
+    const dateString =
+      this.formatDate(date);
 
-      /*
-       * Para paciente:
-       * Reservado y Reprogramación pendiente
-       * se consideran simplemente Ocupado.
-       *
-       * Cancelado no se muestra.
-       */
-      if (this.mode === 'patient') {
+    const hourStart =
+      this.timeToMinutes(hour);
 
-        const isOccupied =
-          availability.status === 'Reservado' ||
-          availability.status ===
+    const hourEnd =
+      hourStart + 60;
+
+
+    return this
+      .getMergedAvailabilitiesForDateString(
+        dateString
+      )
+      .filter((availability) => {
+
+        /*
+         * Para paciente:
+         * Reservado y Reprogramación pendiente
+         * se consideran simplemente Ocupado.
+         *
+         * Cancelado no se muestra.
+         */
+        if (this.mode === 'patient') {
+
+          const isOccupied =
+            availability.status === 'Reservado' ||
+            availability.status ===
             'Reprogramacion pendiente';
 
-        if (!isOccupied) {
-          return false;
-        }
+          if (!isOccupied) {
+            return false;
+          }
 
-      } else {
+        } else {
 
-        const isAdministrativeStatus =
-          availability.status === 'Reservado' ||
-          availability.status ===
+          const isAdministrativeStatus =
+            availability.status === 'Reservado' ||
+            availability.status ===
             'Reprogramacion pendiente' ||
-          availability.status === 'Cancelado';
+            availability.status === 'Cancelado';
 
-        if (!isAdministrativeStatus) {
-          return false;
-        }
+          if (!isAdministrativeStatus) {
+            return false;
+          }
 
 
-        if (
-          this.statusFilter !== 'all' &&
-          availability.status !==
+          if (
+            this.statusFilter !== 'all' &&
+            availability.status !==
             this.statusFilter
-        ) {
-          return false;
+          ) {
+            return false;
+          }
+
         }
 
-      }
 
+        const startMinutes =
+          this.timeToMinutes(
+            availability.startTime
+          );
 
-      const startMinutes =
-        this.timeToMinutes(
-          availability.startTime
+        return (
+          startMinutes >= hourStart &&
+          startMinutes < hourEnd
         );
-
-      return (
-        startMinutes >= hourStart &&
-        startMinutes < hourEnd
+      })
+      .sort(
+        (first, second) =>
+          this.timeToMinutes(
+            first.startTime
+          ) -
+          this.timeToMinutes(
+            second.startTime
+          )
       );
-    })
-    .sort(
-      (first, second) =>
-        this.timeToMinutes(
-          first.startTime
-        ) -
-        this.timeToMinutes(
-          second.startTime
-        )
-    );
-}
+  }
 
   getFormattedRange12h(
     availability: Availability
@@ -2638,17 +2640,17 @@ getBookedAvailabilitiesForHour(
     return (
 
       date.getDate() ===
-        today.getDate()
+      today.getDate()
 
       &&
 
       date.getMonth() ===
-        today.getMonth()
+      today.getMonth()
 
       &&
 
       date.getFullYear() ===
-        today.getFullYear()
+      today.getFullYear()
     );
   }
 
@@ -2697,10 +2699,10 @@ getBookedAvailabilitiesForHour(
 
     if (
       this.statusFilter !==
-        'all'
+      'all'
       &&
       this.statusFilter !==
-        'Disponible'
+      'Disponible'
     ) {
 
       return 0;
@@ -2716,12 +2718,12 @@ getBookedAvailabilitiesForHour(
         (availability) =>
 
           availability.date ===
-            dateString
+          dateString
 
           &&
 
           availability.status ===
-            'Disponible'
+          'Disponible'
 
           &&
 
@@ -2791,24 +2793,24 @@ getBookedAvailabilitiesForHour(
   }
 
   getPatientOccupiedCountForDate(
-  date: Date
-): number {
+    date: Date
+  ): number {
 
-  const dateString =
-    this.formatDate(date);
+    const dateString =
+      this.formatDate(date);
 
-  return this
-    .getMergedAvailabilitiesForDateString(
-      dateString
-    )
-    .filter(
-      (availability) =>
-        availability.status === 'Reservado' ||
-        availability.status ===
+    return this
+      .getMergedAvailabilitiesForDateString(
+        dateString
+      )
+      .filter(
+        (availability) =>
+          availability.status === 'Reservado' ||
+          availability.status ===
           'Reprogramacion pendiente'
-    )
-    .length;
-}
+      )
+      .length;
+  }
 
   getAvailableSlots():
     Availability[] {
@@ -2817,7 +2819,7 @@ getBookedAvailabilitiesForHour(
       .filter(
         (availability) =>
           availability.status ===
-            'Disponible' &&
+          'Disponible' &&
           this.generateSlots(availability).length > 0
       );
   }
@@ -2881,46 +2883,46 @@ getBookedAvailabilitiesForHour(
   }
 
 
-  generateSlots( availability: Availability ): string[] {
+  generateSlots(availability: Availability): string[] {
     const slots: string[] = [];
 
     const dateAppointments =
       availability.status === 'Disponible'
         ? this.appointments.filter(
-            (appointment) =>
-              appointment.date === availability.date &&
-              appointment.status !== 'Cancelled'
-          )
+          (appointment) =>
+            appointment.date === availability.date &&
+            appointment.status !== 'Cancelled'
+        )
         : [];
 
     const dateBookedAvailabilities =
       availability.status === 'Disponible'
         ? this.availabilities.filter(
-            (item) =>
-              item.date === availability.date &&
-              item.id !== availability.id &&
-              (item.status === 'Reservado' ||
-                item.status === 'Reprogramacion pendiente')
-          )
+          (item) =>
+            item.date === availability.date &&
+            item.id !== availability.id &&
+            (item.status === 'Reservado' ||
+              item.status === 'Reprogramacion pendiente')
+        )
         : [];
 
     const dateDisabledSchedules =
       availability.status === 'Disponible'
         ? this.disabledSchedules.filter((disabledSchedule) => {
-            const startDate =
-              disabledSchedule.startDate || disabledSchedule.date;
-            const rawEndDate =
-              disabledSchedule.endDate || disabledSchedule.date || startDate;
-            const endDate =
-              disabledSchedule.type === 'Puntual' || rawEndDate < startDate
-                ? startDate
-                : rawEndDate;
-            return (
-              Boolean(startDate && endDate) &&
-              availability.date >= startDate &&
-              availability.date <= endDate
-            );
-          })
+          const startDate =
+            disabledSchedule.startDate || disabledSchedule.date;
+          const rawEndDate =
+            disabledSchedule.endDate || disabledSchedule.date || startDate;
+          const endDate =
+            disabledSchedule.type === 'Puntual' || rawEndDate < startDate
+              ? startDate
+              : rawEndDate;
+          return (
+            Boolean(startDate && endDate) &&
+            availability.date >= startDate &&
+            availability.date <= endDate
+          );
+        })
         : [];
 
     let currentMinutes = this.timeToMinutes(
@@ -3209,26 +3211,26 @@ getBookedAvailabilitiesForHour(
     date: Date
   ): Array<
     | {
-        type: 'availability';
-        startTime: string;
-        availability: Availability;
-      }
+      type: 'availability';
+      startTime: string;
+      availability: Availability;
+    }
     | {
-        type: 'habitualBreak';
-        startTime: string;
-      }
+      type: 'habitualBreak';
+      startTime: string;
+    }
   > {
 
     const items: Array<
       | {
-          type: 'availability';
-          startTime: string;
-          availability: Availability;
-        }
+        type: 'availability';
+        startTime: string;
+        availability: Availability;
+      }
       | {
-          type: 'habitualBreak';
-          startTime: string;
-        }
+        type: 'habitualBreak';
+        startTime: string;
+      }
     > = [];
 
 
@@ -3238,9 +3240,9 @@ getBookedAvailabilitiesForHour(
      */
     for (
       const availability of
-        this.getAvailabilitiesForDate(
-          date
-        )
+      this.getAvailabilitiesForDate(
+        date
+      )
     ) {
 
       if (this.mode === 'patient') {
@@ -3250,11 +3252,11 @@ getBookedAvailabilitiesForHour(
           availability.status === 'Reservado' ||
           availability.status === 'Reprogramacion pendiente';
 
-          if (!visibleForPatient) {
-            continue;
-          }
-
+        if (!visibleForPatient) {
+          continue;
         }
+
+      }
 
       items.push({
 
@@ -3329,10 +3331,10 @@ getBookedAvailabilitiesForHour(
          */
         if (
           first.type ===
-            'habitualBreak'
+          'habitualBreak'
           &&
           second.type !==
-            'habitualBreak'
+          'habitualBreak'
         ) {
 
           return -1;
@@ -3341,10 +3343,10 @@ getBookedAvailabilitiesForHour(
 
         if (
           second.type ===
-            'habitualBreak'
+          'habitualBreak'
           &&
           first.type !==
-            'habitualBreak'
+          'habitualBreak'
         ) {
 
           return 1;
@@ -3363,62 +3365,62 @@ getBookedAvailabilitiesForHour(
   /* ============================================================
      HU-02B - HORARIOS INHABILITADOS
      ============================================================ */
-getDisabledSchedulesForDate(
-  date: Date
-): any[] {
+  getDisabledSchedulesForDate(
+    date: Date
+  ): any[] {
 
- /*
- * Los filtros administrativos solamente
- * afectan la agenda de la psicóloga.
- *
- * En la vista paciente los horarios
- * inhabilitados siempre deben poder
- * representarse.
- */
-if (
-  this.mode === 'psychologist' &&
-  this.statusFilter !== 'all' &&
-  this.statusFilter !== 'Inhabilitado'
-) {
-  return [];
-}
+    /*
+    * Los filtros administrativos solamente
+    * afectan la agenda de la psicóloga.
+    *
+    * En la vista paciente los horarios
+    * inhabilitados siempre deben poder
+    * representarse.
+    */
+    if (
+      this.mode === 'psychologist' &&
+      this.statusFilter !== 'all' &&
+      this.statusFilter !== 'Inhabilitado'
+    ) {
+      return [];
+    }
 
-  const dateString =
-    this.formatDate(date);
+    const dateString =
+      this.formatDate(date);
 
-  return this.disabledSchedules
-    .filter(
-      (disabledSchedule) => {
+    return this.disabledSchedules
+      .filter(
+        (disabledSchedule) => {
 
-        const startDate =
-          disabledSchedule.startDate ||
-          disabledSchedule.date;
+          const startDate =
+            disabledSchedule.startDate ||
+            disabledSchedule.date;
 
-        const rawEndDate =
-          disabledSchedule.endDate ||
-          disabledSchedule.date ||
-          startDate;
+          const rawEndDate =
+            disabledSchedule.endDate ||
+            disabledSchedule.date ||
+            startDate;
 
-        const endDate =
-          disabledSchedule.type === 'Puntual' ||
-          rawEndDate < startDate
-            ? startDate
-            : rawEndDate;
+          const endDate =
+            disabledSchedule.type === 'Puntual' ||
+              rawEndDate < startDate
+              ? startDate
+              : rawEndDate;
 
-        if (
-          !startDate ||
-          !endDate
-        ) {
-          return false;
+          if (
+            !startDate ||
+            !endDate
+          ) {
+            return false;
+          }
+
+          return (
+            dateString >= startDate &&
+            dateString <= endDate
+          );
         }
-
-        return (
-          dateString >= startDate &&
-          dateString <= endDate
-        );
-      }
-    );
-}
+      );
+  }
 
 
   hasDisabledSchedule(
@@ -3526,10 +3528,10 @@ if (
 
           return (
             availabilityStart <
-              rowEnd
+            rowEnd
             &&
             availabilityEnd >
-              rowStart
+            rowStart
           );
         }
       );
@@ -3562,7 +3564,7 @@ if (
   }
 
 
-   isRegularWorkDay(
+  isRegularWorkDay(
     date: Date
   ): boolean {
 
@@ -3659,10 +3661,10 @@ if (
 
     return (
       breakStart >=
-        workStart
+      workStart
       &&
       breakEnd <=
-        workEnd
+      workEnd
     );
   }
 
@@ -3841,7 +3843,7 @@ if (
         new Date(
           startDate.getFullYear(),
           startDate.getMonth() +
-            value,
+          value,
           1
         );
 
@@ -3897,10 +3899,10 @@ if (
 
     return (
       targetDate >=
-        startDate
+      startDate
       &&
       targetDate <=
-        endDate
+      endDate
     );
   }
   isHabitualBreakSegmentStart(
@@ -3977,7 +3979,7 @@ if (
       index === -1
       ||
       index ===
-        days.length - 1
+      days.length - 1
     ) {
 
       return true;
@@ -4099,10 +4101,10 @@ if (
 
     return (
       breakStart >=
-        rowStart
+      rowStart
       &&
       breakStart <
-        rowEnd
+      rowEnd
     );
   }
 
@@ -4213,39 +4215,39 @@ if (
    */
 
   refreshCalendarData(): void {
-      forkJoin({
-        availabilities:
-          this.calendarService.getAvailabilities().pipe(
-            catchError((err) => {
-              console.error('Error loading availabilities:', err);
-              return of([]);
-            })
-          ),
+    forkJoin({
+      availabilities:
+        this.calendarService.getAvailabilities().pipe(
+          catchError((err) => {
+            console.error('Error loading availabilities:', err);
+            return of([]);
+          })
+        ),
 
-        schedule:
-          this.regularScheduleService.getRegularSchedule().pipe(
-            catchError((err) => {
-              console.error('Error loading regular schedule:', err);
-              return of(null);
-            })
-          ),
+      schedule:
+        this.regularScheduleService.getRegularSchedule().pipe(
+          catchError((err) => {
+            console.error('Error loading regular schedule:', err);
+            return of(null);
+          })
+        ),
 
-        disabledSchedules:
-          this.calendarService.getDisabledSchedules().pipe(
-            catchError((err) => {
-              console.error('Error loading disabled schedules:', err);
-              return of([]);
-            })
-          ),
+      disabledSchedules:
+        this.calendarService.getDisabledSchedules().pipe(
+          catchError((err) => {
+            console.error('Error loading disabled schedules:', err);
+            return of([]);
+          })
+        ),
 
-        appointments:
-          this.calendarService.getAppointments().pipe(
-            catchError((err) => {
-              console.error('Error loading appointments:', err);
-              return of({ appointments: [] });
-            })
-          )
-      })
+      appointments:
+        this.calendarService.getAppointments().pipe(
+          catchError((err) => {
+            console.error('Error loading appointments:', err);
+            return of({ appointments: [] });
+          })
+        )
+    })
       .subscribe({
         next: ({
           availabilities,
@@ -4261,13 +4263,13 @@ if (
           this.notifyCalendarDataChanged();
         },
 
-      error: (error) => {
+        error: (error) => {
           console.error(
             'Error al actualizar los datos del calendario:',
             error
           );
         }
-    });
+      });
   }
 
 
@@ -4312,117 +4314,117 @@ if (
         platformId
       );
 
-      afterNextRender(
-        
-        () => {
+    afterNextRender(
 
-    if (!this.isBrowser) {
-      return;
-    }
+      () => {
 
-
-    /*
-     * Primera carga del calendario.
-     */
-    this.refreshCalendarData();
-
-
-    /*
-     * Actualización cuando los cambios
-     * ocurren dentro de la misma instancia
-     * de Angular.
-     */
-    this.calendarService
-      .scheduleChanged$
-      .subscribe(
-        () => {
-
-          this.refreshCalendarData();
-
+        if (!this.isBrowser) {
+          return;
         }
-      );
 
 
-    /*
-     * PACIENTE:
-     *
-     * Como la vista de la psicóloga y la
-     * del paciente pueden estar abiertas
-     * en pestañas, puertos o sesiones
-     * diferentes, scheduleChanged$ no es
-     * suficiente.
-     *
-     * Consultamos el backend cada 3 segundos.
-     */
-    if (
-      this.patientRefreshInterval === null
-    ) {
+        /*
+         * Primera carga del calendario.
+         */
+        this.refreshCalendarData();
 
-      this.patientRefreshInterval =
-        setInterval(
-          () => {
 
-            /*
-             * En la vista de la psicóloga no se refresca
-             * mientras haya un modal abierto para no
-             * interferir con la captura de datos.
-             */
-            if (
-              this.isCancelModalOpen ||
-              this.isRescheduleModalOpen ||
-              this.isManageScheduleOpen ||
-              this.sidebarView === 'patient-booking-form'
-            ) {
-              return;
+        /*
+         * Actualización cuando los cambios
+         * ocurren dentro de la misma instancia
+         * de Angular.
+         */
+        this.calendarService
+          .scheduleChanged$
+          .subscribe(
+            () => {
+
+              this.refreshCalendarData();
+
             }
+          );
 
-            this.refreshCalendarData();
 
-          },
-          this.mode === 'patient' ? 3000 : 5000
-        );
-    }
+        /*
+         * PACIENTE:
+         *
+         * Como la vista de la psicóloga y la
+         * del paciente pueden estar abiertas
+         * en pestañas, puertos o sesiones
+         * diferentes, scheduleChanged$ no es
+         * suficiente.
+         *
+         * Consultamos el backend cada 3 segundos.
+         */
+        if (
+          this.patientRefreshInterval === null
+        ) {
 
-  }
-);
+          this.patientRefreshInterval =
+            setInterval(
+              () => {
+
+                /*
+                 * En la vista de la psicóloga no se refresca
+                 * mientras haya un modal abierto para no
+                 * interferir con la captura de datos.
+                 */
+                if (
+                  this.isCancelModalOpen ||
+                  this.isRescheduleModalOpen ||
+                  this.isManageScheduleOpen ||
+                  this.sidebarView === 'patient-booking-form'
+                ) {
+                  return;
+                }
+
+                this.refreshCalendarData();
+
+              },
+              this.mode === 'patient' ? 3000 : 5000
+            );
+        }
+
+      }
+    );
 
   }
 
   ngOnDestroy(): void {
 
-  /*
-   * Detener la actualización automática
-   * cuando se abandona la vista.
-   */
-  if (
-    this.patientRefreshInterval !== null
-  ) {
+    /*
+     * Detener la actualización automática
+     * cuando se abandona la vista.
+     */
+    if (
+      this.patientRefreshInterval !== null
+    ) {
 
-    clearInterval(
-      this.patientRefreshInterval
-    );
+      clearInterval(
+        this.patientRefreshInterval
+      );
 
-    this.patientRefreshInterval =
-      null;
+      this.patientRefreshInterval =
+        null;
+    }
+
+
+    /*
+     * Limpiar también el timeout
+     * de las notificaciones.
+     */
+    if (
+      this.toastTimeout !== null
+    ) {
+
+      clearTimeout(
+        this.toastTimeout
+      );
+
+      this.toastTimeout =
+        null;
+    }
   }
-
-
-  /*
-   * Limpiar también el timeout
-   * de las notificaciones.
-   */
-  if (
-    this.toastTimeout !== null
-  ) {
-
-    clearTimeout(
-      this.toastTimeout
-    );
-
-    this.toastTimeout =
-      null;
-  }
-}
 
 
   /* ============================================================

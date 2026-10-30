@@ -58,6 +58,23 @@ export class Dashboard implements OnInit {
     );
   }
 
+  get nextAppointment(): Appointment | null {
+    const now = new Date();
+
+    return this.appointments
+      .filter((apt) => {
+        if (apt.status !== 'Reserved') return false;
+
+        const start = new Date(`${apt.date}T${apt.start_time}:00`);
+        return start > now;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(`${a.date}T${a.start_time}:00`).getTime();
+        const dateB = new Date(`${b.date}T${b.start_time}:00`).getTime();
+        return dateA - dateB;
+      })[0] ?? null;
+  }
+
   // Fecha local actual en formato YYYY-MM-DD
   private getTodayString(): string {
     const now = new Date();

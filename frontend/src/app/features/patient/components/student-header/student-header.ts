@@ -30,7 +30,7 @@ export class StudentHeader {
   navOptions: NavOption[] = [
     { label: 'Inicio', route: '/portal-alumno' },
     { label: 'Disponibilidad', route: '/patient/availability' },
-    { label: 'Mis citas', route: '/portal-alumno' }
+    { label: 'Mis citas', route: '/patient/appointments' }
   ];
 
   toggleMenu(): void {
