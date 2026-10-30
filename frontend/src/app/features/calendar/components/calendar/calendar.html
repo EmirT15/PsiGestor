@@ -1781,7 +1781,11 @@
                 />
 
                 <small>
-                  Escribe el nombre o matrícula y selecciona al alumno.
+                  Escribe al menos dos caracteres y selecciona al alumno.
+                </small>
+
+                <small *ngIf="isSearchingStudents">
+                  Buscando alumnos...
                 </small>
 
                 <div
@@ -1795,10 +1799,16 @@
                     (click)="selectStudent(student)"
                   >
                     <strong>{{ student.name }}</strong>
-                    <span>{{ student.program }} · Semestre {{ student.semester }}</span>
+                    <span>
+                      {{ student.program }} · Semestre {{ student.semester }}
+                    </span>
                     <small>Matrícula: {{ student.studentId }}</small>
                   </button>
                 </div>
+
+                <small *ngIf="selectedStudent">
+                  Alumno seleccionado: {{ selectedStudent.name }}
+                </small>
               </div>
 
 
@@ -1811,7 +1821,8 @@
                       type="radio"
                       name="modality"
                       value="In person"
-                      checked
+                      [checked]="appointmentModality === 'In person'"
+                      (change)="onModalityChange('In person')"
                     />
                     <span>♙ Presencial</span>
                   </label>
@@ -1821,21 +1832,56 @@
                       type="radio"
                       name="modality"
                       value="Online"
+                      [checked]="appointmentModality === 'Online'"
+                      (change)="onModalityChange('Online')"
                     />
                     <span>▣ En línea</span>
                   </label>
                 </div>
               </fieldset>
 
-              <div class="booking-field">
-                <label for="appointmentLocation">Ubicación de atención <span>*</span></label>
+              <div
+                class="booking-field"
+                *ngIf="appointmentModality === 'In person'"
+              >
+                <label for="appointmentLocation">
+                  Ubicación de atención <span>*</span>
+                </label>
+
                 <input
                   id="appointmentLocation"
                   name="location"
                   type="text"
                   placeholder="Escribe el lugar de atención"
+                  maxlength="150"
+                  required
                 />
-                <small>Solo para modalidad presencial.</small>
+
+                <small>
+                  Indica el cubículo o espacio donde se realizará la atención.
+                </small>
+              </div>
+
+              <div
+                class="booking-field"
+                *ngIf="appointmentModality === 'Online'"
+              >
+                <label for="appointmentMeetingUrl">
+                  Enlace de la reunión <span>*</span>
+                </label>
+
+                <input
+                  id="appointmentMeetingUrl"
+                  name="meeting_url"
+                  type="url"
+                  placeholder="https://..."
+                  maxlength="500"
+                  required
+                />
+
+                <small>
+                  Introduce el enlace de Google Meet, Zoom u otra plataforma.
+                </small>
               </div>
 
               <div class="booking-field">

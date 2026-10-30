@@ -15,7 +15,7 @@ import {
   signal
 } from '@angular/core';
 
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, of, Subscription, timer, switchMap, finalize } from 'rxjs';
 import { Router } from '@angular/router';
 
 import { AuthService } from '../../../../core/services/auth.service';
@@ -147,6 +147,13 @@ export class Calendar implements OnDestroy {
   selectedStudent: Student | null = null;
 
   studentSearchResults: Student[] = [];
+
+  isSearchingStudents = false;
+
+  private studentSearchSubscription: Subscription | null = null;
+
+  // Appointment modality
+  appointmentModality: 'In person' | 'Online' = 'In person';
 
 /*Notificación visual del calendario. */
 toastMessage = '';
@@ -1459,26 +1466,24 @@ selectDisabledSchedule(
     const form = event.target as HTMLFormElement;
     const formData = new FormData(form);
 
-    const studentName = String(
-      formData.get('studentName') ?? ''
-    ).trim();
-
     const selectedStudent = this.selectedStudent;
 
     if (!selectedStudent) {
-
       this.showToast(
-          'Busca y selecciona un alumno de la lista.',
-          'warning'
-  );      return;
+        'Busca y selecciona un alumno de la lista.',
+        'warning'
+      );
+      return;
     }
 
-    const modality = String(
-      formData.get('modality') ?? ''
-    );
+    const modality = this.appointmentModality;
 
     const location = String(
       formData.get('location') ?? ''
+    ).trim();
+
+    const meetingUrl = String(
+      formData.get('meeting_url') ?? ''
     ).trim();
 
     const reason = String(
@@ -1492,6 +1497,7 @@ selectDisabledSchedule(
         'Completa el motivo de la cita.',
         'warning'
       );
+      return;
     }
 
     if (
@@ -1518,12 +1524,41 @@ selectDisabledSchedule(
       return;
     }
 
+    // Validate in-person appointment.
     if (modality === 'In person' && !location) {
       this.showToast(
         'Escribe la ubicación de la atención.',
         'warning'
       );
       return;
+    }
+
+    // Validate online appointment.
+    if (modality === 'Online') {
+      if (!meetingUrl) {
+        this.showToast(
+          'Escribe el enlace de la reunión.',
+          'warning'
+        );
+        return;
+      }
+
+      try {
+        const parsedUrl = new URL(meetingUrl);
+
+        if (
+          parsedUrl.protocol !== 'http:' &&
+          parsedUrl.protocol !== 'https:'
+        ) {
+          throw new Error('Invalid protocol');
+        }
+      } catch {
+        this.showToast(
+          'Introduce un enlace válido que comience con https:// o http://.',
+          'warning'
+        );
+        return;
+      }
     }
 
     const selectedRange = this.selectedSlot.split(' - ');
@@ -1557,27 +1592,23 @@ selectDisabledSchedule(
       return;
     }
 
-    const selectedStudentId = selectedStudent.id;
-    const selectedStudentName = selectedStudent.name;
-
     this.calendarService.createAppointment({
-      student_id: selectedStudentId,
-      student_name: selectedStudentName,
+      student_id: selectedStudent.id,
+      student_name: selectedStudent.name,
       date: this.selectedSlotDate,
       start_time: startTime,
       end_time: endTime,
       duration,
-      modality: modality as 'In person' | 'Online',
+      modality,
       location: modality === 'In person' ? location : undefined,
+      meeting_url: modality === 'Online' ? meetingUrl : undefined,
       reason
     }).subscribe({
-     next: (response) => {
-        console.log(
-          'Cita registrada:',
-          response
-        );
+      next: (response) => {
+        console.log('Cita registrada:', response);
 
         this.closeSidebar();
+
         this.showToast(
           'La cita se agendó correctamente.',
           'success'
@@ -1601,36 +1632,51 @@ selectDisabledSchedule(
   onStudentSearchChange(value: string): void {
     this.studentSearchText = value;
     this.selectedStudent = null;
+    this.studentSearchResults = [];
+
+    // Cancel the previous search immediately.
+    this.studentSearchSubscription?.unsubscribe();
+    this.studentSearchSubscription = null;
 
     const search = value.trim();
 
-    if (!search) {
-      this.studentSearchResults = [];
+    if (search.length < 2) {
+      this.isSearchingStudents = false;
       return;
     }
 
-    this.calendarService.searchStudents(search).subscribe({
-      next: (students) => {
-        if (this.studentSearchText.trim() !== search) {
-          return;
-        }
-        console.log('Respuesta de búsqueda:', students);
-        console.log('¿Es un arreglo?', Array.isArray(students));
-        this.studentSearchResults = students;
-      },
-      error: (error) => {
-        console.error('Error al buscar alumnos:', error);
+    this.isSearchingStudents = true;
+
+    this.studentSearchSubscription = timer(300).pipe(
+      switchMap(() =>
+        this.calendarService.searchStudents(search)
+      ),
+      catchError((error) => {
+        console.error('Error searching students:', error);
         this.studentSearchResults = [];
-      }
+        return of([]);
+      }),
+      finalize(() => {
+        this.isSearchingStudents = false;
+      })
+    ).subscribe((students) => {
+      this.studentSearchResults = students.slice(0, 5);
     });
   }
 
   selectStudent(student: Student): void {
+    this.studentSearchSubscription?.unsubscribe();
+    this.studentSearchSubscription = null;
+
+    this.isSearchingStudents = false;
     this.selectedStudent = student;
     this.studentSearchText = student.name;
     this.studentSearchResults = [];
   }
 
+  onModalityChange(modality: 'In person' | 'Online'): void {
+    this.appointmentModality = modality;
+  }
 
   /* ============================================================
      SIDEBAR HU-03
@@ -4390,39 +4436,42 @@ if (
 
   ngOnDestroy(): void {
 
-  /*
-   * Detener la actualización automática
-   * cuando se abandona la vista.
-   */
-  if (
-    this.patientRefreshInterval !== null
-  ) {
+    this.studentSearchSubscription?.unsubscribe();
+    this.studentSearchSubscription = null;
 
-    clearInterval(
-      this.patientRefreshInterval
-    );
+    /*
+    * Detener la actualización automática
+    * cuando se abandona la vista.
+    */
+    if (
+      this.patientRefreshInterval !== null
+    ) {
 
-    this.patientRefreshInterval =
-      null;
+      clearInterval(
+        this.patientRefreshInterval
+      );
+
+      this.patientRefreshInterval =
+        null;
+    }
+
+
+    /*
+    * Limpiar también el timeout
+    * de las notificaciones.
+    */
+    if (
+      this.toastTimeout !== null
+    ) {
+
+      clearTimeout(
+        this.toastTimeout
+      );
+
+      this.toastTimeout =
+        null;
+    }
   }
-
-
-  /*
-   * Limpiar también el timeout
-   * de las notificaciones.
-   */
-  if (
-    this.toastTimeout !== null
-  ) {
-
-    clearTimeout(
-      this.toastTimeout
-    );
-
-    this.toastTimeout =
-      null;
-  }
-}
 
 
   /* ============================================================
