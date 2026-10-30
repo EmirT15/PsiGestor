@@ -350,9 +350,14 @@ def get_appointments(date=None):
                     meeting_url,
                     reason,
                     status,
-                    created_at
-                FROM appointments
-                WHERE status <> 'Cancelled'
+                    created_at,
+                    reschedule_reason,
+                    proposed_date,
+                    proposed_start_time,
+                    proposed_end_time,
+                    reschedule_requested_by
+                    FROM appointments
+                    WHERE status <> 'Cancelled'
             """
             params = []
 
