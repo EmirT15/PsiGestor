@@ -6,11 +6,13 @@ import {
   OnChanges,
   OnInit,
   Output,
-  SimpleChanges
+  SimpleChanges,
+  ViewChild
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { Availability } from '../../models/availability.model';
+import { CalendarService } from '../../services/calendar.service';
 import {
   RegularScheduleService,
   SaveRegularScheduleRequest
@@ -57,6 +59,8 @@ export class ManageScheduleModal implements OnInit, OnChanges {
   @Output() closed = new EventEmitter<void>();
   @Output() scheduleUpdated = new EventEmitter<RegularScheduleConfig>();
 
+  @ViewChild(DisabledSchedulesList) disabledSchedulesListChild?: DisabledSchedulesList;
+
   activeTab: ScheduleTab = 'regular';
 
   /* HORARIO HABITUAL */
@@ -83,6 +87,9 @@ export class ManageScheduleModal implements OnInit, OnChanges {
   formError = '';
   isHistoryOpen = false;
 
+  isSubmittingDisable = false;
+  submitDisableError = '';
+
   disableForm = {
     isRange: false,
     date: '',
@@ -100,7 +107,8 @@ export class ManageScheduleModal implements OnInit, OnChanges {
   };
 
   constructor(
-    private regularScheduleService: RegularScheduleService
+    private regularScheduleService: RegularScheduleService,
+    private calendarService: CalendarService
   ) {}
 
   ngOnInit(): void {
@@ -187,7 +195,7 @@ export class ManageScheduleModal implements OnInit, OnChanges {
     }
   }
 
-  /* VALIDACIONES Y VISTA PREVIA */
+  /* VALIDACIONES Y CÁLCULO DE VISTA PREVIA */
   validateAndCalculateImpact(): void {
     this.formError = '';
 
@@ -224,6 +232,9 @@ export class ManageScheduleModal implements OnInit, OnChanges {
     }
 
     let daysCount = 1;
+    const startD = isRange ? startDate : date;
+    const endD = isRange ? endDate : date;
+
     if (isRange) {
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -237,24 +248,66 @@ export class ManageScheduleModal implements OnInit, OnChanges {
 
     const slotsPerDay = Math.max(1, Math.floor(durationMinutes / 45));
     this.impactSummary.totalSlots = slotsPerDay * daysCount;
-    this.impactSummary.conflictsCount = 0;
 
-    this.showImpactPreview = true;
+    // Consultar conflictos reales con CalendarService
+    this.calendarService.checkConflicts({
+      startDate: startD,
+      endDate: endD,
+      startTime: startTime,
+      endTime: endTime
+    }).subscribe({
+      next: (res) => {
+        this.impactSummary.conflictsCount = res.conflictCount || 0;
+        this.showImpactPreview = true;
+      },
+      error: () => {
+        this.impactSummary.conflictsCount = 0;
+        this.showImpactPreview = true;
+      }
+    });
   }
 
   backToForm(): void {
     this.showImpactPreview = false;
   }
 
+  /* ACCIÓN DEL BOTÓN "CONFIRMAR E INHABILITAR" */
   confirmDisable(): void {
-    console.log('Inhabilitación registrada exitosamente:', {
-      ...this.disableForm,
-      applicableDays: this.selectedDays
-    });
+    if (this.isSubmittingDisable) return;
 
-    this.showImpactPreview = false;
-    this.resetDisableForm();
-    this.isHistoryOpen = true; // Despliega el historial tras guardar
+    this.isSubmittingDisable = true;
+    this.submitDisableError = '';
+
+    const payload = {
+      type: this.disableForm.isRange ? 'Rango de fechas' : 'Puntual',
+      isRange: this.disableForm.isRange,
+      startDate: this.disableForm.isRange ? this.disableForm.startDate : this.disableForm.date,
+      endDate: this.disableForm.isRange ? this.disableForm.endDate : this.disableForm.date,
+      startTime: this.disableForm.startTime,
+      endTime: this.disableForm.endTime,
+      reason: this.disableForm.reason,
+      observation: this.disableForm.observation,
+      applicableDays: this.disableForm.isRange ? this.selectedDays : []
+    };
+
+    this.calendarService.disableSchedule(payload).subscribe({
+      next: () => {
+        this.isSubmittingDisable = false;
+        this.showImpactPreview = false;
+        this.resetDisableForm();
+        this.isHistoryOpen = true; // Despliega el historial
+
+        // Ordenar al componente hijo recargar la lista de inhabilitados
+        if (this.disabledSchedulesListChild) {
+          this.disabledSchedulesListChild.loadDisabledSchedules();
+        }
+      },
+      error: (err) => {
+        console.error('Error al guardar inhabilitación:', err);
+        this.isSubmittingDisable = false;
+        this.submitDisableError = err?.error?.message || 'Ocurrió un error al guardar la inhabilitación.';
+      }
+    });
   }
 
   resetDisableForm(): void {
@@ -269,6 +322,7 @@ export class ManageScheduleModal implements OnInit, OnChanges {
       observation: ''
     };
     this.formError = '';
+    this.submitDisableError = '';
     this.showImpactPreview = false;
   }
 
