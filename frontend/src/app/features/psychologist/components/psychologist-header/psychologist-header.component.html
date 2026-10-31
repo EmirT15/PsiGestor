@@ -1,0 +1,62 @@
+<header class="header-container">
+  <div class="header-content">
+    
+    <!-- BRANDING / IDENTIDAD DEL SISTEMA -->
+    <div class="brand-zone" routerLink="/calendar">
+      <img src="favicon.ico" alt="PsiGestor Logo" class="brand-logo" />
+      <span class="brand-title">PsiGestor</span>
+    </div>
+
+    <!-- BOTÓN MENÚ MÓVIL -->
+    <button 
+      class="mobile-toggle" 
+      (click)="toggleMenu()" 
+      aria-label="Toggle navigation menu"
+    >
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+
+    <!-- OPCIONES DE NAVEGACIÓN PERMITIDAS -->
+    <nav class="nav-zone" [class.is-open]="isMobileMenuOpen()">
+      <ul class="nav-list">
+        @for (option of navOptions; track option.route) {
+          <li class="nav-item">
+            <a 
+              [routerLink]="option.route" 
+              routerLinkActive="active-link"
+              class="nav-link"
+              (click)="isMobileMenuOpen.set(false)"
+            >
+              {{ option.label }}
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <!-- DATOS DE LA PSICÓLOGA AUTENTICADA (SOLO LECTURA) -->
+    @if (currentUser(); as user) {
+      <div class="user-zone">
+        <div class="user-info">
+          <span class="user-name">{{ user.name }}</span>
+          <span class="user-role">
+            {{ user.role === 'psicologo' ? 'Psicóloga' : user.role }}
+          </span>
+        </div>
+
+        <div class="avatar-container">
+            @if (user.avatarUrl) {
+                <img [src]="user.avatarUrl" [alt]="user.name" class="avatar-img" />
+            } @else {
+                <div class="avatar-fallback">
+                {{ getInitials(user.name) }}
+                </div>
+            }
+        </div>
+      </div>
+    }
+
+  </div>
+</header>

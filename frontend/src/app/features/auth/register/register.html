@@ -1,0 +1,128 @@
+<div class="register-page">
+  <div class="register-card">
+    <div class="brand-header">
+      <div class="brand-logo-icon">
+        <svg viewBox="0 0 40 40" width="34" height="34" fill="none">
+          <path d="M20 34s-14-8.5-14-18a8 8 0 0 1 14-5.2A8 8 0 0 1 34 16c0 9.5-14 18-14 18z" stroke="#6366f1" stroke-width="2.5" stroke-linejoin="round" fill="none"/>
+          <path d="M20 12v14M15 17l5-4 5 4M15 22l5-4 5 4" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-name">PsiGestor</h1>
+        <p class="brand-tagline">Registro de Alumno</p>
+      </div>
+    </div>
+
+    <h2 class="card-title">Crea tu cuenta institucional</h2>
+    <p class="card-subtitle">Ingresa tus datos y matrícula para vincular tu información académica</p>
+
+    @if (errorMessage()) {
+      <div class="alert-error">
+        <span>⚠️</span>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    @if (successMessage()) {
+      <div class="alert-success">
+        <span>✅</span>
+        <span>{{ successMessage() }}</span>
+      </div>
+    }
+
+    <form class="auth-form" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="name" class="form-label">Nombre completo</label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          [(ngModel)]="name"
+          placeholder="Ej. Ana López Hernández"
+          required
+        />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="studentCode" class="form-label">Matrícula</label>
+          <input
+            id="studentCode"
+            name="studentCode"
+            type="text"
+            [(ngModel)]="studentCode"
+            placeholder="Ej. TEST2026001"
+            required
+          />
+        </div>
+
+        <div class="form-group flex-2">
+          <label for="email" class="form-label">Correo institucional</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            [(ngModel)]="email"
+            placeholder="alumno@itescam.edu.mx"
+            required
+            autocomplete="email"
+          />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="password" class="form-label">Contraseña</label>
+          <div class="input-container">
+            <input
+              id="password"
+              name="password"
+              [type]="showPassword ? 'text' : 'password'"
+              [(ngModel)]="password"
+              placeholder="Mínimo 6 caracteres"
+              required
+            />
+            <button
+              type="button"
+              class="password-toggle-btn"
+              (click)="togglePasswordVisibility()"
+            >
+              {{ showPassword ? '👁️' : '🔒' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group flex-1">
+          <label for="confirmPassword" class="form-label">Confirmar contraseña</label>
+          <input
+            id="confirmPassword"
+            name="confirmPassword"
+            [type]="showPassword ? 'text' : 'password'"
+            [(ngModel)]="confirmPassword"
+            placeholder="Repite la contraseña"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="info-notice">
+        <span>ℹ️</span>
+        <small>Al registrarte se te asignará automáticamente el rol de <strong>Alumno</strong> tras verificar tu matrícula en el registro universitario.</small>
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="isLoading()">
+        @if (isLoading()) {
+          <span class="spinner"></span>
+          <span>Validando y registrando...</span>
+        } @else {
+          <span>Registrarme como alumno</span>
+        }
+      </button>
+
+      <div class="login-prompt">
+        <span>¿Ya tienes una cuenta?</span>
+        <a routerLink="/login" class="login-link">Inicia sesión</a>
+      </div>
+    </form>
+  </div>
+</div>
