@@ -1,0 +1,107 @@
+
+<header class="header-container">
+  <div class="header-content">
+    
+    <!-- BRANDING / IDENTIDAD DEL SISTEMA -->
+    <a
+      class="brand-zone"
+      routerLink="/portal-alumno"
+      (click)="closeMenus()"
+    >
+      <img
+        src="logo-psigestor.svg"
+        alt="PsiGestor Logo"
+        class="brand-logo"
+      />
+      <span class="brand-title">PsiGestor</span>
+    </a>
+
+    <button
+      type="button"
+      class="mobile-toggle"
+      (click)="toggleMenu()"
+      [attr.aria-expanded]="isMobileMenuOpen()"
+      aria-label="Abrir o cerrar navegación">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+
+    <nav
+      class="nav-zone"
+      [class.is-open]="isMobileMenuOpen()"
+      aria-label="Navegación del alumno">
+      <ul class="nav-list">
+        @for (option of navOptions; track $index) {
+          <li class="nav-item">
+            <a
+              [routerLink]="option.route"
+              [fragment]="option.label === 'Mis citas' ? 'mis-citas' : undefined"
+              routerLinkActive="active-link"
+              [routerLinkActiveOptions]="{ exact: true }"
+              class="nav-link"
+              (click)="closeMenus()">
+              {{ option.label }}
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    @if (displayStudent; as currentStudent) {
+      <div class="profile-container">
+        <button
+          type="button"
+          class="profile-trigger"
+          (click)="toggleProfileMenu()"
+          [attr.aria-expanded]="isProfileMenuOpen()"
+          aria-haspopup="true"
+          aria-label="Abrir menú del perfil">
+
+          <span class="user-info">
+            <span class="user-name">{{ currentStudent.name }}</span>
+            @if (currentStudent.studentId) {
+              <span class="user-role">
+                Matrícula: {{ currentStudent.studentId }}
+              </span>
+            } @else {
+              <span class="user-role">{{ currentStudent.role }}</span>
+            }
+          </span>
+
+          <span class="avatar-container">
+            @if (currentStudent.photoUrl) {
+              <img
+                [src]="currentStudent.photoUrl"
+                [alt]="currentStudent.name"
+                class="avatar-img" />
+            } @else {
+              <span class="avatar-fallback">{{ initials }}</span>
+            }
+          </span>
+
+          <span class="profile-chevron" aria-hidden="true">⌄</span>
+        </button>
+
+        @if (isProfileMenuOpen()) {
+          <div class="profile-dropdown">
+            <div class="dropdown-user">
+              <strong>{{ currentStudent.name }}</strong>
+              @if (currentStudent.studentId) {
+                <span>Matrícula: {{ currentStudent.studentId }}</span>
+              }
+            </div>
+
+            <button
+              type="button"
+              class="logout-option"
+              (click)="logout()">
+              <span aria-hidden="true">↪</span>
+              Cerrar sesión
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</header>

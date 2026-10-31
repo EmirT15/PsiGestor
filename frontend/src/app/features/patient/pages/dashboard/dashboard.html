@@ -1,0 +1,319 @@
+<div class="portal-layout">
+  <!-- Encabezado compartido del alumno -->
+  <app-student-header></app-student-header>
+
+  <!-- Notificación Toast -->
+  @if (toastMessage) {
+    <div class="toast-notification success">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <span>{{ toastMessage }}</span>
+    </div>
+  }
+
+  <!-- Contenido principal -->
+  <main class="portal-main">
+    
+    <!-- Banner de bienvenida con botón de acción rápida -->
+    <div class="welcome-banner">
+      <div class="welcome-text">
+        <h2>¡Hola, {{ user?.name }}! 👋</h2>
+        <p>Gestiona tus atenciones psicológicas institucionales con total autonomía y comodidad.</p>
+      </div>
+      <a routerLink="/patient/availability" class="btn-agendar-cta">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+          <line x1="12" y1="14" x2="12" y2="18"></line>
+          <line x1="10" y1="16" x2="14" y2="16"></line>
+        </svg>
+        <span>Agendar Nueva Cita</span>
+      </a>
+    </div>
+
+    <!-- Sección de dos columnas: Ficha Académica y Mis Citas -->
+    <div class="portal-content-grid">
+      
+      <!-- Columna izquierda: Información del Estudiante -->
+      <aside class="sidebar-info">
+        <div class="portal-card">
+          <div class="card-header">
+            <span class="card-icon">🎓</span>
+            <h3>Ficha Académica</h3>
+          </div>
+          <div class="student-info-list">
+            <div class="info-row">
+              <span class="label">Carrera:</span>
+              <strong class="val">{{ user?.program || 'Por definir' }}</strong>
+            </div>
+            <div class="info-row">
+              <span class="label">Semestre:</span>
+              <strong class="val">{{ user?.semester ? user?.semester + '° Semestre' : 'N/A' }}</strong>
+            </div>
+            <div class="info-row">
+              <span class="label">Correo:</span>
+              <strong class="val">{{ user?.email }}</strong>
+            </div>
+            <div class="info-row">
+              <span class="label">Estado de cuenta:</span>
+              <span class="status-active">Activa y verificada</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="portal-card info-box-card">
+          <div class="card-header">
+            <span class="card-icon">💡</span>
+            <h3>Indicaciones</h3>
+          </div>
+          <p class="text-hint">
+            • Puedes solicitar reprogramar tu cita si necesitas cambiar tu horario.<br>
+            • Si no puedes asistir, cancela tu cita con anticipación para liberar el espacio.<br>
+            • Las citas presenciales se atienden en <strong>Cubículo 2B</strong>.
+          </p>
+        </div>
+      </aside>
+
+      <!-- Columna derecha: Mis Citas -->
+      <section class="appointments-section" id="mis-citas">
+        
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-title">Mis Citas</h2>
+            <p class="section-desc">Citas programadas y solicitudes de atención</p>
+          </div>
+          <button class="btn-refresh" (click)="loadMyAppointments()" [disabled]="isLoadingAppointments" title="Actualizar lista">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.rotating]="isLoadingAppointments">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Estado de carga -->
+        @if (isLoadingAppointments) {
+          <div class="loading-card">
+            <span class="spinner dark"></span>
+            <span>Cargando tus citas...</span>
+          </div>
+        } @else {
+
+          <!-- Citas pendientes (Reservadas / Reprogramación pendiente) -->
+          @if (pendingAppointments.length === 0) {
+            <div class="empty-appointments-card">
+              <div class="empty-icon-wrap">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </div>
+              <h3>No tienes citas pendientes</h3>
+              <p>Actualmente no tienes ninguna atención programada. Puedes consultar los horarios disponibles de la psicóloga y reservar un espacio.</p>
+              <a routerLink="/patient/availability" class="btn-primary-inline">
+                Ver horarios disponibles
+              </a>
+            </div>
+          } @else {
+            <div class="appointments-list">
+              @for (apt of pendingAppointments; track apt.id) {
+                <div class="appointment-card" [class.reschedule-pending]="apt.status === 'Pending Reschedule' || apt.status === 'Reprogramacion pendiente'">
+                  
+                  <div class="apt-card-top">
+                    <div class="apt-date-time">
+                      <strong class="apt-date">{{ formatDate(apt.date) }}</strong>
+                      <span class="apt-time">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        {{ apt.start_time }} - {{ apt.end_time }} hrs ({{ apt.duration }} min)
+                      </span>
+                    </div>
+
+                    <!-- Badge de estado -->
+                    @if (apt.status === 'Reserved') {
+                      <span class="badge badge-reserved">
+                        <span class="status-dot"></span>
+                        Cita Reservada
+                      </span>
+                    } @else if (apt.status === 'Pending Reschedule' || apt.status === 'Reprogramacion pendiente') {
+                      <span class="badge badge-pending-reschedule">
+                        <span class="status-dot warning"></span>
+                        Reprogramación pendiente
+                      </span>
+                    }
+                  </div>
+
+                  <!-- Detalle de modalidad y ubicación/enlace -->
+                  <div class="apt-card-body">
+                    <div class="apt-meta-row">
+                      <span class="meta-label">Modalidad:</span>
+                      <strong class="meta-val">
+                        @if (isPresencial(apt.modality)) {
+                          🏢 Presencial — {{ apt.location || 'Cubículo 2B' }}
+                        } @else {
+                          🌐 En línea (Videollamada)
+                        }
+                      </strong>
+                    </div>
+
+                    <div class="apt-meta-row">
+                      <span class="meta-label">Motivo de consulta:</span>
+                      <span class="meta-reason">"{{ apt.reason }}"</span>
+                    </div>
+
+                    <!-- Si está en reprogramación pendiente, mostrar el horario solicitado -->
+                    @if (apt.status === 'Pending Reschedule' || apt.status === 'Reprogramacion pendiente') {
+                      <div class="reschedule-info-banner">
+                        <div class="banner-icon">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"></path>
+                          </svg>
+                        </div>
+                        <div class="banner-text">
+                          @if (apt.reschedule_requested_by === 'psicologo') {
+                            <strong>La psicóloga propone una nueva fecha para tu atención:</strong>
+                            <span>{{ formatDate(apt.proposed_date || '') }} • {{ apt.proposed_start_time }} - {{ apt.proposed_end_time }} hrs</span>
+                            @if (apt.reschedule_reason) {
+                              <p class="sub-reason">Motivo: "{{ apt.reschedule_reason }}"</p>
+                            }
+                            <p class="legend">Por favor confirma si puedes asistir en el nuevo horario. Si no te es posible y rechazas la propuesta, la cita se cancelará definitivamente.</p>
+                          } @else {
+                            <strong>Nuevo horario propuesto a la psicóloga:</strong>
+                            <span>{{ formatDate(apt.proposed_date || '') }} • {{ apt.proposed_start_time }} - {{ apt.proposed_end_time }} hrs</span>
+                            @if (apt.reschedule_reason) {
+                              <p class="sub-reason">Motivo: "{{ apt.reschedule_reason }}"</p>
+                            }
+                            <p class="legend">Tu horario actual se mantiene reservado mientras la solicitud es atendida.</p>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Botones de acción del alumno -->
+                  <div class="apt-card-actions">
+                    @if (apt.status === 'Reserved') {
+                      <button
+                        type="button"
+                        class="btn-action btn-reschedule"
+                        (click)="openRescheduleModal(apt)"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"></path>
+                        </svg>
+                        <span>Solicitar reprogramación</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        class="btn-action btn-cancel"
+                        (click)="openCancelModal(apt)"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <line x1="15" y1="9" x2="9" y2="15"></line>
+                          <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                        <span>Cancelar cita</span>
+                      </button>
+                    } @else if (apt.status === 'Pending Reschedule' || apt.status === 'Reprogramacion pendiente') {
+                      @if (apt.reschedule_requested_by === 'psicologo') {
+                        <div class="pending-actions-row">
+                          <button
+                            type="button"
+                            class="btn-action btn-confirm-reschedule"
+                            (click)="acceptReschedule(apt)"
+                            [disabled]="isProcessing"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <span>Aceptar nueva fecha</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            class="btn-action btn-reject-reschedule"
+                            (click)="rejectReschedule(apt)"
+                            [disabled]="isProcessing"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <line x1="18" y1="6" x2="6" y2="18"></line>
+                              <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                            <span>Rechazar propuesta (Cancelar cita)</span>
+                          </button>
+                        </div>
+                      } @else {
+                        <div class="pending-notice">
+                          <span class="pill-disabled">Solicitud enviada a la psicóloga</span>
+                          <button
+                            type="button"
+                            class="btn-text-danger"
+                            (click)="rejectReschedule(apt)"
+                            [disabled]="isProcessing"
+                          >
+                            Descartar solicitud de cambio
+                          </button>
+                        </div>
+                      }
+                    }
+                  </div>
+
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Historial de citas canceladas / pasadas -->
+          @if (historyAppointments.length > 0) {
+            <div class="history-block">
+              <h3 class="history-title">Historial de Citas Canceladas</h3>
+              <div class="history-list">
+                @for (hist of historyAppointments; track hist.id) {
+                  <div class="history-card">
+                    <div class="history-main">
+                      <strong class="hist-date">{{ formatDate(hist.date) }} &bull; {{ hist.start_time }} hrs</strong>
+                      <span class="hist-reason">Motivo de cancelación: {{ hist.cancellation_reason || 'Cancelada por el alumno' }}</span>
+                    </div>
+                    <span class="badge badge-cancelled">Cancelada</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+        }
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Modal de Solicitar Reprogramación -->
+  @if (reschedulingAppointment) {
+    <app-reschedule-appointment-modal
+      [appointment]="reschedulingAppointment"
+      (close)="closeRescheduleModal()"
+      (rescheduleRequested)="onRescheduleRequested()"
+    ></app-reschedule-appointment-modal>
+  }
+
+  <!-- Modal de Cancelar Cita -->
+  @if (cancellingAppointment) {
+    <app-cancel-appointment-modal
+      [appointment]="cancellingAppointment"
+      (close)="closeCancelModal()"
+      (appointmentCancelled)="onAppointmentCancelled()"
+    ></app-cancel-appointment-modal>
+  }
+
+</div>
