@@ -272,12 +272,28 @@
                   </div>
                 }
 
+                @if (submitDisableError) {
+                  <div class="form-alert error-alert">
+                    ⚠️ {{ submitDisableError }}
+                  </div>
+                }
+
                 <div class="form-actions">
-                  <button type="button" class="btn-secondary" (click)="backToForm()">
+                  <button
+                    type="button"
+                    class="btn-secondary"
+                    (click)="backToForm()"
+                    [disabled]="isSubmittingDisable"
+                  >
                     ← Volver a editar
                   </button>
-                  <button type="button" class="btn-danger" (click)="confirmDisable()">
-                    Confirmar e Inhabilitar
+                  <button
+                    type="button"
+                    class="btn-danger"
+                    (click)="confirmDisable()"
+                    [disabled]="isSubmittingDisable"
+                  >
+                    {{ isSubmittingDisable ? 'Guardando...' : 'Confirmar e Inhabilitar' }}
                   </button>
                 </div>
               </div>
