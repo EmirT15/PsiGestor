@@ -44,8 +44,14 @@ export const routes: Routes = [
         .then((m) => m.Availability)
   },
   {
+    path: 'patient/appointments',
+    loadComponent: () =>
+      import('./features/patient/pages/appointments/appointments')
+        .then((m) => m.Appointments)
+  },
+  {
     path: 'psychologist',
-    loadComponent: () => 
+    loadComponent: () =>
       import('./features/psychologist/psychologist-layout.component')
         .then(m => m.PsychologistLayoutComponent),
     children: [
@@ -60,7 +66,7 @@ export const routes: Routes = [
           import('./features/calendar/components/calendar/calendar')
             .then((m) => m.Calendar)
       }
-      
+
     ]
   },
   {

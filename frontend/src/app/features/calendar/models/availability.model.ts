@@ -38,6 +38,7 @@ export interface Availability {
   studentSemester?: string;
   studentProgram?: string;
   consultationReason?: string;
+  rescheduleReason?: string;
   modality?: string;
   location?: string;
   folio?: string;
