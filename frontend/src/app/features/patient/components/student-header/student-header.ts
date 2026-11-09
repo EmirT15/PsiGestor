@@ -1,6 +1,6 @@
-import { Component, Input, inject, signal } from '@angular/core';
+﻿import { Component, Input, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { NavOption } from '../../../../core/models/auth.model';
 
@@ -22,32 +22,55 @@ export class StudentHeader {
   @Input() student: StudentHeaderData | null = null;
 
   public authService = inject(AuthService);
+  private router = inject(Router);
 
-  isMobileMenuOpen = signal<boolean>(false);
+  isMobileMenuOpen = signal(false);
+  isProfileMenuOpen = signal(false);
 
   navOptions: NavOption[] = [
-    { label: 'Mi Portal', route: '/portal-alumno' },
-    { label: 'Disponibilidad', route: '/patient/availability' }
+    { label: 'Inicio', route: '/portal-alumno' },
+    { label: 'Disponibilidad', route: '/patient/availability' },
+    { label: 'Mis citas', route: '/portal-alumno' }
   ];
 
   toggleMenu(): void {
     this.isMobileMenuOpen.update(state => !state);
   }
 
+  toggleProfileMenu(): void {
+    this.isProfileMenuOpen.update(state => !state);
+  }
+
+  closeMenus(): void {
+    this.isMobileMenuOpen.set(false);
+    this.isProfileMenuOpen.set(false);
+  }
+
+  logout(): void {
+    this.closeMenus();
+    this.authService.logout().subscribe({
+      next: () => this.router.navigate(['/login']),
+      error: () => this.router.navigate(['/login'])
+    });
+  }
+
   get displayStudent(): StudentHeaderData | null {
     if (this.student) {
       return this.student;
     }
+
     const user = this.authService.currentUser();
-    if (user) {
-      return {
-        name: user.name,
-        studentId: user.studentCode || (user.studentId != null ? String(user.studentId) : ''),
-        role: user.role === 'alumno' ? 'Alumno' : user.role,
-        photoUrl: user.avatarUrl
-      };
+
+    if (!user || user.role !== 'alumno') {
+      return null;
     }
-    return null;
+
+    return {
+      name: user.name,
+      studentId: user.studentCode || (user.studentId != null ? String(user.studentId) : ''),
+      role: 'Alumno',
+      photoUrl: user.avatarUrl
+    };
   }
 
   get initials(): string {
@@ -55,7 +78,10 @@ export class StudentHeader {
   }
 
   getInitials(name?: string): string {
-    if (!name) return 'AL';
+    if (!name?.trim()) {
+      return 'AL';
+    }
+
     return name
       .trim()
       .split(/\s+/)

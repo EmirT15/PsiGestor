@@ -1,10 +1,21 @@
 import { ChangeDetectorRef, Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+
 import { AuthService } from '../../../../core/services/auth.service';
-import { CalendarService, Appointment } from '../../../calendar/services/calendar.service';
-import { RescheduleAppointmentModal } from '../../components/reschedule-appointment-modal/reschedule-appointment-modal';
-import { CancelAppointmentModal } from '../../components/cancel-appointment-modal/cancel-appointment-modal';
+import {
+  CalendarService,
+  Appointment
+} from '../../../calendar/services/calendar.service';
+import {
+  RescheduleAppointmentModal
+} from '../../components/reschedule-appointment-modal/reschedule-appointment-modal';
+import {
+  CancelAppointmentModal
+} from '../../components/cancel-appointment-modal/cancel-appointment-modal';
+import {
+  StudentHeader
+} from '../../components/student-header/student-header';
 
 @Component({
   selector: 'app-patient-dashboard',
@@ -12,6 +23,7 @@ import { CancelAppointmentModal } from '../../components/cancel-appointment-moda
   imports: [
     CommonModule,
     RouterModule,
+    StudentHeader,
     RescheduleAppointmentModal,
     CancelAppointmentModal
   ],
