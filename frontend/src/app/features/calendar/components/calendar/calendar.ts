@@ -148,10 +148,6 @@ export class Calendar implements OnDestroy {
 
   studentSearchResults: Student[] = [];
 
-<<<<<<< HEAD
-  /*Notificación visual del calendario. */
-  toastMessage = '';
-=======
   isSearchingStudents = false;
 
   private studentSearchSubscription: Subscription | null = null;
@@ -161,7 +157,6 @@ export class Calendar implements OnDestroy {
 
 /*Notificación visual del calendario. */
 toastMessage = '';
->>>>>>> fix/buscador-alumnos-modalidad-cita
 
   toastType:
     'success'
@@ -1479,12 +1474,8 @@ toastMessage = '';
       this.showToast(
         'Busca y selecciona un alumno de la lista.',
         'warning'
-<<<<<<< HEAD
-      ); return;
-=======
       );
       return;
->>>>>>> fix/buscador-alumnos-modalidad-cita
     }
 
     const modality = this.appointmentModality;
@@ -1616,14 +1607,7 @@ toastMessage = '';
       reason
     }).subscribe({
       next: (response) => {
-<<<<<<< HEAD
-        console.log(
-          'Cita registrada:',
-          response
-        );
-=======
         console.log('Cita registrada:', response);
->>>>>>> fix/buscador-alumnos-modalidad-cita
 
         this.closeSidebar();
 
@@ -4454,20 +4438,6 @@ toastMessage = '';
 
   ngOnDestroy(): void {
 
-<<<<<<< HEAD
-    /*
-     * Detener la actualización automática
-     * cuando se abandona la vista.
-     */
-    if (
-      this.patientRefreshInterval !== null
-    ) {
-
-      clearInterval(
-        this.patientRefreshInterval
-      );
-
-=======
     this.studentSearchSubscription?.unsubscribe();
     this.studentSearchSubscription = null;
 
@@ -4483,7 +4453,6 @@ toastMessage = '';
         this.patientRefreshInterval
       );
 
->>>>>>> fix/buscador-alumnos-modalidad-cita
       this.patientRefreshInterval =
         null;
     }
