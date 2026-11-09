@@ -350,7 +350,14 @@ def get_appointments(date=None):
                     meeting_url,
                     reason,
                     status,
-                    created_at
+                    created_at,
+                    reschedule_reason,
+                    rescheduled_at,
+                    proposed_date,
+                    proposed_start_time,
+                    proposed_end_time,
+                    proposed_availability_id,
+                    reschedule_requested_by
                 FROM appointments
                 WHERE status <> 'Cancelled'
             """
@@ -692,32 +699,89 @@ def approve_student_reschedule_db(appointment_id):
                 if prop_row:
                     prop_avail_id = prop_row[0]
 
-            if prop_avail_id:
-                folio = f"PSI-{prop_date.year}-{apt_id:04d}"
-                cursor.execute(
-                    """
-                    UPDATE availabilities
-                    SET status = 'Reservado',
-                        student_name = %s,
-                        consultation_reason = %s,
-                        modality = %s,
-                        location = %s,
-                        folio = %s
-                    WHERE id = %s;
-                    """,
-                    (student_name, reason, modality, location, folio, prop_avail_id)
-                )
-
             cursor.execute(
                 """
-                SELECT id FROM availabilities
+                SELECT id, student_initials, student_age, student_semester, student_program
+                FROM availabilities
                 WHERE date = %s AND start_time = %s AND end_time = %s;
                 """,
                 (old_date, old_start, old_end)
             )
             old_avail = cursor.fetchone()
+
+            initials = (
+                old_avail[1]
+                if old_avail and old_avail[1]
+                else "".join(part[0].upper() for part in (student_name or "AL").split() if part)[:2] or "AL"
+            )
+            student_age = old_avail[2] if old_avail and old_avail[2] else 20
+            student_semester = old_avail[3] if old_avail and old_avail[3] else ""
+            student_program = old_avail[4] if old_avail and old_avail[4] else ""
+            modality_label = "Presencial" if modality in ("In person", "Presencial") else "En línea"
+            location_label = location or meeting_url or ("Cubículo 2B" if modality_label == "Presencial" else "En línea")
+            folio = f"PSI-{prop_date.year}-{apt_id:04d}"
+
+            if prop_avail_id:
+                cursor.execute(
+                    """
+                    UPDATE availabilities
+                    SET status = 'Reservado',
+                        student_name = %s,
+                        student_initials = %s,
+                        student_age = %s,
+                        student_semester = %s,
+                        student_program = %s,
+                        consultation_reason = %s,
+                        modality = %s,
+                        location = %s,
+                        folio = %s,
+                        proposed_date = NULL,
+                        proposed_start_time = NULL,
+                        proposed_end_time = NULL,
+                        reschedule_requested_by = NULL
+                    WHERE id = %s;
+                    """,
+                    (
+                        student_name,
+                        initials,
+                        student_age,
+                        student_semester,
+                        student_program,
+                        reason,
+                        modality_label,
+                        location_label,
+                        folio,
+                        prop_avail_id,
+                    )
+                )
+            else:
+                cursor.execute(
+                    """
+                    INSERT INTO availabilities (
+                        date, start_time, end_time, duration, break_time, status,
+                        student_name, student_initials, student_age, student_semester,
+                        student_program, consultation_reason, modality, location, folio, source
+                    )
+                    VALUES (%s, %s, %s, %s, 0, 'Reservado', %s, %s, %s, %s, %s, %s, %s, %s, %s, 'manual');
+                    """,
+                    (
+                        prop_date,
+                        prop_start,
+                        prop_end,
+                        duration,
+                        student_name,
+                        initials,
+                        student_age,
+                        student_semester,
+                        student_program,
+                        reason,
+                        modality_label,
+                        location_label,
+                        folio,
+                    )
+                )
+
             if old_avail:
-                old_avail_id = old_avail[0]
                 cursor.execute(
                     """
                     UPDATE availabilities
@@ -733,10 +797,11 @@ def approve_student_reschedule_db(appointment_id):
                         folio = NULL,
                         proposed_date = NULL,
                         proposed_start_time = NULL,
-                        proposed_end_time = NULL
-                    WHERE id = %s;
+                        proposed_end_time = NULL,
+                        reschedule_requested_by = NULL
+                    WHERE date = %s AND start_time = %s AND end_time = %s;
                     """,
-                    (old_avail_id,)
+                    (old_date, old_start, old_end)
                 )
 
         connection.commit()

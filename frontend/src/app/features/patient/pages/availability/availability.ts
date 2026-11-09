@@ -63,6 +63,7 @@ export class Availability implements OnInit {
   } | null = null;
 
   toastMessage: string | null = null;
+  private toastTimer: any = null;
 
   // Panel lateral de Mis citas
   isAppointmentsPanelOpen = false;
@@ -236,10 +237,14 @@ export class Availability implements OnInit {
     this.reschedulingAppointment = null;
 
     this.showToast(
-      'Solicitud de reprogramaciÃ³n enviada correctamente.'
+      'Solicitud de reprogramación enviada correctamente.'
     );
 
     this.loadMyAppointments();
+
+    if (this.calendarComponent) {
+      this.calendarComponent.refreshCalendarData();
+    }
   }
 
   // Cancelar cita con el modal existente
@@ -263,7 +268,7 @@ export class Availability implements OnInit {
     this.loadMyAppointments();
 
     if (this.calendarComponent) {
-      this.calendarComponent.loadAvailabilities();
+      this.calendarComponent.refreshCalendarData();
     }
 
     this.calendarService.notifyScheduleChanged();
@@ -275,10 +280,8 @@ export class Availability implements OnInit {
     this.selectedSlotData = null;
     this.loadMyAppointments();
 
-    this.showToast('¡Cita registrada correctamente! Se ha reflejado en tu agenda y en la de la psicóloga.');
-
     if (this.calendarComponent) {
-      this.calendarComponent.loadAvailabilities();
+      this.calendarComponent.refreshCalendarData();
     }
   }
 
@@ -288,9 +291,14 @@ export class Availability implements OnInit {
   }
 
   showToast(message: string): void {
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+    }
     this.toastMessage = message;
-    setTimeout(() => {
+    this.cdr.detectChanges();
+    this.toastTimer = setTimeout(() => {
       this.toastMessage = null;
+      this.cdr.detectChanges();
     }, 4500);
   }
 }

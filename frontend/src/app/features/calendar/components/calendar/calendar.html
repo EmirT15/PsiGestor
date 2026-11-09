@@ -43,19 +43,15 @@
       <div class="calendar-toast-content">
 
         <strong>
-
-          @if (toastType === 'success') {
+          @if (toastTitle) {
+            {{ toastTitle }}
+          } @else if (toastType === 'success') {
             Cita agendada
-          }
-
-          @if (toastType === 'warning') {
+          } @else if (toastType === 'warning') {
             Revisa la información
-          }
-
-          @if (toastType === 'error') {
+          } @else if (toastType === 'error') {
             No se pudo completar
           }
-
         </strong>
 
         <span>
@@ -1712,15 +1708,11 @@
 
           <app-reschedule-details
             [data]="selectedRescheduleDetails"
-
+            [isProcessing]="isProcessingReschedule"
             (close)="closeSidebar()"
-
-            (modify)="
-              openRescheduleModal()
-            "
+            (modify)="openRescheduleModal()"
             (accept)="onApproveReschedule()"
             (reject)="onRejectReschedule()"
-            (cancel)="onRejectReschedule()"
           />
 
         } @else if (
@@ -1964,4 +1956,58 @@
     "
   />
 
+}
+
+<!-- ========================================= -->
+<!-- MODAL DE CONFIRMACIÓN ESTILIZADO          -->
+<!-- ========================================= -->
+@if (confirmModalConfig) {
+  <div class="custom-confirm-overlay" (click)="closeConfirmModal()">
+    <div class="custom-confirm-modal" (click)="$event.stopPropagation()">
+      <div class="custom-confirm-header">
+        <div
+          class="custom-confirm-icon"
+          [class.danger]="confirmModalConfig.variant === 'danger'"
+          [class.primary]="confirmModalConfig.variant === 'primary'"
+        >
+          @if (confirmModalConfig.variant === 'danger') {
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          } @else {
+            <i class="fa-solid fa-circle-question"></i>
+          }
+        </div>
+        <div class="custom-confirm-title-group">
+          <h3>{{ confirmModalConfig.title }}</h3>
+          <p>{{ confirmModalConfig.message }}</p>
+        </div>
+        <button
+          type="button"
+          class="custom-confirm-close"
+          aria-label="Cerrar"
+          (click)="closeConfirmModal()"
+        >
+          &times;
+        </button>
+      </div>
+
+      <div class="custom-confirm-footer">
+        <button
+          type="button"
+          class="custom-confirm-btn cancel"
+          (click)="closeConfirmModal()"
+        >
+          {{ confirmModalConfig.cancelText }}
+        </button>
+        <button
+          type="button"
+          class="custom-confirm-btn confirm"
+          [class.danger]="confirmModalConfig.variant === 'danger'"
+          [class.primary]="confirmModalConfig.variant === 'primary'"
+          (click)="confirmModalConfig.onConfirm()"
+        >
+          {{ confirmModalConfig.confirmText }}
+        </button>
+      </div>
+    </div>
+  </div>
 }

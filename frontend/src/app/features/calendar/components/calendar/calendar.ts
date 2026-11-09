@@ -149,6 +149,7 @@ export class Calendar implements OnDestroy {
   studentSearchResults: Student[] = [];
 
 /*Notificación visual del calendario. */
+toastTitle = '';
 toastMessage = '';
 
 toastType:
@@ -157,6 +158,18 @@ toastType:
   | 'warning' = 'success';
 
 toastVisible = false;
+
+isProcessingReschedule = false;
+
+confirmModalConfig: {
+  title: string;
+  message: string;
+  subMessage?: string;
+  confirmText: string;
+  cancelText: string;
+  variant: 'danger' | 'success' | 'primary';
+  onConfirm: () => void;
+} | null = null;
 
 private toastTimeout:
   ReturnType<typeof setTimeout>
@@ -804,20 +817,40 @@ private toastTimeout:
 
       if (matchingAvail) {
         // Enriquecer el bloque existente para que mantenga su ID real positivo
-        if (matchingAvail.status === 'Disponible' || matchingAvail.status === 'Reservado') {
+        if (
+          matchingAvail.status === 'Disponible' ||
+          matchingAvail.status === 'Reservado' ||
+          matchingAvail.status === 'Reprogramacion pendiente'
+        ) {
           matchingAvail.status = appointment.status === 'Cancelled'
             ? 'Cancelado'
             : (appointment.status === 'Pending Reschedule' || appointment.status === 'Reprogramacion pendiente'
               ? 'Reprogramacion pendiente'
               : 'Reservado');
-          matchingAvail.studentName = appointment.student_name;
-          matchingAvail.consultationReason = appointment.reason || (appointment as any).reschedule_reason;
-          matchingAvail.modality = appointment.modality === 'In person' ? 'Presencial' : 'En línea';
-          matchingAvail.location = appointment.location || appointment.meeting_url || 'Cubículo';
-          matchingAvail.proposedDate = appointment.proposed_date || undefined;
-          matchingAvail.proposedStartTime = appointment.proposed_start_time || undefined;
-          matchingAvail.proposedEndTime = appointment.proposed_end_time || undefined;
-          matchingAvail.rescheduleRequestedBy = appointment.reschedule_requested_by || 'psicologo';
+          matchingAvail.studentName = appointment.student_name || matchingAvail.studentName;
+          matchingAvail.consultationReason =
+            (appointment as any).reschedule_reason ||
+            appointment.reason ||
+            matchingAvail.consultationReason;
+          matchingAvail.modality =
+            appointment.modality === 'In person' || appointment.modality === 'Presencial'
+              ? 'Presencial'
+              : 'En línea';
+          matchingAvail.location =
+            appointment.location ||
+            appointment.meeting_url ||
+            matchingAvail.location ||
+            'Cubículo';
+          matchingAvail.proposedDate =
+            appointment.proposed_date || matchingAvail.proposedDate || undefined;
+          matchingAvail.proposedStartTime =
+            appointment.proposed_start_time || matchingAvail.proposedStartTime || undefined;
+          matchingAvail.proposedEndTime =
+            appointment.proposed_end_time || matchingAvail.proposedEndTime || undefined;
+          matchingAvail.rescheduleRequestedBy =
+            appointment.reschedule_requested_by ||
+            matchingAvail.rescheduleRequestedBy ||
+            'psicologo';
         }
       } else {
         fallbackBooked.push(
@@ -1298,7 +1331,8 @@ private toastTimeout:
   type:
     'success'
     | 'error'
-    | 'warning' = 'success'
+    | 'warning' = 'success',
+  title?: string
 ): void {
 
   if (this.toastTimeout) {
@@ -1306,6 +1340,14 @@ private toastTimeout:
       this.toastTimeout
     );
   }
+
+  this.toastTitle =
+    title ||
+    (type === 'success'
+      ? 'Operación exitosa'
+      : type === 'warning'
+        ? 'Revisa la información'
+        : 'No se pudo completar');
 
   this.toastMessage =
     message;
@@ -1783,83 +1825,80 @@ selectDisabledSchedule(
   /**
    * Se dispara al hacer clic en "Rehabilitar horario" desde el panel lateral (AppointmentDetails)
    */
-/**
-   * Se dispara al hacer clic en "Rehabilitar horario" desde el panel lateral
-   */
   rehabilitateFromPanel(appointment: any): void {
     const targetId = Math.abs(appointment?.id || this.selectedAvailabilityId || 0);
 
     if (!targetId) {
-      alert('No se pudo identificar el horario a rehabilitar.');
+      this.showToast('No se pudo identificar el horario a rehabilitar.', 'error', 'Error');
       return;
     }
 
-    if (confirm('¿Está seguro de que desea rehabilitar este horario? Volverá a estar disponible para agendar citas.')) {
-      // 1. Eliminar el registro de inhabilitación
-      this.calendarService.enableSchedule(targetId).subscribe({
-        next: () => {
-          const date = appointment.date || this.selectedSlotDate;
-          const startTime = appointment.startTime;
-          const endTime = appointment.endTime;
+    this.confirmModalConfig = {
+      title: 'Rehabilitar horario',
+      message: '¿Está seguro de que desea rehabilitar este horario? Volverá a estar disponible para agendar citas.',
+      confirmText: 'Sí, rehabilitar',
+      cancelText: 'Cancelar',
+      variant: 'primary',
+      onConfirm: () => {
+        this.confirmModalConfig = null;
+        this.calendarService.enableSchedule(targetId).subscribe({
+          next: () => {
+            const date = appointment.date || this.selectedSlotDate;
+            const startTime = appointment.startTime;
+            const endTime = appointment.endTime;
 
-          // 2. Si tenemos la fecha y franja horaria, generamos la disponibilidad como 'Disponible'
-          if (date && startTime && endTime) {
-            const availabilityPayload = {
-              date: date,
-              startTime: startTime,
-              endTime: endTime,
-              duration: appointment.duration || 45,
-              breakTime: 0,
-              status: 'Disponible'
-            };
+            if (date && startTime && endTime) {
+              const availabilityPayload = {
+                date: date,
+                startTime: startTime,
+                endTime: endTime,
+                duration: appointment.duration || 45,
+                breakTime: 0,
+                status: 'Disponible'
+              };
 
-            this.calendarService.createAvailability(availabilityPayload).subscribe({
-              next: () => {
-                alert('El horario ha sido rehabilitado y ya está disponible.');
-                this.closeSidebar();
-                this.refreshCalendarData();
-              },
-              error: (err) => {
-                console.warn('Inhabilitación removida, actualizando calendario...', err);
-                this.closeSidebar();
-                this.refreshCalendarData();
-              }
-            });
-          } else {
-            this.closeSidebar();
-            this.refreshCalendarData();
+              this.calendarService.createAvailability(availabilityPayload).subscribe({
+                next: () => {
+                  this.showToast('El horario ha sido rehabilitado y ya está disponible.', 'success', 'Horario rehabilitado');
+                  this.closeSidebar();
+                  this.refreshCalendarData();
+                },
+                error: (err) => {
+                  console.warn('Inhabilitación removida, actualizando calendario...', err);
+                  this.showToast('El horario ha sido rehabilitado.', 'success', 'Horario rehabilitado');
+                  this.closeSidebar();
+                  this.refreshCalendarData();
+                }
+              });
+            } else {
+              this.showToast('El horario ha sido rehabilitado.', 'success', 'Horario rehabilitado');
+              this.closeSidebar();
+              this.refreshCalendarData();
+            }
+          },
+          error: (err) => {
+            console.error('Error al rehabilitar:', err);
+            this.showToast('Ocurrió un error al intentar rehabilitar el horario.', 'error', 'Error');
           }
-        },
-        error: (err) => {
-          console.error('Error al rehabilitar:', err);
-          alert('Ocurrió un error al intentar rehabilitar el horario.');
-        }
-      });
-    }
+        });
+      }
+    };
+  }
+
+  closeConfirmModal(): void {
+    this.confirmModalConfig = null;
   }
 
   openRescheduleModal(): void {
-
-    this.isRescheduleModalOpen =
-      true;
+    this.isRescheduleModalOpen = true;
   }
-
 
   closeRescheduleModal(): void {
-
-    this.isRescheduleModalOpen =
-      false;
+    this.isRescheduleModalOpen = false;
   }
 
-
-  onRescheduleConfirm(
-    data: any
-  ): void {
-
-    if (
-      this.selectedAvailabilityId ===
-      null
-    ) {
+  onRescheduleConfirm(data: any): void {
+    if (this.selectedAvailabilityId === null || this.isProcessingReschedule) {
       return;
     }
 
@@ -1875,6 +1914,7 @@ selectDisabledSchedule(
       }
     }
 
+    this.isProcessingReschedule = true;
     this.calendarService
       .rescheduleAppointment(
         targetId,
@@ -1884,76 +1924,62 @@ selectDisabledSchedule(
       )
       .subscribe({
         next: () => {
+          this.isProcessingReschedule = false;
           this.closeRescheduleModal();
           this.closeSidebar();
-          this.loadAvailabilities();
-          this.showToast('Propuesta de reprogramación enviada correctamente.', 'success');
+          this.refreshCalendarData();
+          this.showToast(
+            'Propuesta de reprogramación enviada correctamente.',
+            'success',
+            'Reprogramación enviada'
+          );
         },
         error: (error) => {
-          console.error(
-            'Error al reprogramar:',
-            error
+          this.isProcessingReschedule = false;
+          console.error('Error al reprogramar:', error);
+          this.showToast(
+            error.error?.error || 'Error al enviar propuesta de reprogramación.',
+            'error',
+            'Error al reprogramar'
           );
-          alert(error.error?.error || 'Error al enviar propuesta de reprogramación.');
         }
       });
   }
 
-
   openCancelModal(): void {
-
-    this.isCancelModalOpen =
-      true;
+    this.isCancelModalOpen = true;
   }
-
 
   closeCancelModal(): void {
-
-    this.isCancelModalOpen =
-      false;
+    this.isCancelModalOpen = false;
   }
 
-
-  onCancelConfirm(
-    data: any
-  ): void {
-
-    if (
-      this.selectedAvailabilityId ===
-      null
-    ) {
+  onCancelConfirm(data: any): void {
+    if (this.selectedAvailabilityId === null) {
       return;
     }
 
-
     this.calendarService
       .cancelAppointment(
-
         this.selectedAvailabilityId,
-
         data.reason,
-
         data.observation
       )
       .subscribe({
-
         next: () => {
-
           this.closeCancelModal();
-
           this.closeSidebar();
-
-          this.loadAvailabilities();
+          this.refreshCalendarData();
+          this.showToast('La cita ha sido cancelada.', 'warning', 'Cita cancelada');
         },
-
         error: (error) => {
-
-          console.error(
-            'Error al cancelar:',
-            error
+          console.error('Error al cancelar:', error);
+          this.showToast(
+            error.error?.error || 'No fue posible cancelar la cita.',
+            'error',
+            'Error al cancelar'
           );
         }
-
       });
   }
 
@@ -1976,13 +2002,14 @@ selectDisabledSchedule(
         next: () => {
           this.closeSidebar();
           this.refreshCalendarData();
-          this.showToast('Horario rehabilitado y disponible nuevamente.', 'success');
+          this.showToast('Horario rehabilitado y disponible nuevamente.', 'success', 'Horario rehabilitado');
         },
         error: (error) => {
           console.error('Error al rehabilitar horario:', error);
           this.showToast(
             error.error?.error || 'No fue posible rehabilitar el horario.',
-            'error'
+            'error',
+            'Error al rehabilitar'
           );
           this.refreshCalendarData();
         }
@@ -1990,57 +2017,93 @@ selectDisabledSchedule(
   }
 
   onApproveReschedule(): void {
-    if (this.selectedAvailabilityId === null) return;
+    if (this.selectedAvailabilityId === null || this.isProcessingReschedule) return;
 
+    this.isProcessingReschedule = true;
     const req$ = this.selectedAvailabilityId < 0
       ? this.calendarService.approveReschedule(-this.selectedAvailabilityId)
       : this.calendarService.approveAvailabilityReschedule(this.selectedAvailabilityId);
 
     req$.subscribe({
       next: () => {
+        this.isProcessingReschedule = false;
         this.closeSidebar();
-        this.loadAvailabilities();
-        this.showToast('Reprogramación aceptada con éxito', 'success');
+        this.refreshCalendarData();
+        this.showToast(
+          'La solicitud de reprogramación ha sido aceptada y el horario fue actualizado.',
+          'success',
+          'Reprogramación confirmada'
+        );
       },
       error: (error) => {
+        this.isProcessingReschedule = false;
         console.error('Error al aprobar reprogramación:', error);
-        alert(error.error?.error || 'No se pudo aprobar la reprogramación.');
+        this.showToast(
+          error.error?.error || 'No se pudo aprobar la reprogramación.',
+          'error',
+          'Error al aprobar'
+        );
       }
     });
   }
 
   onRejectReschedule(): void {
-    if (this.selectedAvailabilityId === null) return;
+    if (this.selectedAvailabilityId === null || this.isProcessingReschedule) return;
 
     const isAlumno =
       this.selectedRescheduleDetails?.rescheduleRequestedBy === 'alumno' ||
       this.selectedRescheduleDetails?.reschedule_requested_by === 'alumno';
 
+    const title = isAlumno ? 'Rechazar solicitud de cambio' : 'Cancelar propuesta de cambio';
     const confirmMsg = isAlumno
       ? '¿Rechazar la solicitud de cambio del alumno? La cita se mantendrá en su horario original.'
-      : '¿Deseas cancelar esta propuesta de reprogramación?';
+      : '¿Deseas cancelar esta propuesta de reprogramación? La cita se mantendrá en su horario original.';
+    const confirmText = isAlumno ? 'Sí, rechazar solicitud' : 'Sí, cancelar propuesta';
 
-    if (!confirm(confirmMsg)) return;
+    const targetAvailabilityId = this.selectedAvailabilityId;
 
-    const req$ = this.selectedAvailabilityId < 0
-      ? this.calendarService.rejectReschedule(-this.selectedAvailabilityId)
-      : this.calendarService.rejectAvailabilityReschedule(this.selectedAvailabilityId);
+    this.confirmModalConfig = {
+      title,
+      message: confirmMsg,
+      confirmText,
+      cancelText: 'Volver',
+      variant: 'danger',
+      onConfirm: () => {
+        this.confirmModalConfig = null;
+        if (this.isProcessingReschedule) return;
+        this.isProcessingReschedule = true;
 
-    req$.subscribe({
-      next: (res) => {
-        this.closeSidebar();
-        this.loadAvailabilities();
-        if (res?.action === 'cancelled') {
-          this.showToast('Propuesta cancelada. La cita ha sido cancelada.', 'warning');
-        } else {
-          this.showToast('Solicitud rechazada. La cita se mantiene en su horario original.', 'success');
-        }
-      },
-      error: (error) => {
-        console.error('Error al rechazar reprogramación:', error);
-        alert(error.error?.error || 'No se pudo rechazar la reprogramación.');
+        const req$ = targetAvailabilityId < 0
+          ? this.calendarService.rejectReschedule(-targetAvailabilityId)
+          : this.calendarService.rejectAvailabilityReschedule(targetAvailabilityId);
+
+        req$.subscribe({
+          next: (res) => {
+            this.isProcessingReschedule = false;
+            this.closeSidebar();
+            this.refreshCalendarData();
+            if (res?.action === 'cancelled') {
+              this.showToast('Propuesta cancelada. La cita ha sido cancelada.', 'warning', 'Cita cancelada');
+            } else {
+              this.showToast(
+                'Solicitud rechazada. La cita se mantiene en su horario original.',
+                'success',
+                isAlumno ? 'Solicitud rechazada' : 'Propuesta cancelada'
+              );
+            }
+          },
+          error: (error) => {
+            this.isProcessingReschedule = false;
+            console.error('Error al rechazar reprogramación:', error);
+            this.showToast(
+              error.error?.error || 'No se pudo rechazar la reprogramación.',
+              'error',
+              'Error'
+            );
+          }
+        });
       }
-    });
+    };
   }
 
 
@@ -4371,6 +4434,7 @@ if (
               this.isCancelModalOpen ||
               this.isRescheduleModalOpen ||
               this.isManageScheduleOpen ||
+              this.confirmModalConfig !== null ||
               this.sidebarView === 'patient-booking-form'
             ) {
               return;

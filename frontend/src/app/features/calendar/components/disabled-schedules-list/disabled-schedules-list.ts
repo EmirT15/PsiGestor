@@ -35,6 +35,7 @@ export class DisabledSchedulesList implements OnInit {
   // Variables para Modal de Confirmación
   showConfirmModal: boolean = false;
   itemToRehabilitateId?: number;
+  errorMessage: string | null = null;
 
   constructor(
     private calendarService: CalendarService,
@@ -154,7 +155,7 @@ export class DisabledSchedulesList implements OnInit {
       },
       error: (err) => {
         console.error('Error al rehabilitar:', err);
-        alert('Ocurrió un error al intentar rehabilitar el horario.');
+        this.errorMessage = 'Ocurrió un error al intentar rehabilitar el horario.';
       }
     });
   }
@@ -162,12 +163,13 @@ export class DisabledSchedulesList implements OnInit {
   private finishRehabilitation(): void {
     this.showConfirmModal = false;
     this.itemToRehabilitateId = undefined;
+    this.errorMessage = null;
     this.loadDisabledSchedules();
   }
 
   saveSchedule(): void {
     if (!this.formData.startDate || !this.formData.startTime || !this.formData.endTime) {
-      alert('Por favor, completa la fecha y franja horaria.');
+      this.errorMessage = 'Por favor, completa la fecha y franja horaria.';
       return;
     }
 
@@ -177,6 +179,7 @@ export class DisabledSchedulesList implements OnInit {
 
     if (this.isSubmitting) return;
     this.isSubmitting = true;
+    this.errorMessage = null;
 
     this.calendarService.disableSchedule(this.formData).subscribe({
       next: () => {
@@ -187,7 +190,7 @@ export class DisabledSchedulesList implements OnInit {
       error: (err) => {
         this.isSubmitting = false;
         console.error('Error al guardar horario inhabilitado:', err);
-        alert('Ocurrió un error al guardar la inhabilitación.');
+        this.errorMessage = 'Ocurrió un error al guardar la inhabilitación.';
       }
     });
   }
@@ -195,6 +198,7 @@ export class DisabledSchedulesList implements OnInit {
     closeForm(): void {
     this.showForm = false;
     this.isSubmitting = false;
+    this.errorMessage = null;
     this.cdr.detectChanges(); // Forzar ocultar la ventana en la vista
   }
 

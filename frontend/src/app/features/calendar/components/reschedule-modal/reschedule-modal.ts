@@ -22,16 +22,19 @@ export class RescheduleModal {
   @Output() confirm = new EventEmitter<any>();
 
   selectedSlotId: number | null = null;
+  isSubmitting = false;
 
   closeModal(): void {
+    if (this.isSubmitting) return;
     this.close.emit();
   }
 
   submit(): void {
-    if (!this.selectedSlotId) return;
+    if (!this.selectedSlotId || this.isSubmitting) return;
     
     const slot = this.availableSlots.find(s => s.id === Number(this.selectedSlotId));
     if (slot) {
+      this.isSubmitting = true;
       this.confirm.emit({
         date: slot.date,
         startTime: slot.startTime,
