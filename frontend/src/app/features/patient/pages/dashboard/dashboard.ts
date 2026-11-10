@@ -41,10 +41,13 @@ export class Dashboard implements OnInit {
   isLoadingAppointments = false;
   isProcessing = false;
   toastMessage: string | null = null;
+  toastType: 'success' | 'warning' | 'error' = 'success';
+  private toastTimer: any = null;
 
   // Modales
   reschedulingAppointment: Appointment | null = null;
   cancellingAppointment: Appointment | null = null;
+  rejectingRescheduleAppointment: Appointment | null = null;
 
   get user() {
     return this.authService.currentUser();
@@ -175,12 +178,12 @@ export class Dashboard implements OnInit {
     this.calendarService.approveReschedule(apt.id).subscribe({
       next: () => {
         this.isProcessing = false;
-        this.showToast('¡Has aceptado la reprogramación! La cita ha sido confirmada en el nuevo horario.');
+        this.showToast('¡Has aceptado la reprogramación! La cita ha sido confirmada en el nuevo horario.', 'success');
         this.loadMyAppointments();
       },
       error: (err) => {
         this.isProcessing = false;
-        this.showToast(err.error?.error || 'No se pudo aceptar la reprogramación.');
+        this.showToast(err.error?.error || 'No se pudo aceptar la reprogramación.', 'error');
         this.cdr.detectChanges();
       }
     });
@@ -188,14 +191,17 @@ export class Dashboard implements OnInit {
 
   rejectReschedule(apt: Appointment): void {
     if (this.isProcessing) return;
-    const isPsicologo = apt.reschedule_requested_by === 'psicologo';
-    const confirmMsg = isPsicologo
-      ? '¿Estás seguro de que deseas rechazar la propuesta de la psicóloga? Al rechazarla, tu cita se cancelará definitivamente ya que la psicóloga no cuenta con disponibilidad en el horario original.'
-      : '¿Deseas descartar tu solicitud de cambio de horario? Tu cita continuará agendada en el horario original.';
+    this.rejectingRescheduleAppointment = apt;
+  }
 
-    if (!confirm(confirmMsg)) {
-      return;
-    }
+  closeRejectRescheduleModal(): void {
+    if (this.isProcessing) return;
+    this.rejectingRescheduleAppointment = null;
+  }
+
+  confirmRejectReschedule(): void {
+    const apt = this.rejectingRescheduleAppointment;
+    if (!apt || this.isProcessing) return;
 
     this.isProcessing = true;
     this.cdr.detectChanges();
@@ -203,16 +209,18 @@ export class Dashboard implements OnInit {
     this.calendarService.rejectReschedule(apt.id).subscribe({
       next: (res) => {
         this.isProcessing = false;
+        this.rejectingRescheduleAppointment = null;
         if (res.action === 'cancelled') {
-          this.showToast('Propuesta rechazada. La cita ha sido cancelada definitivamente.');
+          this.showToast('Propuesta rechazada. La cita ha sido cancelada definitivamente.', 'warning');
         } else {
-          this.showToast('Solicitud de cambio descartada. Se conserva el horario original.');
+          this.showToast('Solicitud de cambio descartada. Se conserva el horario original.', 'success');
         }
         this.loadMyAppointments();
       },
       error: (err) => {
         this.isProcessing = false;
-        this.showToast(err.error?.error || 'No se pudo rechazar la reprogramación.');
+        this.rejectingRescheduleAppointment = null;
+        this.showToast(err.error?.error || 'No se pudo rechazar la reprogramación.', 'error');
         this.cdr.detectChanges();
       }
     });
@@ -228,14 +236,18 @@ export class Dashboard implements OnInit {
 
   onAppointmentCancelled(): void {
     this.cancellingAppointment = null;
-    this.showToast('Tu cita ha sido cancelada correctamente y el horario fue liberado.');
+    this.showToast('Tu cita ha sido cancelada correctamente y el horario fue liberado.', 'success');
     this.loadMyAppointments();
   }
 
-  showToast(message: string): void {
+  showToast(message: string, type: 'success' | 'warning' | 'error' = 'success'): void {
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+    }
     this.toastMessage = message;
+    this.toastType = type;
     this.cdr.detectChanges();
-    setTimeout(() => {
+    this.toastTimer = setTimeout(() => {
       this.toastMessage = null;
       this.cdr.detectChanges();
     }, 4500);

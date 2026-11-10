@@ -1,5 +1,6 @@
 from datetime import date as Date
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from app.repositories.appointment_repository import (
     create_appointment,
@@ -9,6 +10,8 @@ from app.repositories.appointment_repository import (
     approve_student_reschedule_db,
     reject_student_reschedule_db,
 )
+
+LOCAL_TIMEZONE = ZoneInfo("America/Merida")
 
 
 def register_appointment(data, user=None):
@@ -104,7 +107,12 @@ def register_appointment(data, user=None):
             "La hora de inicio debe ser anterior a la hora de fin."
         )
 
-    if datetime.combine(appointment_date, start_time) <= datetime.now():
+    slot_start_moment = datetime.combine(
+        appointment_date,
+        start_time,
+        tzinfo=LOCAL_TIMEZONE,
+    )
+    if slot_start_moment <= datetime.now(LOCAL_TIMEZONE):
         raise ValueError(
             "No es posible reservar un horario cuya hora de inicio ya ha transcurrido."
         )

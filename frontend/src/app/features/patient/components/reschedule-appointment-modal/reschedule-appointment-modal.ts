@@ -70,6 +70,7 @@ export class RescheduleAppointmentModal implements OnInit {
   }
 
   submitReschedule(): void {
+    if (this.isSubmitting) return;
     this.errorMessage = '';
     const cleanReason = this.reason.trim();
 

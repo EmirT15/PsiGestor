@@ -712,6 +712,7 @@ def approve_availability_reschedule_repo(availability_id):
                 """
                 SELECT id FROM appointments
                 WHERE (date, start_time, end_time) = (SELECT date, start_time, end_time FROM availabilities WHERE id = %s)
+                  AND status IN ('Pending Reschedule', 'Reprogramacion pendiente', 'Reserved')
                 ORDER BY id DESC LIMIT 1;
                 """,
                 (availability_id,)
@@ -758,6 +759,7 @@ def reject_availability_reschedule_repo(availability_id):
                 """
                 SELECT id FROM appointments
                 WHERE (date, start_time, end_time) = (SELECT date, start_time, end_time FROM availabilities WHERE id = %s)
+                  AND status IN ('Pending Reschedule', 'Reprogramacion pendiente', 'Reserved')
                 ORDER BY id DESC LIMIT 1;
                 """,
                 (availability_id,)

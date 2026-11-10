@@ -86,9 +86,25 @@ def list_appointments_route():
             appointment["start_time"] = appointment["start_time"].strftime("%H:%M")
             appointment["end_time"] = appointment["end_time"].strftime("%H:%M")
 
-            if appointment["created_at"]:
+            if appointment.get("created_at"):
                 appointment["created_at"] = (
                     appointment["created_at"].isoformat()
+                )
+            if appointment.get("rescheduled_at"):
+                appointment["rescheduled_at"] = (
+                    appointment["rescheduled_at"].isoformat()
+                )
+            if appointment.get("proposed_date"):
+                appointment["proposed_date"] = (
+                    appointment["proposed_date"].isoformat()
+                )
+            if appointment.get("proposed_start_time"):
+                appointment["proposed_start_time"] = (
+                    appointment["proposed_start_time"].strftime("%H:%M")
+                )
+            if appointment.get("proposed_end_time"):
+                appointment["proposed_end_time"] = (
+                    appointment["proposed_end_time"].strftime("%H:%M")
                 )
 
         if not viewer_has_full_access():

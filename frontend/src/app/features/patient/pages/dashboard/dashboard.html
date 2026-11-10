@@ -4,7 +4,7 @@
 
   <!-- Notificación Toast -->
   @if (toastMessage) {
-  <div class="toast-notification success">
+ <!-- <div class="toast-notification success">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
       stroke-linecap="round" stroke-linejoin="round">
       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -12,6 +12,20 @@
     </svg>
     <span>{{ toastMessage }}</span>
   </div>
+  -->
+
+    <div
+      class="toast-notification"
+      [class.success]="toastType === 'success'"
+      [class.warning]="toastType === 'warning'"
+      [class.error]="toastType === 'error'"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <span>{{ toastMessage }}</span>
+    </div>
   }
 
   <!-- Contenido principal -->
@@ -152,6 +166,64 @@
   @if (cancellingAppointment) {
   <app-cancel-appointment-modal [appointment]="cancellingAppointment" (close)="closeCancelModal()"
     (appointmentCancelled)="onAppointmentCancelled()"></app-cancel-appointment-modal>
+  }
+
+  <!-- Modal de Confirmación Estilizado para Rechazar / Descartar Reprogramación -->
+  @if (rejectingRescheduleAppointment) {
+    <div class="confirm-modal-backdrop" (click)="closeRejectRescheduleModal()">
+      <div class="confirm-modal-card" (click)="$event.stopPropagation()">
+        <div class="confirm-modal-header">
+          <div class="confirm-modal-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+          <div class="confirm-modal-title-group">
+            @if (rejectingRescheduleAppointment.reschedule_requested_by === 'psicologo') {
+              <h3>Rechazar propuesta de reprogramación</h3>
+              <p>
+                ¿Estás seguro de que deseas rechazar la propuesta de la psicóloga?
+                Al rechazarla, tu cita se cancelará definitivamente ya que la psicóloga no cuenta con disponibilidad en el horario original.
+              </p>
+            } @else {
+              <h3>Descartar solicitud de cambio</h3>
+              <p>
+                ¿Deseas descartar tu solicitud de cambio de horario?
+                Tu cita continuará agendada en el horario original ({{ formatDate(rejectingRescheduleAppointment.date) }} • {{ rejectingRescheduleAppointment.start_time }} hrs).
+              </p>
+            }
+          </div>
+          <button type="button" class="confirm-modal-close" (click)="closeRejectRescheduleModal()" [disabled]="isProcessing">&times;</button>
+        </div>
+
+        <div class="confirm-modal-footer">
+          <button
+            type="button"
+            class="btn-modal-secondary"
+            (click)="closeRejectRescheduleModal()"
+            [disabled]="isProcessing"
+          >
+            Volver
+          </button>
+          <button
+            type="button"
+            class="btn-modal-danger"
+            (click)="confirmRejectReschedule()"
+            [disabled]="isProcessing"
+          >
+            @if (isProcessing) {
+              Procesando...
+            } @else if (rejectingRescheduleAppointment.reschedule_requested_by === 'psicologo') {
+              Sí, rechazar y cancelar cita
+            } @else {
+              Sí, descartar solicitud
+            }
+          </button>
+        </div>
+      </div>
+    </div>
   }
 
 </div>

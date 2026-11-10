@@ -83,9 +83,9 @@
     </div>
     
     <div class="modal-actions">
-       <!-- Action buttons could go here, but design doesn't show the bottom part clearly, 
-            I'll assume there is a Send button or it's implied by selection -->
-       <button class="btn-primary" (click)="submit()">Enviar propuesta</button>
+       <button type="button" class="btn-primary" [disabled]="!selectedSlotId || isSubmitting" (click)="submit()">
+         {{ isSubmitting ? 'Enviando propuesta...' : 'Enviar propuesta' }}
+       </button>
     </div>
   </div>
 </div>

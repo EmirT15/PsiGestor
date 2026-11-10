@@ -26,6 +26,7 @@ export interface RescheduleDetailsMock {
 })
 export class RescheduleDetails {
   @Input() data: RescheduleDetailsMock | null = null;
+  @Input() isProcessing = false;
   @Output() close = new EventEmitter<void>();
   @Output() modify = new EventEmitter<void>();
   @Output() remind = new EventEmitter<void>();

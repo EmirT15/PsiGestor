@@ -199,6 +199,12 @@
             </div>
           }
 
+          @if (errorMessage) {
+            <div class="conflict-alert" style="background-color: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+              {{ errorMessage }}
+            </div>
+          }
+
           <div class="modal-footer">
             <button type="button" class="btn-cancel" (click)="closeForm()">Cancelar</button>
             <button type="submit" class="btn-confirm" [disabled]="isSubmitting">
